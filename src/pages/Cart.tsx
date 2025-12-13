@@ -63,34 +63,23 @@ export default function Cart() {
         customerPhone: phone,
         customerAddress: address,
         storeId: 0,
-        deliveryPhone: "",
         orderContent: "",
-        orderLink: "",
         items: []
       };
   
-      // ✅ في حالة Manual Order
       if (manualOrder) {
-        orderPayload.storeId = storeInfo?.id;   // حفظ storeId
+        orderPayload.storeId = storeInfo?.id;
         orderPayload.orderContent = manualRequest;
-      } 
-      // ✅ في حالة منتجات
-      else {
+      } else {
         const [storeId, storeData]: any = Object.entries(filteredCart)[0];
-        if (!storeData) {
-          setLoading(false);
-          return;
-        }
-  
-        orderPayload.storeId = storeId; // حفظ storeId
-        orderPayload.items = (storeData.items || []).map((item: any) => ({
+        orderPayload.storeId = storeId;
+        orderPayload.items = storeData.items.map((item: any) => ({
           productId: item.id,
           qty: item.qty,
           price: item.price
         }));
       }
   
-      // 🔹 إرسال الطلب للـ API
       const res = await fetch(
         "https://deliver-web-app2.runasp.net/api/Orders/CreateOrder",
         {
@@ -105,10 +94,10 @@ export default function Cart() {
       const data = await res.json();
       const orderId = data.orderId;
   
-      // 🔗 لينك الطلب العام
+      // ✅ لينك واحد فقط
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      // 📱 واتساب – اللينك فقط
+      // ✅ واتساب – اللينك فقط
       const waNumber = "201006621660";
       const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
   
@@ -120,6 +109,7 @@ export default function Cart() {
       setLoading(false);
     }
   };
+  
   
   
 
