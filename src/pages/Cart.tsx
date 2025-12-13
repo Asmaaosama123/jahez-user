@@ -77,9 +77,6 @@ export default function Cart() {
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
       let message = `طلب جديد:
-  رقم الهاتف: ${phone}
-  العنوان: ${address}
-  متجر: ${storeName}
   رابط الطلب: ${publicOrderLink}`;
   
       // إضافة المنتجات لو في كارت
