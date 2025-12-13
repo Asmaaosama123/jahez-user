@@ -19,7 +19,7 @@ function App() {
       <Routes>
         {/* الصفحة الرئيسية / عرض طلب */}
         <Route path="/" element={<Home />} />
-        <Route path="/public-order/:orderId" element={<PublicOrder />} />
+        <Route path="/public-order/:id" element={<PublicOrder />} />
 
         {/* باقي الصفحات */}
         <Route path="/restaurant/:name" element={<RestaurantPage />} />

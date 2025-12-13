@@ -27,13 +27,14 @@ export default function PublicOrder() {
   const { id } = useParams<{ id: string }>(); // ناخد الـ id من URL
   const [data, setData] = useState<OrderData | null>(null);
 
+
   useEffect(() => {
-    if (!id) return; // لو مفيش id ما نعملش fetch
-    fetch(`${BASE}/api/Orders/PublicOrder/${id}`)
-      .then((res) => res.json())
-      .then((resData) => setData(resData))
-      .catch((err) => console.error("Error fetching order:", err));
+    if (!id) return;
+    fetch(`https://deliver-web-app2.runasp.net/api/Orders/PublicOrder/${id}`)
+      .then(res => res.json())
+      .then(setData);
   }, [id]);
+  
 
   const fixImageUrl = (url: string | null) => {
     if (!url) return "./src/assets/Layer 1.png";
