@@ -1,0 +1,111 @@
+/* Arabic font support - Cairo */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* RTL Support */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+.rtl * {
+  font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* RTL specific styles */
+.rtl .flex-rtl {
+  flex-direction: row-reverse;
+}
+
+.rtl .space-x-2-rtl > * + * {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+.rtl .space-x-3-rtl > * + * {
+  margin-left: 0;
+  margin-right: 0.75rem;
+}
+
+.rtl .space-x-4-rtl > * + * {
+  margin-left: 0;
+  margin-right: 1rem;
+}
+
+.rtl .space-x-8-rtl > * + * {
+  margin-left: 0;
+  margin-right: 2rem;
+}
+
+.rtl .ml-1-rtl { margin-left: 0; margin-right: 0.25rem; }
+.rtl .ml-2-rtl { margin-left: 0; margin-right: 0.5rem; }
+.rtl .ml-3-rtl { margin-left: 0; margin-right: 0.75rem; }
+.rtl .ml-4-rtl { margin-left: 0; margin-right: 1rem; }
+.rtl .mr-1-rtl { margin-right: 0; margin-left: 0.25rem; }
+.rtl .mr-2-rtl { margin-right: 0; margin-left: 0.5rem; }
+.rtl .mr-3-rtl { margin-right: 0; margin-left: 0.75rem; }
+.rtl .mr-4-rtl { margin-right: 0; margin-left: 1rem; }
+
+.rtl .pl-2-rtl { padding-left: 0; padding-right: 0.5rem; }
+.rtl .pl-3-rtl { padding-left: 0; padding-right: 0.75rem; }
+.rtl .pl-4-rtl { padding-left: 0; padding-right: 1rem; }
+.rtl .pr-2-rtl { padding-right: 0; padding-left: 0.5rem; }
+.rtl .pr-3-rtl { padding-right: 0; padding-left: 0.75rem; }
+.rtl .pr-4-rtl { padding-right: 0; padding-left: 1rem; }
+.rtl .pr-12-rtl { padding-right: 0; padding-left: 3rem; }
+
+.rtl .left-0-rtl { left: auto; right: 0; }
+.rtl .left-2-rtl { left: auto; right: 0.5rem; }
+.rtl .left-4-rtl { left: auto; right: 1rem; }
+.rtl .right-0-rtl { right: auto; left: 0; }
+.rtl .right-2-rtl { right: auto; left: 0.5rem; }
+.rtl .right-3-rtl { right: auto; left: 0.75rem; }
+.rtl .right-4-rtl { right: auto; left: 1rem; }
+
+.rtl .text-left-rtl { text-align: right; }
+.rtl .text-right-rtl { text-align: left; }
+
+/* Custom slider styles for price range */
+.slider-thumb-yellow::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fbbf24;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.slider-thumb-yellow::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #fbbf24;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* RTL specific component fixes */
+.rtl .rounded-l-lg-rtl { border-radius: 0 0.5rem 0.5rem 0; }
+.rtl .rounded-r-lg-rtl { border-radius: 0.5rem 0 0 0.5rem; }
+.rtl .border-l-rtl { border-left: 0; border-right: 1px solid; }
+.rtl .border-r-rtl { border-right: 0; border-left: 1px solid; }

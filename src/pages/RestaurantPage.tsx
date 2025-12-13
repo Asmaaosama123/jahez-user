@@ -1,0 +1,296 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { IoArrowForward } from "react-icons/io5";
+import { useCart } from "../context/CartContext";
+import { useLang } from "../context/LanguageContext";
+
+const BASE = "http://deliver-web-app2.runasp.net";
+
+export default function RestaurantPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+  const { t, language } = useLang();
+  const { addToCart, clearCart } = useCart();
+
+
+  const [storeInfo, setStoreInfo] = useState<any | null>(location.state || null);
+  const [sections, setSections] = useState<any[]>([]);
+  const [products, setProducts] = useState<{ [key: number]: any[] }>({});
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [selectedTab, setSelectedTab] = useState<string>("");
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [added, setAdded] = useState(false);
+  const [supermarketOrder, setSupermarketOrder] = useState("");
+  const [categoryType, setCategoryType] = useState<number | null>(null);
+
+
+  // --------------------------------
+  // رابط الصورة
+  // --------------------------------
+  const fixImageUrl = (url: string | null) => url || "./src/assets/Layer 1.png";
+
+  // --------------------------------
+  // جلب بيانات المطعم لو storeInfo فاضي
+  // --------------------------------
+  useEffect(() => {
+    if (!storeInfo && params.id) {
+      fetch(`${BASE}/api/Stores/${params.id}`)
+        .then(res => res.json())
+        .then(data => setStoreInfo(data))
+        .catch(() => setStoreInfo(null));
+    }
+  }, [storeInfo, params.id]);
+
+  // --------------------------------
+  // Zoom
+  // --------------------------------
+  useEffect(() => {
+    document.body.style.zoom = "80%";
+  }, []);
+
+  // --------------------------------
+  // Fetch sections و products
+  // --------------------------------
+  const fetchSections = async (storeId: number) => {
+    try {
+      const res = await fetch(`${BASE}/api/Subcategories/${storeId}/sections?lang=${language}`);
+      const data = res.ok ? await res.json() : [];
+      setSections(data);
+
+      const productsMap: { [key: number]: any[] } = {};
+      for (const section of data) {
+        const resProducts = await fetch(`${BASE}/api/Subcategories/section/${section.id}/products?lang=${language}`);
+        productsMap[section.id] = resProducts.ok ? await resProducts.json() : [];
+      }
+      setProducts(productsMap);
+
+      if (data.length > 0) setSelectedTab(data[0].name); // اختر أول تاب افتراضياً
+
+      const initialQuantities: { [key: string]: number } = {};
+      Object.values(productsMap).flat().forEach((p: any) => { initialQuantities[p.id] = 0; });
+      setQuantities(initialQuantities);
+
+      setLoading(false);
+    } catch {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (storeInfo?.id) fetchSections(storeInfo.id);
+    else setLoading(false);
+  }, [storeInfo, language]);
+
+  // --------------------------------
+  // كمية المنتج
+  // --------------------------------
+  const handleQuantityChange = (id: string, delta: number) => {
+    setQuantities(prev => ({ ...prev, [id]: Math.max(0, (prev[id] || 0) + delta) }));
+  };
+
+  // --------------------------------
+  // أضف للسلة
+  // --------------------------------
+ // في دالة handleOrderNow في RestaurantPage.tsx:
+// ...imports زي ما عندك
+const handleOrderNow = () => {
+  if (!storeInfo) return;
+  clearCart();
+
+  const itemsToAdd = Object.entries(quantities)
+    .filter(([_, qty]) => qty > 0)
+    .map(([prodId, qty]) => {
+      const product = Object.values(products).flat().find(p => p.id.toString() === prodId);
+      if (!product) return null;
+
+      return {
+        ...product,
+        name: product.name,
+        qty,
+        price: parseFloat(product.price),
+        imageFile: product.rawFile || null
+      };
+    })
+    .filter(Boolean) as any[];
+
+  if (itemsToAdd.length === 0) { alert("لم تختَر أي منتجات"); return; }
+
+  addToCart(
+    storeInfo.id.toString(),
+    storeInfo.name,
+    fixImageUrl(storeInfo.profileImageUrl),
+    storeInfo.StoreaddressSecondary,   // تمرير العنوان الثانوي
+    itemsToAdd                        // تمرير المنتجات
+  );
+  
+  
+
+  setQuantities({});
+  setAdded(true);
+  setTimeout(() => setAdded(false), 1500);
+
+  // نمرر العنوان الثانوي مع الطلب
+  navigate("/cart", { state: { storeSecondaryAddress: storeInfo.addressSecondary } });
+};
+useEffect(() => {
+  if (storeInfo?.id) {
+    fetch(`${BASE}/api/Subcategories/GetStoreCategory/${storeInfo.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setCategoryType(data.category); // هي 2 لو سوبرماركت
+      })
+      .catch(() => setCategoryType(null));
+  }
+}, [storeInfo]);
+
+
+const isSupermarket = categoryType === 2;
+
+  if (loading) return <div className="p-5 text-center">{t.loading}</div>;
+
+  return (
+    <div className="relative bg-gray-100 min-h-screen font-sans" dir="rtl">
+
+      {/* HERO */}
+      <div className="relative">
+        <img
+          src={fixImageUrl(storeInfo?.coverImageUrl)}
+          className="w-full h-60 object-cover"
+          alt="cover"
+        />
+
+        <button
+          className="absolute top-5 right-4 bg-black/40 p-2 rounded-full"
+          onClick={() => navigate(-1)}
+        >
+          <IoArrowForward className="text-white text-xl" />
+        </button>
+
+        <div className="absolute bottom-3 right-3 text-white flex items-center gap-3">
+          <img
+            src={fixImageUrl(storeInfo?.profileImageUrl)}
+            className="w-20 h-20 rounded-xl shadow-xl object-cover bg-white"
+            alt="store"
+          />
+          <div className="flex flex-col items-start text-right">
+            <h1 className="text-xl font-bold">{storeInfo?.name || ""}</h1>
+            {/* <h1 className="text-xl font-bold">{storeInfo?.StoreaddressSecondary || ""}</h1> */}
+            <p className="text-green-400 text-[10px]">{storeInfo?.isOpen ? t.open : t.closed}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div className="flex gap-2 overflow-x-auto px-3 py-5 bg-gray-100 shadow">
+        {sections.map((tab) => (
+          <button
+            key={tab.id}
+            className={`px-6 py-2 rounded-md text-sm whitespace-nowrap ${
+              selectedTab === tab.name ? "bg-green-700 text-white" : "bg-white text-gray-600"
+            }`}
+            onClick={() => setSelectedTab(tab.name)}
+          >
+            {tab.name}
+          </button>
+        ))}
+      </div>
+
+      {/* MENU */}
+      <div className="px-3 pb-36">
+        {sections
+          .filter(section => section.name === selectedTab)
+          .flatMap(section => products[section.id] || [])
+          .map((product, i) => (
+            <div
+              key={i}
+              onClick={() => setSelectedProduct(product)}
+              className="bg-white rounded-xl p-2 mt-2 flex items-center mb-5 shadow-sm cursor-pointer"
+            >
+              <div className="w-20 h-20 rounded-xl overflow-hidden border flex items-center justify-center bg-gray-100">
+                <img
+                  src={fixImageUrl(product.imageUrl)}
+                  className="w-full h-full object-cover"
+                  alt={product.name}
+                />
+              </div>
+              <div className="flex flex-col mr-4 flex-1">
+                <h2 className="font-bold text-lg">{product.name}</h2>
+                <span className="text-sm text-green-600">{product.price} MRU</span>
+              </div>
+              <div
+  className={`flex border rounded-lg overflow-hidden 
+    ${quantities[product.id] > 0 ? "bg-green-100 border-green-600" : "bg-gray-100"}`}
+  onClick={(e) => e.stopPropagation()}
+>
+
+                <button className="px-2 py-0.5 border-l text-lg" onClick={() => handleQuantityChange(product.id.toString(), 1)}>+</button>
+                <span className="px-3 py-0.5">{quantities[product.id] || 0}</span>
+                <button className="px-2 py-0.5 border-r text-lg" onClick={() => handleQuantityChange(product.id.toString(), -1)}>-</button>
+              </div>
+            </div>
+          ))}
+      </div>
+
+      {/* BOTTOM BUTTON */}
+      <div className="fixed bottom-0 w-full">
+  {isSupermarket ? (
+    <button
+    onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
+    className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+    >
+      {t.rightyourorder}
+    </button>
+  ) : (
+    <>
+      {added && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg animate-bounce z-50">
+          ✔ تمت الإضافة للسلة
+        </div>
+      )}
+
+      <button
+        onClick={handleOrderNow}
+        className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+      >
+        {t.orderNow} ({Object.values(quantities).reduce((a, b) => a + b, 0)})
+      </button>
+    </>
+  )}
+</div>
+
+
+      {/* PRODUCT MODAL */}
+      {selectedProduct && (
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-40 backdrop-blur-md z-50 p-3">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden pb-3">
+            <div className="relative">
+              <img src={fixImageUrl(selectedProduct.imageUrl)} className="w-full h-72 object-cover bg-white" />
+              <button onClick={() => setSelectedProduct(null)} className="absolute top-2 right-2 bg-gray-100 px-2 py-1 rounded-md">✕</button>
+            </div>
+            <div className="px-4 mt-3 flex items-center justify-between flex-row-reverse">
+            <div
+  className={`flex items-center border rounded-lg overflow-hidden 
+    ${quantities[selectedProduct.id] > 0 ? "bg-green-100 border-green-600" : "bg-gray-100"}`}
+>
+                <button className="px-3 py-1 border-l text-xl" onClick={() => handleQuantityChange(selectedProduct.id.toString(), 1)}>+</button>
+                <span className="px-4 py-1">{quantities[selectedProduct.id] || 0}</span>
+                <button className="px-3 py-1 border-r text-xl" onClick={() => handleQuantityChange(selectedProduct.id.toString(), -1)}>−</button>
+              </div>
+              <div className="text-right">
+                <h2 className="text-xl font-bold">{selectedProduct.name}</h2>
+                <p className="text-green-700 font-bold text-[15px] mt-1">{selectedProduct.price} MRU</p>
+              </div>
+            </div>
+            <div className="w-full mt-4 px-4">
+              <div className="bg-gray-100 w-full p-4 rounded-xl text-[15px] text-black leading-relaxed whitespace-pre-line">
+                {selectedProduct.description}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
