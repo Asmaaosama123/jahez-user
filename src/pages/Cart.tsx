@@ -59,10 +59,7 @@ export default function Cart() {
     setLoading(true);
   
     try {
-      let orderId = ""; // من response API
-      let storeName = "";
-  
-      // بناء payload وإرسال للـ API هنا...
+      // إرسال الطلب للـ API
       const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,29 +68,14 @@ export default function Cart() {
   
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
       const data = await res.json();
-      orderId = data.orderId;
-      storeName = manualOrder ? storeInfo?.name ?? "غير معروف" : filteredCart[Object.keys(filteredCart)[0]]?.storeName ?? "غير معروف";
+      const orderId = data.orderId;
   
+      // فقط رابط الطلب العام
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      let message = `طلب جديد:
-  رقم الهاتف: ${phone}
-  العنوان: ${address}
-  متجر: ${storeName}
-  رابط الطلب: ${publicOrderLink}`;
-  
-      // إضافة المنتجات لو في كارت
-      if (!manualOrder) {
-        const items = filteredCart[Object.keys(filteredCart)[0]].items || [];
-        items.forEach(item => {
-          message += `\n- ${item.nameAr} × ${item.qty} (سعر: ${item.price})`;
-        });
-      } else {
-        message += `\nطلب مكتوب: ${manualRequest}`;
-      }
-  
       const waNumber = "201006621660"; // رقم الواتساب
-      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
+  
       window.open(waLink, "_blank");
   
     } catch (err: any) {
@@ -115,7 +97,7 @@ export default function Cart() {
           <IoArrowForward className="text-white text-lg" />
         </button>
         <h1 className="text-xl font-bold text-black m-auto">
-          <span className="text-black font-bold text-3xl">تفاصيل الطلب</span>
+          <span className="text-black font-bold text-3xl">{t.Orderdetails}</span>
         </h1>
       </div>
 
@@ -135,7 +117,7 @@ export default function Cart() {
           <textarea
             className="w-full p-3 border rounded-lg mb-4"
             rows={6}
-            placeholder="t.Pleaseenteryourdetailshere"
+            placeholder={t.Pleaseenteryourdetailshere}
             value={manualRequest}
             onChange={e => setManualRequest(e.target.value)}
           />
