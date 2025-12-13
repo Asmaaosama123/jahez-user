@@ -1,48 +1,91 @@
-import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { PhoneIcon } from "@heroicons/react/24/solid";
 
 const BASE = "http://deliver-web-app2.runasp.net";
 
+interface OrderItem {
+  qty: number;
+  productName: string;
+  price: number;
+  imageUrl?: string | null;
+}
+
+interface OrderData {
+  type: "items" | "content";
+  storeName?: string;
+  storeAddress?: string;
+  customerAddress?: string;
+  customerPhone?: string;
+  orderId?: string;
+  orderContent?: string;
+  imageUrl?: string | null;
+  items?: OrderItem[];
+}
+
 export default function PublicOrder() {
-  const { orderId } = useParams();
-  const [data, setData] = useState(null);
+  const { id } = useParams<{ id: string }>(); // ناخد الـ id من URL
+  const [data, setData] = useState<OrderData | null>(null);
 
   useEffect(() => {
-    fetch(`${BASE}/api/Orders/PublicOrder/${orderId}`)
-      .then(res => res.json())
-      .then(setData);
-  }, [orderId]);
+    if (!id) return; // لو مفيش id ما نعملش fetch
+    fetch(`${BASE}/api/Orders/PublicOrder/${id}`)
+      .then((res) => res.json())
+      .then((resData) => setData(resData))
+      .catch((err) => console.error("Error fetching order:", err));
+  }, [id]);
+
+  const fixImageUrl = (url: string | null) => {
+    if (!url) return "./src/assets/Layer 1.png";
+    return url.replace(/\/{2,}/g, "/").replace("http:/", "http://");
+  };
+
+  const grandTotal =
+    data && data.type === "items"
+      ? data.items?.reduce((sum, item) => sum + item.qty * item.price, 0)
+      : 0;
 
   if (!data) return <div className="p-6">جاري التحميل...</div>;
 
+
   return (
     <div className="bg-gray-100 min-h-screen p-4" dir="rtl">
-
       {/* ===== الإجمالي ===== */}
-      {data.type === "items" && (
+      {data?.type === "items" && (
         <div className="text-center mb-4">
           <p className="text-gray-500 text-sm">إجمالي الطلب</p>
-          <p className="text-3xl font-bold text-green-700">
-            {data.GrandTotal} MRU
-          </p>
+          <p className="text-3xl font-bold text-green-700">{grandTotal} MRU</p>
         </div>
       )}
 
       {/* ===== كارت المتجر + العميل ===== */}
       <div className="bg-white rounded-xl shadow p-4 mb-4">
-
         {/* المتجر */}
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <p className="font-bold">{data.StoreName}</p>
-            <p className="text-sm text-green-700">
-              📍 {data.StoreAddress}
-            </p>
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex gap-1">
+            {data.imageUrl && (
+              <img
+                src={fixImageUrl(data.imageUrl)}
+                alt={data.storeName ?? ""}
+                className="w-14 h-14 rounded-full object-cover border"
+              />
+            )}
+            <div>
+            <p className="font-bold uppercase">{data.storeName ?? "-"}</p>
+            <a
+      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        data.StoreAddress ?? ""
+      )}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-green-700"
+    >{data.storeAddress ?? "-"}    </a>
+
+            </div>
           </div>
 
-          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-            🏪
+          <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white">
+            <PhoneIcon className="w-5 h-5" />
           </div>
         </div>
 
@@ -51,14 +94,21 @@ export default function PublicOrder() {
         {/* العميل */}
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm font-medium">ID{data.OrderId.slice(0, 6)}</p>
-            <p className="text-sm text-green-700">
-              📍 {data.CustomerAddress}
+            <p className="text-sm font-medium">
+              ID{data.orderId ? data.orderId.slice(0, 6) : "-"}
             </p>
+            <a
+      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        data.customerAddress ?? ""
+      )}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-sm text-green-700"
+    >📍 {data.customerAddress ?? "-"}</a>
           </div>
 
           <a
-            href={`tel:${data.CustomerPhone}`}
+            href={`tel:${data.customerPhone ?? ""}`}
             className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white"
           >
             <PhoneIcon className="w-5 h-5" />
@@ -70,38 +120,37 @@ export default function PublicOrder() {
       {data.type === "content" && (
         <div className="bg-white rounded-xl shadow p-4">
           <h3 className="font-bold mb-2">محتوى الطلب</h3>
-          <p>{data.OrderContent}</p>
+          <p>{data.orderContent ?? "-"}</p>
         </div>
       )}
 
       {/* ===== المنتجات ===== */}
-      {data.type === "items" && (
+      {data.type === "items" && data.items?.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4">
-          <h3 className="font-bold mb-3">{data.StoreName}</h3>
+          <h3 className="font-bold mb-3">{data.storeName ?? "-"}</h3>
 
-          {data.Items.map((item, i) => (
+          {data.items.map((item, i) => (
             <div
               key={i}
               className="flex justify-between items-center border-b py-3"
             >
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 border rounded-full flex items-center justify-center text-green-700 font-bold">
-                  {item.Qty}
-                </div>
-
+                {item.imageUrl && (
+                  <img
+                    src={fixImageUrl(item.imageUrl)}
+                    alt={item.productName}
+                    className="w-14 h-14 rounded-lg object-cover border"
+                  />
+                )}
                 <div>
-                  <p className="font-medium">{item.ProductName}</p>
-                  <p className="text-sm text-green-700">
-                    {item.Price} MRU
-                  </p>
+                  <p className="font-medium">{item.productName}</p>
+                  <p className="text-sm text-green-700">{item.price ?? "-"} MRU</p>
                 </div>
               </div>
 
-              <img
-                src={item.ImageUrl}
-                alt={item.ProductName}
-                className="w-14 h-14 rounded-lg object-cover border"
-              />
+              <div className="w-10 h-10 border rounded-full flex items-center justify-center text-green-700 font-bold">
+                {item.qty}
+              </div>
             </div>
           ))}
         </div>
