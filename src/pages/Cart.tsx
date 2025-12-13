@@ -77,6 +77,9 @@ export default function Cart() {
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
       let message = `طلب جديد:
+  رقم الهاتف: ${phone}
+  العنوان: ${address}
+  متجر: ${storeName}
   رابط الطلب: ${publicOrderLink}`;
   
       // إضافة المنتجات لو في كارت
@@ -99,11 +102,6 @@ export default function Cart() {
       setLoading(false);
     }
   };
-  
-  
-  
-  
-
   return (
     <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
       {/* Header */}
