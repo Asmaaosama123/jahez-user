@@ -15,7 +15,8 @@ export const translations = {
       restaurants: "مطاعم",
       supermarkets: "سوبر ماركت",
       bakeries: "مخابز",
-      rightyourorder:"اكتب طلبك"
+      rightyourorder:"اكتب طلبك",
+      Pleaseenteryourdetailshere:"اكتب تفاصيل طلبك هنا..."
     },
   
     fr: {
@@ -34,6 +35,7 @@ export const translations = {
       restaurants: "Restaurants",
     supermarkets: "Supermarchés",
     bakeries: "boulangeries",
-    rightyourorder:"Écrivez votre demande"
+    rightyourorder:"Écrivez votre demande",
+    Pleaseenteryourdetailshere:"Veuillez saisir vos coordonnées ici..."
     }
   };

@@ -62,61 +62,56 @@ export default function Cart() {
       let orderPayload: any = {
         customerPhone: phone,
         customerAddress: address,
-        storeId: storeInfo?.id || "", // ← storeId موجود حتى لو manualOrder
+        storeId: 0,
         deliveryPhone: "",
         orderContent: "",
         orderLink: "",
         items: []
       };
   
+      // ✅ في حالة Manual Order
       if (manualOrder) {
-        // نص الطلب في manual order
+        orderPayload.storeId = storeInfo?.id;   // حفظ storeId
         orderPayload.orderContent = manualRequest;
-        orderPayload.storeId = storeInfo?.id || ""; // ← هنا نخزن storeId
-      } else {
-        // طلب منتجات من الكارت
-        const storeData = Object.entries(filteredCart)[0]; // نفترض مطعم واحد
-        if (!storeData) { setLoading(false); return; }
+      } 
+      // ✅ في حالة منتجات
+      else {
+        const [storeId, storeData]: any = Object.entries(filteredCart)[0];
+        if (!storeData) {
+          setLoading(false);
+          return;
+        }
   
-        const [storeId, store] = storeData;
-        orderPayload.storeId = storeId; // ← storeId للمطعم
-        orderPayload.items = (store.items || []).map(item => ({
+        orderPayload.storeId = storeId; // حفظ storeId
+        orderPayload.items = (storeData.items || []).map((item: any) => ({
           productId: item.id,
           qty: item.qty,
           price: item.price
         }));
       }
   
-      // إرسال الأوردر للـ API
-      const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderPayload)
-      });
+      // 🔹 إرسال الطلب للـ API
+      const res = await fetch(
+        "https://deliver-web-app2.runasp.net/api/Orders/CreateOrder",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload)
+        }
+      );
   
-      if (!res.ok) throw new Error("فشل إنشاء الأوردر");
+      if (!res.ok) throw new Error("فشل إنشاء الطلب");
+  
       const data = await res.json();
-      const orderId = data.orderId; // ← orderId من الـ API
-      const orderLink = `${window.location.origin}/public-order/${orderId}`;
+      const orderId = data.orderId;
   
-      // تكوين رسالة الواتساب
-      let message = `طلب جديد:\nرقم الهاتف: ${phone}\nالعنوان: ${address}\n`;
-      message += `متجر: ${storeInfo?.name || storeInfo?.storeName}\n`;
-      message += `رابط الطلب: ${orderLink}\n`;
+      // 🔗 لينك الطلب العام
+      const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      if (manualOrder) {
-        message += `طلب مكتوب: ${manualRequest}\n`;
-      } else {
-        const [storeId, store] = Object.entries(filteredCart)[0];
-        (store.items || []).forEach(item => {
-          const prodName = getProductName(item);
-          message += `- ${prodName} × ${item.qty} (سعر: ${item.price})\n`;
-        });
-      }
+      // 📱 واتساب – اللينك فقط
+      const waNumber = "201006621660";
+      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
   
-      // فتح الواتساب
-      const waNumber = "201006621660"; // رقم الواتساب
-      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
       window.open(waLink, "_blank");
   
     } catch (err: any) {
@@ -156,7 +151,7 @@ export default function Cart() {
           <textarea
             className="w-full p-3 border rounded-lg mb-4"
             rows={6}
-            placeholder="اكتب تفاصيل طلبك هنا..."
+            placeholder="t.Pleaseenteryourdetailshere"
             value={manualRequest}
             onChange={e => setManualRequest(e.target.value)}
           />
