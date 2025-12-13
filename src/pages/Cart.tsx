@@ -59,14 +59,10 @@ export default function Cart() {
     setLoading(true);
   
     try {
-      // بناء payload بسيط للـ API
-      const orderPayload = {
-        customerPhone: phone,
-        customerAddress: address,
-        storeId: manualOrder ? storeInfo?.id ?? 0 : Object.keys(filteredCart)[0],
-        items: [] // فقط لينك، لذلك نتركه فارغ
-      };
+      let orderId = ""; // من response API
+      let storeName = "";
   
+      // بناء payload وإرسال للـ API هنا...
       const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,13 +71,26 @@ export default function Cart() {
   
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
       const data = await res.json();
-      const orderId = data.orderId;
+      orderId = data.orderId;
+      storeName = manualOrder ? storeInfo?.name ?? "غير معروف" : filteredCart[Object.keys(filteredCart)[0]]?.storeName ?? "غير معروف";
   
-      // تكوين رابط الطلب العام
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      // رسالة واتساب فقط باللينك
-      const message = `طلب جديد:\nرابط الطلب: ${publicOrderLink}`;
+      let message = `طلب جديد:
+  رقم الهاتف: ${phone}
+  العنوان: ${address}
+  متجر: ${storeName}
+  رابط الطلب: ${publicOrderLink}`;
+  
+      // إضافة المنتجات لو في كارت
+      if (!manualOrder) {
+        const items = filteredCart[Object.keys(filteredCart)[0]].items || [];
+        items.forEach(item => {
+          message += `\n- ${item.nameAr} × ${item.qty} (سعر: ${item.price})`;
+        });
+      } else {
+        message += `\nطلب مكتوب: ${manualRequest}`;
+      }
   
       const waNumber = "201006621660"; // رقم الواتساب
       const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
@@ -94,6 +103,10 @@ export default function Cart() {
     }
   };
   
+  
+  
+  
+
   return (
     <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
       {/* Header */}
