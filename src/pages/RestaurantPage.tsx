@@ -4,7 +4,7 @@ import { IoArrowForward } from "react-icons/io5";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
 
-const BASE = "http://deliver-web-app2.runasp.net";
+const BASE = "https://deliver-web-app2.runasp.net";
 
 export default function RestaurantPage() {
   const navigate = useNavigate();

@@ -88,7 +88,7 @@ export default function Cart() {
       }
   
       // إرسال الأوردر للـ API
-      const res = await fetch("http://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
+      const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload)
