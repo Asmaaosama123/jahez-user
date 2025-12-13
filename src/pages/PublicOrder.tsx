@@ -15,6 +15,7 @@ interface OrderData {
   type: "items" | "content";
   storeName?: string;
   storeAddress?: string;
+  storePhone?: string;
   customerAddress?: string;
   customerPhone?: string;
   orderId?: string;
@@ -37,8 +38,15 @@ export default function PublicOrder() {
 
   const fixImageUrl = (url: string | null) => {
     if (!url) return "./src/assets/Layer 1.png";
-    return url.replace(/\/{2,}/g, "/").replace("http:/", "http://");
+    
+    // فصل البروتوكول عن باقي الرابط
+    const parts = url.split("://");
+    if (parts.length !== 2) return url; // لو مش صحيح
+    const protocol = parts[0];
+    const path = parts[1].replace(/\/{2,}/g, "/"); // إصلاح الـ double slash فقط في المسار
+    return `${protocol}://${path}`;
   };
+  
 
   const grandTotal =
     data && data.type === "items"
@@ -84,8 +92,11 @@ export default function PublicOrder() {
             </div>
           </div>
 
-          <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white">
+          
+        <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white">
+        <a href={`tel:${ data.storePhone?? ""}`}>
             <PhoneIcon className="w-5 h-5" />
+            </a>
           </div>
         </div>
 
