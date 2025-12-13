@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang } from "../context/LanguageContext";
-
+import layer1 from "../assets/Layer 1.png";
+import store1 from "../assets/store (1).png";
+import croissant from "../assets/croissant.png";
+import jahezLogo from "../assets/jahez.png";
+import languageIcon from "../assets/language.png";
 const BASE = "http://deliver-web-app2.runasp.net";
 
 export default function Home() {
@@ -16,11 +20,11 @@ export default function Home() {
   // ---------------------------
   // Categories ثابتة مع type
   // ---------------------------
-  const categoriesData = [
-    { key: "restaurants", image: "./src/assets/Layer 1.png", type: 1 },
-    { key: "supermarkets", image: "./src/assets/store (1).png", type: 2 },
-    { key: "bakeries", image: "./src/assets/croissant.png", type: 3 },
-  ];
+const categoriesData = [
+  { key: "restaurants", image: layer1, type: 1 },
+  { key: "supermarkets", image: store1, type: 2 },
+  { key: "bakeries", image: croissant, type: 3 },
+];
 
   const categories = categoriesData.map(c => ({
     name: t[c.key as keyof typeof t],
@@ -123,14 +127,14 @@ export default function Home() {
           {/* <img src="src/assets/shopping-basket.png" className="w-7 h-7" /> */}
         </button>
         <h1 className="text-7xl font-bold text-green-800">
-          <img src="src/assets/jahez.png" className="w-35 h-6 object-cover" />
+          <img src={jahezLogo} className="w-35 h-6 object-cover" />
         </h1>
 
         <button
           className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shadow-md overflow-hidden"
           onClick={() => setLanguageModal(true)}
         >
-          <img src="src/assets/language.png" className="w-full h-full object-cover" />
+          <img src={languageIcon} className="w-full h-full object-cover" />
         </button>
       </div>
 
