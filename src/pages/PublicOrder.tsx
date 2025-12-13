@@ -75,7 +75,7 @@ export default function PublicOrder() {
             <p className="font-bold uppercase">{data.storeName ?? "-"}</p>
             <a
       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        data.StoreAddress ?? ""
+        data.storeAddress ?? ""
       )}`}
       target="_blank"
       rel="noopener noreferrer"
