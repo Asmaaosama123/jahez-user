@@ -59,10 +59,14 @@ export default function Cart() {
     setLoading(true);
   
     try {
-      let orderId = ""; // من response API
-      let storeName = "";
+      // بناء payload بسيط للـ API
+      const orderPayload = {
+        customerPhone: phone,
+        customerAddress: address,
+        storeId: manualOrder ? storeInfo?.id ?? 0 : Object.keys(filteredCart)[0],
+        items: [] // فقط لينك، لذلك نتركه فارغ
+      };
   
-      // بناء payload وإرسال للـ API هنا...
       const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,23 +75,13 @@ export default function Cart() {
   
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
       const data = await res.json();
-      orderId = data.orderId;
-      storeName = manualOrder ? storeInfo?.name ?? "غير معروف" : filteredCart[Object.keys(filteredCart)[0]]?.storeName ?? "غير معروف";
+      const orderId = data.orderId;
   
+      // تكوين رابط الطلب العام
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      let message = `طلب جديد:
-  رابط الطلب: ${publicOrderLink}`;
-  
-      // إضافة المنتجات لو في كارت
-      if (!manualOrder) {
-        const items = filteredCart[Object.keys(filteredCart)[0]].items || [];
-        items.forEach(item => {
-          message += `\n- ${item.nameAr} × ${item.qty} (سعر: ${item.price})`;
-        });
-      } else {
-        message += `\nطلب مكتوب: ${manualRequest}`;
-      }
+      // رسالة واتساب فقط باللينك
+      const message = `طلب جديد:\nرابط الطلب: ${publicOrderLink}`;
   
       const waNumber = "201006621660"; // رقم الواتساب
       const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
@@ -99,6 +93,7 @@ export default function Cart() {
       setLoading(false);
     }
   };
+  
   return (
     <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
       {/* Header */}
