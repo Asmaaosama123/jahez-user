@@ -59,7 +59,10 @@ export default function Cart() {
     setLoading(true);
   
     try {
-      // إرسال الطلب للـ API
+      let orderId = ""; // من response API
+      let storeName = "";
+  
+      // بناء payload وإرسال للـ API هنا...
       const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -68,14 +71,26 @@ export default function Cart() {
   
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
       const data = await res.json();
-      const orderId = data.orderId;
+      orderId = data.orderId;
+      storeName = manualOrder ? storeInfo?.name ?? "غير معروف" : filteredCart[Object.keys(filteredCart)[0]]?.storeName ?? "غير معروف";
   
-      // فقط رابط الطلب العام
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      const waNumber = "201006621660"; // رقم الواتساب
-      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
+      let message = `طلب جديد:
+  رابط الطلب: ${publicOrderLink}`;
   
+      // إضافة المنتجات لو في كارت
+      if (!manualOrder) {
+        const items = filteredCart[Object.keys(filteredCart)[0]].items || [];
+        items.forEach(item => {
+          message += `\n- ${item.nameAr} × ${item.qty} (سعر: ${item.price})`;
+        });
+      } else {
+        message += `\nطلب مكتوب: ${manualRequest}`;
+      }
+  
+      const waNumber = "201006621660"; // رقم الواتساب
+      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
       window.open(waLink, "_blank");
   
     } catch (err: any) {
