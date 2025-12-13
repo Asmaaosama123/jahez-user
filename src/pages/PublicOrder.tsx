@@ -24,17 +24,16 @@ interface OrderData {
 }
 
 export default function PublicOrder() {
-  const { id } = useParams<{ id: string }>(); // ناخد الـ id من URL
+  const { orderId } = useParams<{ orderId: string }>();
   const [data, setData] = useState<OrderData | null>(null);
 
 
   useEffect(() => {
-    if (!id) return;
-    fetch(`https://deliver-web-app2.runasp.net/api/Orders/PublicOrder/${id}`)
+    if (!orderId) return;
+    fetch(`https://deliver-web-app2.runasp.net/api/Orders/PublicOrder/${orderId}`)
       .then(res => res.json())
       .then(setData);
-  }, [id]);
-  
+  }, [orderId]);
 
   const fixImageUrl = (url: string | null) => {
     if (!url) return "./src/assets/Layer 1.png";

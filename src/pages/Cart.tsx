@@ -52,63 +52,57 @@ export default function Cart() {
   // إرسال الطلب عبر WhatsApp أو API
   const handleSendWhatsApp = async () => {
     if (!phone || !address) {
-      alert(language === "ar" ? "يرجى إدخال رقم الهاتف والعنوان" : "Please enter phone and address");
+      alert("يرجى إدخال رقم الهاتف والعنوان");
       return;
     }
   
     setLoading(true);
   
     try {
-      let orderPayload: any = {
-        customerPhone: phone,
-        customerAddress: address,
-        storeId: 0,
-        orderContent: "",
-        items: []
-      };
+      let orderId = ""; // من response API
+      let storeName = "";
   
-      if (manualOrder) {
-        orderPayload.storeId = storeInfo?.id;
-        orderPayload.orderContent = manualRequest;
-      } else {
-        const [storeId, storeData]: any = Object.entries(filteredCart)[0];
-        orderPayload.storeId = storeId;
-        orderPayload.items = storeData.items.map((item: any) => ({
-          productId: item.id,
-          qty: item.qty,
-          price: item.price
-        }));
-      }
-  
-      const res = await fetch(
-        "https://deliver-web-app2.runasp.net/api/Orders/CreateOrder",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(orderPayload)
-        }
-      );
+      // بناء payload وإرسال للـ API هنا...
+      const res = await fetch("https://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
   
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
-  
       const data = await res.json();
-      const orderId = data.orderId;
+      orderId = data.orderId;
+      storeName = manualOrder ? storeInfo?.name ?? "غير معروف" : filteredCart[Object.keys(filteredCart)[0]]?.storeName ?? "غير معروف";
   
-      // ✅ لينك واحد فقط
       const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
   
-      // ✅ واتساب – اللينك فقط
-      const waNumber = "201006621660";
-      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
+      let message = `طلب جديد:
+  رقم الهاتف: ${phone}
+  العنوان: ${address}
+  متجر: ${storeName}
+  رابط الطلب: ${publicOrderLink}`;
   
+      // إضافة المنتجات لو في كارت
+      if (!manualOrder) {
+        const items = filteredCart[Object.keys(filteredCart)[0]].items || [];
+        items.forEach(item => {
+          message += `\n- ${item.nameAr} × ${item.qty} (سعر: ${item.price})`;
+        });
+      } else {
+        message += `\nطلب مكتوب: ${manualRequest}`;
+      }
+  
+      const waNumber = "201006621660"; // رقم الواتساب
+      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
       window.open(waLink, "_blank");
   
     } catch (err: any) {
-      alert(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
+      alert(`حدث خطأ: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
+  
   
   
   
