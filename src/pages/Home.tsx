@@ -6,7 +6,7 @@ import store1 from "../assets/store (1).png";
 import croissant from "../assets/croissant.png";
 import jahezLogo from "../assets/jahez.png";
 import languageIcon from "../assets/language.png";
-const BASE = "http://deliver-web-app2.runasp.net";
+const BASE = "https://deliver-web-app2.runasp.net";
 
 export default function Home() {
   const navigate = useNavigate();
