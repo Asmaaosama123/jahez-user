@@ -55,71 +55,78 @@ export default function Cart() {
       alert(language === "ar" ? "يرجى إدخال رقم الهاتف والعنوان" : "Please enter phone and address");
       return;
     }
-
+  
     setLoading(true);
-
+  
     try {
       let orderPayload: any = {
         customerPhone: phone,
         customerAddress: address,
-        storeId: storeInfo?.id || 1,
+        storeId: storeInfo?.id || "", // ← storeId موجود حتى لو manualOrder
         deliveryPhone: "",
         orderContent: "",
         orderLink: "",
         items: []
       };
-
+  
       if (manualOrder) {
         // نص الطلب في manual order
         orderPayload.orderContent = manualRequest;
+        orderPayload.storeId = storeInfo?.id || ""; // ← هنا نخزن storeId
       } else {
-        const storeData = Object.values(cart)[0]; // نفترض مطعم واحد
+        // طلب منتجات من الكارت
+        const storeData = Object.entries(filteredCart)[0]; // نفترض مطعم واحد
         if (!storeData) { setLoading(false); return; }
-        orderPayload.storeId = storeData.storeId;
-        orderPayload.items = (storeData.items || []).map(item => ({
+  
+        const [storeId, store] = storeData;
+        orderPayload.storeId = storeId; // ← storeId للمطعم
+        orderPayload.items = (store.items || []).map(item => ({
           productId: item.id,
           qty: item.qty,
           price: item.price
         }));
       }
-
-      // إرسال الطلب للـ API
+  
+      // إرسال الأوردر للـ API
       const res = await fetch("http://deliver-web-app2.runasp.net/api/Orders/CreateOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload)
       });
-
+  
       if (!res.ok) throw new Error("فشل إنشاء الأوردر");
       const data = await res.json();
-      const orderLink = data.orderLink || `رقم الطلب: ${data.id}`;
-
+      const orderId = data.orderId; // ← orderId من الـ API
+      const orderLink = `${window.location.origin}/public-order/${orderId}`;
+  
       // تكوين رسالة الواتساب
       let message = `طلب جديد:\nرقم الهاتف: ${phone}\nالعنوان: ${address}\n`;
-      message += `عنوان المتجر: ${storeInfo?.StoreaddressSecondary || ""}\n`;
-      message += `متجر: ${storeInfo?.name}\n`;
-      message += `رابط/رقم الطلب: ${orderLink}\n`;
-
+      message += `متجر: ${storeInfo?.name || storeInfo?.storeName}\n`;
+      message += `رابط الطلب: ${orderLink}\n`;
+  
       if (manualOrder) {
         message += `طلب مكتوب: ${manualRequest}\n`;
       } else {
-        const storeData = Object.values(cart)[0];
-        (storeData.items || []).forEach(item => {
+        const [storeId, store] = Object.entries(filteredCart)[0];
+        (store.items || []).forEach(item => {
           const prodName = getProductName(item);
           message += `- ${prodName} × ${item.qty} (سعر: ${item.price})\n`;
         });
       }
-
+  
+      // فتح الواتساب
       const waNumber = "201006621660"; // رقم الواتساب
       const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
       window.open(waLink, "_blank");
-
+  
     } catch (err: any) {
       alert(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
   };
+  
+  
 
   return (
     <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
