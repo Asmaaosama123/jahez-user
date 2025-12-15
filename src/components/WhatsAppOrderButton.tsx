@@ -12,7 +12,7 @@ const WhatsAppOrderButton = ({ cart, phone, address, storeNames, productNames })
     setLoading(true);
     try {
       // 1️⃣ حفظ الطلب في قاعدة البيانات
-      const resOrder = await fetch("http://deliver-web-app2.runasp.net/api/Orders", {
+      const resOrder = await fetch("https://deliver-web-app2.runasp.net/api/Orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, address, cart })

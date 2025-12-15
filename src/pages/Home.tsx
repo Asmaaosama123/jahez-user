@@ -43,6 +43,8 @@ const categoriesData = [
   const [selectedCity, setSelectedCity] = useState(
     localStorage.getItem("selectedCity") || "Nouakchott"
   );
+  const [search, setSearch] = useState("");
+
   
   // ---------------------------
   // Fetch subcategories عند تغيير الفئة أو المدينة أو اللغة
@@ -114,6 +116,9 @@ const categoriesData = [
     if (url.startsWith("http")) return url;
     return `${BASE}/${url.replace(/^\/?images\/?/, "images/")}`;
   };
+  const filteredStores = stores.filter((store) =>
+  store.name?.toLowerCase().includes(search.toLowerCase())
+);
 
   // ---------------------------
   // JSX
@@ -127,7 +132,7 @@ const categoriesData = [
           {/* <img src="src/assets/shopping-basket.png" className="w-7 h-7" /> */}
         </button>
         <h1 className="text-7xl font-bold text-green-800">
-          <img src={jahezLogo} className="w-35 h-6 object-cover" />
+          <img src={jahezLogo} className="w-37 h-8 object-cover" />
         </h1>
 
         <button
@@ -141,10 +146,13 @@ const categoriesData = [
       {/* Search */}
       <div className="px-4">
         <div className="bg-gray-100 rounded-xl flex items-center px-4 py-3 mt-3">
-          <input
-            className="flex-1 bg-transparent outline-none text-right text-gray-600"
-            placeholder={t.search}
-          />
+        <input
+  className="flex-1 bg-transparent outline-none text-right text-gray-600"
+  placeholder={t.search}
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+/>
+
         </div>
       </div>
 
@@ -190,7 +198,7 @@ const categoriesData = [
 
         {/* Stores list */}
         <div className="px-4 pb-10">
-          {stores.map((r, i) => (
+        {filteredStores.map((r, i) => (
             <div
               key={i}
               onClick={() => goToRestaurant(r)}

@@ -102,6 +102,7 @@ const handleSendWhatsApp = async () => {
     const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
 
     window.open(waLink, "_blank");
+    await saveOrderLink(orderId);
 
   } catch (err: any) {
     alert(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
@@ -111,7 +112,23 @@ const handleSendWhatsApp = async () => {
 };
 
   
-  
+const saveOrderLink = async (orderId: string) => {
+  const publicLink = `${window.location.origin}/public-order/${orderId}`;
+
+  const res = await fetch(
+    `${BASE}/api/Orders/SetOrderLink/${orderId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(publicLink),
+    }
+  );
+
+  return await res.json();
+};
+
 
   return (
     <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
