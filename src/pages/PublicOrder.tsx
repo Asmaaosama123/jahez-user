@@ -145,7 +145,7 @@ const USER_IMAGE =
         rel="noopener noreferrer"
         className="text-sm text-green-700"
       >
-        📍 {data.customerAddress ?? "-"}
+        {data.customerAddress ?? "-"}
       </a>
     </div>
   </div>
