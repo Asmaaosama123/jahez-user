@@ -1,36 +1,16 @@
-import { Toaster } from "react-hot-toast";
 import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import RestaurantPage from "./pages/RestaurantPage";
-import Cart from "./pages/Cart";
-import { LanguageProvider } from "./context/LanguageContext";
-import { CartProvider } from "./context/CartContext";
-import CreateRestaurant from "./AdminPages/CreateRestaurant";
-import RestaurantsPage from "./AdminPages/RestaurantsPage";
-import Sidebar from "./components/Sidebar";
-import RestaurantDetails from "./AdminPages/RestaurantDetails";
-import OrdersPage from "./pages/OrdersPage";
-import PublicOrder from "./pages/PublicOrder"; // ✅ حرف كبير
+import UserApp from "./pages/UserApp";
+import AdminApp from "./AdminPages/AdminApp";
 
 function App() {
   return (
-    <CartProvider>
-      <Toaster position="top-right" />
-      <Routes>
-        {/* الصفحة الرئيسية / عرض طلب */}
-        <Route path="/" element={<Home />} />
-        <Route path="/public-order/:orderId" element={<PublicOrder />} />
+    <Routes>
+      {/* كل روابط اليوزر */}
+      <Route path="/*" element={<UserApp />} />
 
-        {/* باقي الصفحات */}
-        <Route path="/restaurant/:name" element={<RestaurantPage />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/CreateRestaurant" element={<CreateRestaurant />} />
-        <Route path="/RestaurantsPage" element={<RestaurantsPage />} />
-        <Route path="/category/:categoryType" element={<RestaurantsPage />} />
-        <Route path="/restaurantDetails/:id" element={<RestaurantDetails />} />
-      </Routes>
-    </CartProvider>
+      {/* كل روابط الإدارة */}
+      <Route path="/admin/*" element={<AdminApp />} />
+    </Routes>
   );
 }
 

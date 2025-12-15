@@ -6,6 +6,7 @@ import store1 from "../assets/store (1).png";
 import croissant from "../assets/croissant.png";
 import jahezLogo from "../assets/jahez.png";
 import languageIcon from "../assets/language.png";
+
 const BASE = "https://deliver-web-app2.runasp.net";
 
 export default function Home() {
@@ -74,6 +75,8 @@ const categoriesData = [
     fetchData();
   }, [category, selectedCity, language]);
 
+
+ 
   // ---------------------------
   // Fetch stores حسب subcategory
   // ---------------------------
