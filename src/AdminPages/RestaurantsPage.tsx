@@ -3,8 +3,9 @@ import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
+import CreateRestaurantModal from "../components/CreateRestaurantModal";
 
-const BASE = "http://deliver-web-app2.runasp.net";
+const BASE = "https://deliver-web-app2.runasp.net";
 
 export default function RestaurantsPage() {
   const { categoryType } = useParams(); // CategoryType من URL
@@ -16,7 +17,10 @@ export default function RestaurantsPage() {
   const [newAr, setNewAr] = useState("");
   const [newFr, setNewFr] = useState("");
   const navigate = useNavigate();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const selectedSubObj = subCategories.find(s => s.id === selectedSub);
 
+  
   // -------------------------------
   // 1️⃣ جلب Subcategories حسب Category
   // -------------------------------
@@ -102,7 +106,7 @@ export default function RestaurantsPage() {
 
         <div className="p-6">
          
-<button
+{/* <button
   onClick={() =>
     navigate(`/CreateRestaurant`, {
       state: { subcategoryId: selectedSub }   // ⬅️ إرسال الـ Subcategory
@@ -111,7 +115,20 @@ export default function RestaurantsPage() {
   className="bg-green-800 text-white font-bold mr-[1120px] px-7 py-2 mb-5"
 >
   مطعم جديد
+</button> */}
+<button
+  onClick={() => setShowCreateModal(true)}
+  
+  className="bg-green-800 text-white font-bold mr-[1120px] px-7 py-2 mb-5"
+>
+
+  مطعم جديد
 </button>
+{/* <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
+    سيتم إضافة المنتج إلى قسم: {sub.name}
+  </div> */}
+
+
 
           {/* Tabs Subcategories */}
           <div className="flex bg-white rounded shadow">
@@ -244,6 +261,14 @@ export default function RestaurantsPage() {
           </div>
         )}
       </div>
+      {showCreateModal && (
+  <CreateRestaurantModal
+    subcategoryId={selectedSub}
+    subcategoryName={selectedSubObj?.name}
+    onClose={() => setShowCreateModal(false)}
+  />
+)}
+
     </div>
   );
 }

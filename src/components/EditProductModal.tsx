@@ -19,7 +19,7 @@ interface Props {
   }
   
 
-const BASE = "http://deliver-web-app2.runasp.net";
+const BASE = "https://deliver-web-app2.runasp.net";
 
 const EditProductModal: React.FC<Props> = ({ productId, onClose, onUpdated }) => {
   const [loading, setLoading] = useState(true);

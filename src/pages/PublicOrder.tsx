@@ -53,6 +53,26 @@ export default function PublicOrder() {
       ? data.items?.reduce((sum, item) => sum + item.qty * item.price, 0)
       : 0;
 
+
+      const saveOrderLink = async (orderId: string) => {
+  const publicLink = `${window.location.origin}/public-order/${orderId}`;
+
+  const res = await fetch(
+    `${BASE}/api/Orders/SetOrderLink/${orderId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(publicLink),
+    }
+  );
+
+  return await res.json();
+};
+const USER_IMAGE =
+  "https://i.pinimg.com/736x/33/f8/26/33f8266681c946cd80de486c499fe992.jpg";
+
   if (!data) return <div className="p-6">جاري التحميل...</div>;
 
 
@@ -104,27 +124,40 @@ export default function PublicOrder() {
 
         {/* العميل */}
         <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm font-medium">
-              ID{data.orderId ? data.orderId.slice(0, 6) : "-"}
-            </p>
-            <a
-      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        data.customerAddress ?? ""
-      )}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm text-green-700"
-    >📍 {data.customerAddress ?? "-"}</a>
-          </div>
+  <div className="flex items-center gap-2">
+    {/* صورة اليوزر */}
+    <img
+      src={USER_IMAGE}
+      alt="User"
+      className="w-14 h-14 rounded-full object-cover border"
+    />
 
-          <a
-            href={`tel:${data.customerPhone ?? ""}`}
-            className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white"
-          >
-            <PhoneIcon className="w-5 h-5" />
-          </a>
-        </div>
+    <div>
+      <p className="text-sm font-medium">
+        ID{data.orderId ? data.orderId.slice(0, 6) : "-"}
+      </p>
+
+      <a
+        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          data.customerAddress ?? ""
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-green-700"
+      >
+        📍 {data.customerAddress ?? "-"}
+      </a>
+    </div>
+  </div>
+
+  <a
+    href={`tel:${data.customerPhone ?? ""}`}
+    className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white"
+  >
+    <PhoneIcon className="w-5 h-5" />
+  </a>
+</div>
+
       </div>
 
       {/* ===== محتوى الطلب (لو نص) ===== */}

@@ -6,7 +6,7 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 
-const BASE = "http://deliver-web-app2.runasp.net";
+const BASE = "https://deliver-web-app2.runasp.net";
 
 interface Restaurant {
   id: number;
@@ -48,7 +48,7 @@ export default function RestaurantDetailsPage() {
   const restaurant = location.state?.restaurant as Restaurant;
   const categoryType = location.state?.categoryType; 
   const [categoryType1, setCategoryType] = useState<number | null>(null);
-
+  const [showDeleteStoreConfirm, setShowDeleteStoreConfirm] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
@@ -161,7 +161,31 @@ export default function RestaurantDetailsPage() {
     } catch {}
   };
   const editProduct = (p: Product) => setEditingProduct(p);
-
+  const deleteStore = async () => {
+    try {
+      const res = await fetch(
+        `${BASE}/api/CustomerGet/store/${restaurant.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            accept: "*/*",
+          },
+        }
+      );
+  
+      if (res.ok) {
+        alert("تم حذف الحساب بنجاح");
+        // رجوع لصفحة المطاعم أو الرئيسية
+        window.location.href = "/restaurants";
+      } else {
+        alert("حدث خطأ أثناء حذف الحساب");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("تعذر الاتصال بالسيرفر");
+    }
+  };
+  
   return (
     <div className="flex bg-gray-50 min-h-screen" dir="rtl">
       <Sidebar />
@@ -324,13 +348,47 @@ export default function RestaurantDetailsPage() {
                   const res = await fetch(`${BASE}/api/Post/store-section`, { method: "POST", body: form });
                   if (res.ok) { setShowAddSectionModal(false); setNewSectionAr(""); setNewSectionFr(""); fetchSections(); }
                 }}>حفظ</button>
-                <button className="bg-gray-100 border-2 border-red-700 text-red-700 px-12 py-1" onClick={() => setShowAddSectionModal(false)}>إلغاء</button>
+<button
+  className="bg-white border border-red-700 text-red-700 mt-2 py-1 w-full"
+  onClick={() => setShowDeleteStoreConfirm(true)}
+>
+  حذف الحساب
+</button>
               </div>
             </div>
           </div>
         )}
 
       </div>
+      {showDeleteStoreConfirm && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded shadow w-80 text-center">
+      <h2 className="text-lg font-bold mb-4">
+        هل أنتِ متأكدة من حذف الحساب؟
+      </h2>
+      <p className="text-sm text-gray-600 mb-4">
+        سيتم حذف المطعم وكل البيانات المرتبطة به نهائيًا
+      </p>
+
+      <div className="flex justify-center gap-4">
+        <button
+          className="bg-red-700 text-white px-6 py-1 rounded"
+          onClick={deleteStore}
+        >
+          حذف
+        </button>
+        <button
+          className="bg-gray-100 border border-gray-600 text-gray-700 px-6 py-1 rounded"
+          onClick={() => setShowDeleteStoreConfirm(false)}
+        >
+          إلغاء
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+      
     </div>
   );
 }
