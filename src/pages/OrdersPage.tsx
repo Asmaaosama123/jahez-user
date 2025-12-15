@@ -111,9 +111,29 @@ export default function OrdersPage() {
                           </button>
                         )}
                       </td>
-                      <td className="p-3 text-xs break-all">
-                        {order.orderLink}
-                      </td>
+                      <td className="p-3 text-xs break-all flex items-center justify-center gap-2">
+  <span>
+  {order.orderLink && (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(order.orderLink);
+        alert("تم نسخ الرابط!");
+      }}
+      className="text-gray-500 hover:text-gray-800"
+      title="انسخ الرابط"
+    >
+      📋
+    </button>
+  )}
+    {order.orderLink
+      ? order.orderLink.length > 10
+        ? order.orderLink.slice(0, 40) + "..."
+        : order.orderLink
+      : "-"}
+  </span>
+ 
+</td>
+
 
                       
 

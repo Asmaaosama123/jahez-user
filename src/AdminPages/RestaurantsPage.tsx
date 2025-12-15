@@ -198,7 +198,7 @@ export default function RestaurantsPage() {
   key={s.id}
   className="text-center border-b cursor-pointer hover:bg-gray-100"
   onClick={() =>
-    navigate(`/restaurantDetails/${s.id}`, {
+    navigate(`/admin/restaurantDetails/${s.id}`, {
       state: {
         restaurant: s,
         categoryType: categoryType // ⬅️ هنا نبعت الـ Category
