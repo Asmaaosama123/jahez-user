@@ -116,7 +116,7 @@ const saveOrderLink = async (orderId: string) => {
   const publicLink = `${window.location.origin}/public-order/${orderId}`;
 
   const res = await fetch(
-    `${BASE}/api/Orders/SetOrderLink/${orderId}`,
+    `https://deliver-web-app2.runasp.net/api/Orders/SetOrderLink/${orderId}`,
     {
       method: "PUT",
       headers: {
