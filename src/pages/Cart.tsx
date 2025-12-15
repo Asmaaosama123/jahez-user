@@ -100,9 +100,8 @@ const handleSendWhatsApp = async () => {
     // ✅ واتساب – اللينك فقط
     const waNumber = "22224262427";
     const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
-
-    window.open(waLink, "_blank");
     await saveOrderLink(orderId);
+    window.open(waLink, "_blank");
 
   } catch (err: any) {
     alert(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
@@ -113,7 +112,7 @@ const handleSendWhatsApp = async () => {
 
   
 const saveOrderLink = async (orderId: string) => {
-  const publicLink = `${window.location.origin}/public-order/${orderId}`;
+  const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
 
   const res = await fetch(
     `https://deliver-web-app2.runasp.net/api/Orders/SetOrderLink/${orderId}`,
@@ -125,6 +124,10 @@ const saveOrderLink = async (orderId: string) => {
       body: JSON.stringify(publicLink),
     }
   );
+
+  if (!res.ok) {
+    throw new Error("فشل حفظ رابط الطلب");
+  }
 
   return await res.json();
 };
