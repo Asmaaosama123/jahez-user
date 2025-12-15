@@ -98,7 +98,7 @@ const handleSendWhatsApp = async () => {
     const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
 
     // ✅ واتساب – اللينك فقط
-    const waNumber = "201006621660";
+    const waNumber = "22224262427";
     const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
 
     window.open(waLink, "_blank");
