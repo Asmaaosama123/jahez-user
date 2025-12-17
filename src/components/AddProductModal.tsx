@@ -9,6 +9,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
   const [newDescFr, setNewDescFr] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newImage, setNewImage] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -58,6 +59,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
     form.append("Price", newPrice);
     form.append("Image", newImage);
     form.append("StoreSectionId", storeSectionId);
+    form.append("IsAvailable", isAvailable);
 
     try {
       const res = await fetch(`${BASE}/api/Post/product`, {
@@ -96,7 +98,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
         </div>
       )}
       
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg mx-4 flex flex-col max-h-[100vh] overflow-hidden">
+      <div className="bg-white  shadow-2xl w-full max-w-md md:max-w-lg mx-4 flex flex-col max-h-[100vh] overflow-hidden">
         {/* الهيدر ثابت */}
         <div className="p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 text-center">إضافة منتج جديد</h2>
@@ -106,7 +108,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {/* مربع رفع الصورة مع المعاينة */}
           <div 
-            className="relative border-2 border-dashed border-gray-300 rounded-xl p-4 mb-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+            className="relative border-2 border-dashed border-gray-300  p-4 mb-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
             onClick={() => document.getElementById('fileInput').click()}
           >
             <input
@@ -122,9 +124,9 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
                 <img 
                   src={imagePreview} 
                   alt="معاينة الصورة" 
-                  className="w-full h-40 md:h-48 object-cover rounded-lg"
+                  className="w-full h-40 md:h-48 object-cover "
                 />
-                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center rounded-lg opacity-0 hover:opacity-100 transition-opacity">
+                <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center  opacity-0 hover:opacity-100 transition-opacity">
                   <span className="text-white font-semibold text-sm md:text-base">تغيير الصورة</span>
                 </div>
               </div>
@@ -141,7 +143,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
           <div className="space-y-3 md:space-y-4">
             <div>
               <input
-                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
                 placeholder="أدخل الاسم بالعربية"
                 value={newProductAr}
                 onChange={(e) => setNewProductAr(e.target.value)}
@@ -150,7 +152,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
 
             <div>
               <input
-                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
                 placeholder="أدخل الاسم بالفرنسية"
                 value={newProductFr}
                 onChange={(e) => setNewProductFr(e.target.value)}
@@ -160,7 +162,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
             <div>
               <input
                 type="number"
-                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all text-right text-sm md:text-base"
                 placeholder="أدخل السعر"
                 value={newPrice}
                 onChange={(e) => setNewPrice(e.target.value)}
@@ -170,7 +172,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
             <div>
               <textarea
                 ref={descArRef}
-                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all resize-none text-right text-sm md:text-base"
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all resize-none text-right text-sm md:text-base"
                 placeholder="أدخل الوصف بالعربية"
                 value={newDescAr}
                 onChange={(e) => setNewDescAr(e.target.value)}
@@ -182,7 +184,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
             <div>
               <textarea
                 ref={descFrRef}
-                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all resize-none text-right text-sm md:text-base"
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50 focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all resize-none text-right text-sm md:text-base"
                 placeholder="أدخل الوصف بالفرنسية"
                 value={newDescFr}
                 onChange={(e) => setNewDescFr(e.target.value)}
@@ -190,6 +192,20 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
                 style={{ textAlign: 'right', direction: 'rtl' }}
               />
             </div>
+            <div>
+            <select
+              className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50
+                        focus:bg-white focus:border-green-500 focus:ring-2
+                        focus:ring-green-200 transition-all text-right text-sm md:text-base"
+              value={isAvailable}
+              onChange={(e) => setIsAvailable(e.target.value === "true")}
+              style={{ textAlign: "right", direction: "rtl" }}
+            >
+              <option value="true">متاح</option>
+              <option value="false">غير متاح</option>
+            </select>
+          </div>
+
           </div>
         </div>
         
@@ -197,7 +213,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
         <div className="p-4 md:p-6 border-t border-gray-200 bg-white flex-shrink-0">
           <div className="flex gap-2 md:gap-3">
             <button
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 md:py-3 px-2 md:px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 md:py-3 px-2 md:px-4  transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm md:text-base"
               onClick={addProduct}
               disabled={isSubmitting}
             >
@@ -214,7 +230,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
             </button>
             
             <button
-              className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-50 font-semibold py-2 md:py-3 px-2 md:px-4 rounded-lg transition-all text-sm md:text-base"
+              className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-50 font-semibold py-2 md:py-3 px-2 md:px-4  transition-all text-sm md:text-base"
               onClick={onClose}
               disabled={isSubmitting}
             >

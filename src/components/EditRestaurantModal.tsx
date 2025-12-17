@@ -349,7 +349,7 @@ const getProfileImageSrc = () =>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رسوم التوصيل (أوقية)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الخصم</label>
               <input
                 type="number"
                 name="DeliveryFee"

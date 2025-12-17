@@ -15,7 +15,7 @@ export default function AdminApp() {
       <Route path="/login" element={<LoginPage />} />
 
       {/* كل صفحات الإدارة داخل LayoutWithSidebar */}
-      <Route
+      {/* <Route
         path="/*"
         element={
           isAuthenticated ? (
@@ -24,7 +24,7 @@ export default function AdminApp() {
             <Navigate to="/admin/login" replace />
           )
         }
-      >
+      > */}
         {/* Default route عند الدخول للـ admin */}
         <Route index element={<OrdersPage />} />
 
@@ -34,7 +34,7 @@ export default function AdminApp() {
         <Route path="RestaurantsPage" element={<RestaurantsPage />} />
         <Route path="category/:categoryType" element={<RestaurantsPage />} />
         <Route path="restaurantDetails/:id" element={<RestaurantDetails />} />
-      </Route>
+      {/* </Route> */}
     </Routes>
   );
 }
