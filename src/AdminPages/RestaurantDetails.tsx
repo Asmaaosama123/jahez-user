@@ -109,7 +109,7 @@ export default function RestaurantDetailsPage() {
 
   const fetchProductsForSection = async (sectionId: number) => {
     try {
-      const res = await fetch(`${BASE}/api/Subcategories/section/${sectionId}/products?lang=ar`);
+      const res = await fetch(`${BASE}/api/CustomerGet/section/${sectionId}/products?lang=ar`);
       const data = await res.json();
       setProducts(data);
     } catch {

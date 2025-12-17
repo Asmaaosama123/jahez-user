@@ -322,6 +322,24 @@ useEffect(() => {
                 style={{ textAlign: 'right', direction: 'rtl' }}
               />
             </div>
+            <div>
+  <label className="block text-right text-gray-700 mb-1 text-sm md:text-base">
+    حالة المنتج
+  </label>
+
+  <select
+    className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50
+               focus:bg-white focus:border-green-500 focus:ring-2
+               focus:ring-green-200 transition-all text-right text-sm md:text-base"
+    value={isAvailable ? "true" : "false"}
+    onChange={(e) => setIsAvailable(e.target.value === "true")}
+    style={{ direction: "rtl" }}
+  >
+    <option value="true">🟢 متاح</option>
+    <option value="false">🔴 غير متاح</option>
+  </select>
+</div>
+
 
            
           </div>
