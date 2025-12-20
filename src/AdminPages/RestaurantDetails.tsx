@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import AddProductModal from "../components/AddProductModal";
 import EditProductModal from "../components/EditProductModal";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import EditRestaurantModal from "../components/EditRestaurantModal";
+import { useParams } from "react-router-dom";
 
 const BASE = "https://deliver-web-app2.runasp.net";
 
@@ -45,9 +45,9 @@ interface WorkingDay {
 }
 
 export default function RestaurantDetailsPage() {
-  const location = useLocation();
-  const restaurant = location.state?.restaurant as Restaurant;
-  const [restaurantData, setRestaurantData] = useState(restaurant);
+  const { id } = useParams();
+  const [restaurantData, setRestaurantData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [categoryType, setCategoryType] = useState<string | null>(null);
   const [showDeleteStoreConfirm, setShowDeleteStoreConfirm] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
@@ -68,11 +68,12 @@ export default function RestaurantDetailsPage() {
   };
 
   // دالة لبناء URL الصور الكاملة
-  const getFullImageUrl = (url: string) => {
+  const getFullImageUrl = (url) => {
     if (!url) return "";
-    if (url.startsWith('http')) return url;
-    return `${BASE}/${url.replace(/^\/+/, '')}`;
+    if (url.startsWith("http")) return url;
+    return `${BASE}/images/${url.replace(/^\/+/, "")}`;
   };
+  
 
   // جلب نوع الفئة
   useEffect(() => {
@@ -106,6 +107,24 @@ export default function RestaurantDetailsPage() {
       setSections([]);
     }
   };
+
+  useEffect(() => {
+    const fetchRestaurant = async () => {
+      try {
+        const res = await fetch(`${BASE}/api/CustomerGet/store/${id}`);
+        const data = await res.json();
+        setRestaurantData(data);
+
+      } catch (err) {
+        console.error("Error fetching restaurant", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    if (id) fetchRestaurant();
+  }, [id]);
+  
 
   const fetchProductsForSection = async (sectionId: number) => {
     try {
@@ -188,7 +207,7 @@ export default function RestaurantDetailsPage() {
 
       if (res.ok) {
         alert("تم حذف الحساب بنجاح");
-        window.location.href = "/orders";
+        window.location.href = "/admin/orders";
       } else {
         alert("حدث خطأ أثناء حذف الحساب");
       }
@@ -269,7 +288,7 @@ export default function RestaurantDetailsPage() {
                         إضافة منتج
                       </button>
                       <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
-                        سيتم إضافة المنتج إلى قسم: {selectedSection?.nameAr}
+                        سيتم إضافة المنتج إلى قسم: {selectedSection?.name}
                       </div>
                     </div>
                   </>
