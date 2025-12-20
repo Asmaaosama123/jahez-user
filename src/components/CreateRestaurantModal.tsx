@@ -4,6 +4,16 @@ import React, { useState } from "react";
 const BASE = "https://deliver-web-app2.runasp.net";
 
 const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
+  const initialWorkingDays = [
+    { openTime: "09:00", closeTime: "17:00" }, // الأحد
+    { openTime: "09:00", closeTime: "17:00" }, // الإثنين
+    { openTime: "09:00", closeTime: "17:00" }, // الثلاثاء
+    { openTime: "09:00", closeTime: "17:00" }, // الأربعاء
+    { openTime: "09:00", closeTime: "17:00" }, // الخميس
+    { openTime: "10:00", closeTime: "15:00" }, // الجمعة
+    { openTime: "09:00", closeTime: "17:00" }, // السبت
+  ];
+  
   const [form, setForm] = useState({
     NameAr: "",
     NameFr: "",
@@ -15,7 +25,7 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     Phone2: "",
     CoverImage: null,
     ProfileImage: null,
-    workingDays: Array(7).fill({ openTime: "", closeTime: "" }),
+    workingDays: initialWorkingDays,
   });
 
   const daysAr = [
