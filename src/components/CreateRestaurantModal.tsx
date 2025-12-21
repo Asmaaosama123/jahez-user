@@ -5,13 +5,13 @@ const BASE = "https://deliver-web-app2.runasp.net";
 
 const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
   const initialWorkingDays = [
-    { openTime: "09:00", closeTime: "17:00" }, // الأحد
-    { openTime: "09:00", closeTime: "17:00" }, // الإثنين
-    { openTime: "09:00", closeTime: "17:00" }, // الثلاثاء
-    { openTime: "09:00", closeTime: "17:00" }, // الأربعاء
-    { openTime: "09:00", closeTime: "17:00" }, // الخميس
-    { openTime: "10:00", closeTime: "15:00" }, // الجمعة
-    { openTime: "09:00", closeTime: "17:00" }, // السبت
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الأحد
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الإثنين
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الثلاثاء
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الأربعاء
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الخميس
+    { openTime: "10:00", closeTime: "15:00", is24Hours: false }, // الجمعة
+    { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // السبت
   ];
   
   const [form, setForm] = useState({
@@ -37,13 +37,35 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     const { name, value, files } = e.target;
     setForm(prev => ({
       ...prev,
-      [name]: files ? files[0] : value
+      [name]: files ? files[0] : name === "AddressMain" ? parseInt(value) : value
     }));
   };
 
   const handleDayChange = (index, field, value) => {
     const newDays = [...form.workingDays];
-    newDays[index] = { ...newDays[index], [field]: value };
+    
+    if (field === 'is24Hours') {
+      if (value) {
+        // إذا تم تفعيل 24 ساعة، ضع الأوقات على 00:00 - 23:59
+        newDays[index] = { 
+          ...newDays[index], 
+          is24Hours: true, 
+          openTime: "00:00", 
+          closeTime: "23:59" 
+        };
+      } else {
+        // إذا تم إلغاء 24 ساعة، أعد الأوقات إلى القيم الافتراضية
+        newDays[index] = { 
+          ...newDays[index], 
+          is24Hours: false,
+          openTime: initialWorkingDays[index].openTime,
+          closeTime: initialWorkingDays[index].closeTime
+        };
+      }
+    } else {
+      newDays[index] = { ...newDays[index], [field]: value };
+    }
+    
     setForm(prev => ({ ...prev, workingDays: newDays }));
   };
 
@@ -98,15 +120,6 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b p-6 flex justify-between items-center z-10">
-          {/* <div>
-            <h2 className="text-2xl font-bold text-gray-800">إضافة مطعم جديد</h2>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm text-gray-500">سيتم إضافة المطعم إلى:</span>
-              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                {subcategoryName || "قسم غير محدد"}
-              </span>
-            </div>
-          </div> */}
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -178,33 +191,65 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </label>
-                
                 </div>
               </div>
 
               {/* Working Hours */}
               <div className="space-y-4">
-                <label className="block text-lg font-semibold text-gray-700">
-                  أوقات العمل
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="block text-lg font-semibold text-gray-700">
+                    أوقات العمل
+                  </label>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-100 border border-green-300 rounded"></div>
+                      <span>24 ساعة</span>
+                    </div>
+                  </div>
+                </div>
                 <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                   {daysAr.map((day, index) => (
                     <div key={index} className="flex items-center justify-between bg-white p-3 rounded-lg shadow-sm">
-                      <span className="font-medium text-gray-700 w-24">{day}</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={form.workingDays[index].is24Hours}
+                          onChange={(e) => handleDayChange(index, 'is24Hours', e.target.checked)}
+                          className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                          id={`24h-${index}`}
+                        />
+                        <label 
+                          htmlFor={`24h-${index}`}
+                          className="font-medium text-gray-700 w-24 cursor-pointer"
+                        >
+                          {day}
+                        </label>
+                      </div>
                       <div className="flex items-center gap-2">
                         <input
                           type="time"
                           value={form.workingDays[index].openTime}
                           onChange={(e) => handleDayChange(index, 'openTime', e.target.value)}
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          disabled={form.workingDays[index].is24Hours}
+                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                            form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                          }`}
                         />
                         <span className="text-gray-400">إلى</span>
                         <input
                           type="time"
                           value={form.workingDays[index].closeTime}
                           onChange={(e) => handleDayChange(index, 'closeTime', e.target.value)}
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          disabled={form.workingDays[index].is24Hours}
+                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                            form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                          }`}
                         />
+                        {form.workingDays[index].is24Hours && (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                            24 ساعة
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -257,15 +302,21 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">المدينة *</label>
                   <select
-                    name="AddressMain"
-                    value={form.AddressMain}
-                    onChange={handleChange}
-                    required
-                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
-                  >
-                    <option value="2">أنواكشوط</option>
-                    <option value="1">أنواذيبو</option>
-                  </select>
+  name="AddressMain"
+  value={form.AddressMain}
+  onChange={(e) => 
+    setForm(prev => ({
+      ...prev,
+      AddressMain: parseInt(e.target.value) // ← هتحول القيمة لرقم
+    }))
+  }
+  required
+  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+>
+  <option value={2}>أنواكشوط</option>
+  <option value={1}>أنواذيبو</option>
+</select>
+
                 </div>
 
                 <div className="space-y-2">
@@ -307,7 +358,7 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">خصم</label>
+                  <label className="block text-sm font-medium text-gray-700">رسوم التوصيل</label>
                   <input
                     type="number"
                     name="DeliveryFee"
@@ -318,21 +369,6 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                     min="0"
                   />
                 </div>
-
-                {/* <div className="space-y-2 md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700">القسم الفرعي</label>
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-800">{subcategoryName}</p>
-                        <p className="text-sm text-gray-500">سيتم إضافة المطعم إلى هذا القسم تلقائيًا</p>
-                      </div>
-                      <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                        ID: {subcategoryId}
-                      </div>
-                    </div>
-                  </div>
-                </div> */}
               </div>
             </div>
           </div>

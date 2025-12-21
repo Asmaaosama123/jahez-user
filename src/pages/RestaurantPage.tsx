@@ -177,7 +177,9 @@ const isSupermarket = categoryType === 2;
           <div className="flex flex-col items-start text-right">
             <h1 className="text-xl font-bold">{storeInfo?.name || ""}</h1>
             {/* <h1 className="text-xl font-bold">{storeInfo?.StoreaddressSecondary || ""}</h1> */}
-            <p className="text-green-400 text-[10px]">{storeInfo?.isOpen ? t.open : t.closed}</p>
+            <p className={`text-[10px] ${storeInfo?.isOpen ? "text-green-400" : "text-red-700"}`}>
+  {storeInfo?.isOpen ? t.open : t.closed}
+</p>
           </div>
         </div>
       </div>

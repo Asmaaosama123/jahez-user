@@ -217,9 +217,12 @@ const categoriesData = [
 
               <div className="flex flex-col mr-4 flex-1">
                 <h2 className="font-bold text-lg">{r.name}</h2>
-                <span className="text-[10px] text-green-600">
-                  {r.isOpen ? t.open : t.closed}
-                </span>
+                <span
+  className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}
+>
+  {r.isOpen ? t.open : t.closed}
+</span>
+
               </div>
 
               <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-xs shadow">
