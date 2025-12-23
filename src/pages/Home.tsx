@@ -127,7 +127,7 @@ const categoriesData = [
   // JSX
   // ---------------------------
   return (
-    <div className="bg-white min-h-screen font-sans" dir="rtl">
+<div className="bg-white min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-3">
       
@@ -215,15 +215,13 @@ const categoriesData = [
                 />
               </div>
 
-              <div className="flex flex-col mr-4 flex-1">
-                <h2 className="font-bold text-lg">{r.name}</h2>
-                <span
-  className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}
->
-  {r.isOpen ? t.open : t.closed}
-</span>
+              <div className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"}`}>
+  <h2 className="font-bold text-lg">{r.name}</h2>
+  <span className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}>
+    {r.isOpen ? t.open : t.closed}
+  </span>
+</div>
 
-              </div>
 
               <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-xs shadow">
                 {t.delivery}: {r.deliveryFee ?? "-"}

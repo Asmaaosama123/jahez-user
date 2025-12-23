@@ -134,14 +134,17 @@ const saveOrderLink = async (orderId: string) => {
 
 
   return (
-    <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir="rtl" >
+    <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"} >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-white shadow relative">
-        <button className="absolute top-2 right-2 bg-black/40 p-2 rounded-full" onClick={() => navigate(-1)}>
-          <IoArrowForward className="text-white text-lg" />
-        </button>
+      <button
+        className={`absolute top-4 ${language === "ar" ? "right-2" : "left-2"} bg-black/40 p-2 rounded-full`}
+        onClick={() => navigate(-1)}
+      >
+        <IoArrowForward className={`text-white text-xl ${language === "fr" ? "rotate-180" : ""}`} />
+      </button>
         <h1 className="text-xl font-bold text-black m-auto">
-          <span className="text-black font-bold text-3xl">{t.Orderdetails}</span>
+          <span className="text-black font-bold text-2xl">{t.Orderdetails}</span>
         </h1>
       </div>
 
@@ -171,19 +174,25 @@ const saveOrderLink = async (orderId: string) => {
           <div key={storeId} className="bg-white p-3 mb-3 mt-5 mx-3">
             {/* معلومات المتجر */}
             <div className="flex items-center mb-3 gap-2">
-              <img src={storeData.storeImage} alt={storeData.storeName} className="w-16 h-16 rounded-full object-cover"/>
-              <div>
-                <h2 className="text-xl font-bold">{storeData.storeName}</h2>
-                {storeData.StoreaddressSecondary && (
-                  <p className="text-sm text-green-700">{storeData.StoreaddressSecondary}</p>
-                )}
-              </div>
-              <div className="mr-auto">
-                <span className="text-white text-xl bg-green-700 px-5 py-3 rounded font-bold">
-                  {totalPrice} MRU
-                </span>
-              </div>
-            </div>
+  {/* صورة المتجر */}
+  <img src={storeData.storeImage} alt={storeData.storeName} className="w-16 h-16 rounded-full object-cover"/>
+
+  {/* اسم المتجر والعنوان */}
+  <div className="flex-1">
+    <h2 className="text-xl font-bold">{storeData.storeName}</h2>
+    {storeData.StoreaddressSecondary && (
+      <p className="text-sm text-green-700">{storeData.StoreaddressSecondary}</p>
+    )}
+  </div>
+
+  {/* السعر الكلي */}
+  <div className={`${language === "ar" ? "ml-15" : "mr-15"}`}>
+    <span className="text-white text-xl bg-green-700 px-5 py-3 rounded font-bold">
+      {totalPrice} MRU
+    </span>
+  </div>
+</div>
+
 
             <hr className="border-t-1 border-black my-4" />
 
@@ -191,15 +200,28 @@ const saveOrderLink = async (orderId: string) => {
             {(storeData.items || []).map(item => (
               <div key={item.id} className="flex items-center border rounded-xl p-2 mb-2">
                 <img src={item.imageUrl || ""} className="w-12 h-12 rounded-xl border-2 border-green-500" alt={getProductName(item)} />
-                <div className="mr-2 shadow-sm bg-white">
+                <div className={` ${language === "fr" ? "ml-2" : "mr-2"}  mr-2 shadow-sm bg-white `}>
                   <p className="font-bold text-sm shadow-sm">{getProductName(item)}</p>
                   <p className="text-green-700 text-xs">{item.price} MRU</p>
                 </div>
-                <div className="flex items-center gap-1 mr-auto text-green-700 font-bold">
-                  <button onClick={() => increaseQty(storeId, item.id)} className="border px-2 py-0.5 rounded border-green-600">+</button>
-                  <div className="border px-2 py-0.5 rounded text-sm">{item.qty}</div>
-                  <button onClick={() => decreaseQty(storeId, item.id)} className="border px-2 py-0.5 rounded border-green-600">-</button>
-                </div>
+                <div
+  className={`flex items-center gap-1 ${language === "fr" ? "ml-auto" : "mr-auto"} text-green-700 font-bold`}
+>
+  <button
+    onClick={() => increaseQty(storeId, item.id)}
+    className="border px-2 py-0.5 rounded border-green-600"
+  >
+    +
+  </button>
+  <div className="border px-2 py-0.5 rounded text-sm">{item.qty}</div>
+  <button
+    onClick={() => decreaseQty(storeId, item.id)}
+    className="border px-2 py-0.5 rounded border-green-600"
+  >
+    -
+  </button>
+</div>
+
               </div>
             ))}
           </div>
