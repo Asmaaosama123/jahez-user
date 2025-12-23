@@ -151,7 +151,7 @@ const isSupermarket = categoryType === 2;
   if (loading) return <div className="p-5 text-center">{t.loading}</div>;
 
   return (
-    <div className="relative bg-gray-100 min-h-screen font-sans" dir="rtl">
+    <div className="relative bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
 
       {/* HERO */}
       <div className="relative">
@@ -161,27 +161,46 @@ const isSupermarket = categoryType === 2;
           alt="cover"
         />
 
-        <button
-          className="absolute top-5 right-4 bg-black/40 p-2 rounded-full"
-          onClick={() => navigate(-1)}
-        >
-          <IoArrowForward className="text-white text-xl" />
-        </button>
+<button
+  className={`absolute top-5 ${language === "ar" ? "right-4" : "left-4"} bg-black/40 p-2 rounded-full`}
+  onClick={() => navigate(-1)}
+>
+  <IoArrowForward className={`text-white text-xl ${language === "fr" ? "rotate-180" : ""}`} />
+</button>
 
-        <div className="absolute bottom-3 right-3 text-white flex items-center gap-3">
-          <img
-            src={fixImageUrl(storeInfo?.profileImageUrl)}
-            className="w-20 h-20 rounded-xl shadow-xl object-cover bg-white"
-            alt="store"
-          />
-          <div className="flex flex-col items-start text-right">
-            <h1 className="text-xl font-bold">{storeInfo?.name || ""}</h1>
-            {/* <h1 className="text-xl font-bold">{storeInfo?.StoreaddressSecondary || ""}</h1> */}
-            <p className={`text-[10px] ${storeInfo?.isOpen ? "text-green-400" : "text-red-700"}`}>
-  {storeInfo?.isOpen ? t.open : t.closed}
-</p>
-          </div>
-        </div>
+
+<div
+  className={`absolute bottom-3 ${
+    language === "ar" ? "right-3" : "left-3"
+  } text-white flex items-center gap-3`}
+>
+  {/* الصورة دائمًا أول عنصر */}
+  <img
+    src={fixImageUrl(storeInfo?.profileImageUrl)}
+    className="w-20 h-20 rounded-xl shadow-xl object-cover bg-white"
+    alt="store"
+  />
+
+  {/* النصوص */}
+  <div
+  className={`flex flex-col ${
+    language === "ar" ? "text-right items-start" : "text-left items-start"
+  }`}
+>
+  <h1 className="text-xl font-bold">{storeInfo?.name || ""}</h1>
+  <span
+    className={`text-[10px] mt-1 ${
+      storeInfo?.isOpen ? "text-green-400" : "text-red-700"
+    }`}
+  >
+    {storeInfo?.isOpen ? t.open : t.closed}
+  </span>
+</div>
+
+
+</div>
+
+
       </div>
 
       {/* TABS */}
@@ -217,10 +236,15 @@ const isSupermarket = categoryType === 2;
                   alt={product.name}
                 />
               </div>
-              <div className="flex flex-col mr-4 flex-1">
-                <h2 className="font-bold text-lg">{product.name}</h2>
-                <span className="text-sm text-green-600">{product.price} MRU</span>
-              </div>
+              <div
+  className={`flex flex-col flex-1 ${
+    language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
+  }`}
+>
+  <h2 className="font-bold text-lg">{product.name}</h2>
+  <span className="text-sm text-green-600">{product.price} MRU</span>
+</div>
+
               <div
   className={`flex border rounded-lg overflow-hidden 
     ${quantities[product.id] > 0 ? "bg-green-100 border-green-600" : "bg-gray-100"}`}
@@ -280,10 +304,19 @@ const isSupermarket = categoryType === 2;
                 <span className="px-4 py-1">{quantities[selectedProduct.id] || 0}</span>
                 <button className="px-3 py-1 border-r text-xl" onClick={() => handleQuantityChange(selectedProduct.id.toString(), -1)}>−</button>
               </div>
-              <div className="text-right">
-                <h2 className="text-xl font-bold">{selectedProduct.name}</h2>
-                <p className="text-green-700 font-bold text-[15px] mt-1">{selectedProduct.price} MRU</p>
-              </div>
+              <div
+  className={`flex flex-col ${
+    language === "ar" ? "text-right items-start" : "text-left items-start"
+  }`}
+>
+  <h2 className="text-xl font-bold">{selectedProduct.name}</h2>
+  <p
+    className={`text-green-700 font-bold text-[15px] mt-1`}
+  >
+    {selectedProduct.price} MRU
+  </p>
+</div>
+
             </div>
             <div className="w-full mt-4 px-4">
               <div className="bg-gray-100 w-full p-4 rounded-xl text-[15px] text-black leading-relaxed whitespace-pre-line">
