@@ -63,7 +63,7 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
 
     try {
       const res = await fetch(
-        "https://deliver-web-app2.runasp.net/api/Post/create-store",
+        "https://jahezdelivery.com/api/Post/create-store",
         { method: "POST", body: data }
       );
       const result = await res.json();

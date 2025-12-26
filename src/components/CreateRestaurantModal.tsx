@@ -1,7 +1,7 @@
 // components/CreateRestaurantModal.jsx
 import React, { useState } from "react";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
   const initialWorkingDays = [

@@ -8,7 +8,7 @@ import EditSubCategoryModal from "../components/EditSubCategoryModal";
 import DeleteSubCategoryModal from "../components/DeleteSubCategoryModal";
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 export default function RestaurantsPage() {
   const { categoryType } = useParams();

@@ -7,7 +7,7 @@ import croissant from "../assets/croissant.png";
 import jahezLogo from "../assets/jahez.png";
 import languageIcon from "../assets/language.png";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 export default function Home() {
   const navigate = useNavigate();

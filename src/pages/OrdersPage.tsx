@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 interface Order {
   orderId: string;

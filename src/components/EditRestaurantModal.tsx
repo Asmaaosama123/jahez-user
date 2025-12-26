@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 interface EditRestaurantModalProps {
   restaurantId: number;

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PhoneIcon } from "@heroicons/react/24/solid";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 interface OrderItem {
   qty: number;
@@ -31,7 +31,7 @@ export default function PublicOrder() {
 
   useEffect(() => {
     if (!orderId) return;
-    fetch(`https://deliver-web-app2.runasp.net/api/Orders/PublicOrder/${orderId}`)
+    fetch(`https://jahezdelivery.com/api/Orders/PublicOrder/${orderId}`)
       .then(res => res.json())
       .then(setData);
   }, [orderId]);

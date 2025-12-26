@@ -81,7 +81,7 @@ const handleSendWhatsApp = async () => {
     }
 
     const res = await fetch(
-      "https://deliver-web-app2.runasp.net/api/Orders/CreateOrder",
+      "https://jahezdelivery.com/api/Orders/CreateOrder",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,7 +115,7 @@ const saveOrderLink = async (orderId: string) => {
   const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
 
   const res = await fetch(
-    `https://deliver-web-app2.runasp.net/api/Orders/SetOrderLink/${orderId}`,
+    `https://jahezdelivery.com/api/Orders/SetOrderLink/${orderId}`,
     {
       method: "PUT",
       headers: {
