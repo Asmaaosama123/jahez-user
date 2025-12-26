@@ -7,7 +7,7 @@ import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import EditRestaurantModal from "../components/EditRestaurantModal";
 import { useParams } from "react-router-dom";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 interface Restaurant {
   id: number;

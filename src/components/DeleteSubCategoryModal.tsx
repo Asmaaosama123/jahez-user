@@ -13,7 +13,7 @@ const DeleteSubCategoryModal = ({ subcategory, onClose, onDelete }) => {
 
     try {
       const response = await fetch(
-        `https://deliver-web-app2.runasp.net/api/Subcategories/DeleleSubCategoryByid/${subcategory.id}`,
+        `https://jahezdelivery.com/api/Subcategories/DeleleSubCategoryByid/${subcategory.id}`,
         {
           method: "DELETE",
           headers: {

@@ -63,7 +63,7 @@ export default function Cart() {
   const handleOrder = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://deliver-web-app2.runasp.net/api/Orders", {
+      const response = await fetch("https://jahezdelivery.com/api/Orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

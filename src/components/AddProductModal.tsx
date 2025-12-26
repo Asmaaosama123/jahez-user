@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-const BASE = "https://deliver-web-app2.runasp.net";
+const BASE = "https://jahezdelivery.com";
 
 export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
   const [newProductAr, setNewProductAr] = useState("");
