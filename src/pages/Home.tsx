@@ -80,19 +80,41 @@ const categoriesData = [
   // ---------------------------
   // Fetch stores حسب subcategory
   // ---------------------------
-  const fetchStores = async (subId: number) => {
+  const fetchStores = async (subId) => {
     try {
-      const res = await fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=${language}`);
-      const data = await res.json();
-      const filtered = data.filter((store: any) =>
+      // بيانات باللغة الحالية (مثلاً فرنسي)
+      const res1 = await fetch(
+        `${BASE}/api/Subcategories/by-subcategory/${subId}?lang=${language}`
+      );
+      const dataLang = await res1.json();
+  
+      // بيانات عربي — علشان السيرش
+      const res2 = await fetch(
+        `${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`
+      );
+      const dataAr = await res2.json();
+  
+      // ندمج الاتنين على حسب id
+      const merged = dataLang.map((store) => {
+        const arVersion = dataAr.find((s) => s.id === store.id);
+  
+        return {
+          ...store,
+          nameAr: arVersion?.name || store.nameAr,
+        };
+      });
+  
+      const filtered = merged.filter((store) =>
         store.addressMain?.includes(selectedCity)
       );
+  
       setStores(filtered);
     } catch (err) {
       console.log("Error fetching stores:", err);
       setStores([]);
     }
   };
+  
 
   // ---------------------------
   // Navigate to restaurant
@@ -119,9 +141,68 @@ const categoriesData = [
     if (url.startsWith("http")) return url;
     return `${BASE}/${url.replace(/^\/?images\/?/, "images/")}`;
   };
-  const filteredStores = stores.filter((store) =>
-  store.name?.toLowerCase().includes(search.toLowerCase())
-);
+
+  
+  const filteredStores = stores.filter((store) => {
+    const q = search.toLowerCase();
+  
+    return (
+      store.name?.toLowerCase().includes(q) ||          // الاسم الحالي
+      store.nameAr?.toLowerCase().includes(q) ||        // عربي
+      store.nameFr?.toLowerCase().includes(q)           // فرنسي
+    );
+  });
+
+
+const smartSearch = async (value) => {
+  setSearch(value);
+
+  // لو فاضي — رجّعي الوضع الطبيعي
+  if (!value.trim()) return;
+
+  // جرّبي كل الكاتيجوريات
+  for (const c of categoriesData) {
+    try {
+      const res = await fetch(
+        `${BASE}/api/Subcategories/by-category-type/${c.type}?lang=${language}`
+      );
+      const subs = await res.json();
+
+      for (const s of subs) {
+        const res2 = await fetch(
+          `${BASE}/api/Subcategories/by-subcategory/${s.id}?lang=${language}`
+        );
+        const storesData = await res2.json();
+
+        const filtered = storesData.filter((store) => {
+          const q = value.toLowerCase();
+        
+          return (
+            store.addressMain?.includes(selectedCity) &&
+            (
+              store.name?.toLowerCase().includes(q) ||
+              store.nameAr?.toLowerCase().includes(q) ||
+              store.nameFr?.toLowerCase().includes(q)
+            )
+          );
+        });
+        
+
+        // أول ما نلاقي نتيجة 👇
+        if (filtered.length) {
+          setCategory(c.type);   // نقلنا للكاتيجوري الصح
+          setFilters(subs);
+          setFilter(s.name);
+          setStores(filtered);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+};
+
 
   // ---------------------------
   // JSX
@@ -150,11 +231,16 @@ const categoriesData = [
       <div className="px-4">
         <div className="bg-gray-100 rounded-xl flex items-center px-4 py-3 mt-3">
         <input
-  className="flex-1 bg-transparent outline-none text-right text-gray-600"
+  className={`flex-1 bg-transparent outline-none text-gray-600 ${
+    language === "ar" ? "text-right" : "text-left"
+  }`}
+  dir={language === "ar" ? "rtl" : "ltr"}
   placeholder={t.search}
   value={search}
-  onChange={(e) => setSearch(e.target.value)}
+  onChange={(e) => smartSearch(e.target.value)}
 />
+
+
 
         </div>
       </div>
