@@ -82,28 +82,26 @@ const categoriesData = [
   // ---------------------------
   const fetchStores = async (subId) => {
     try {
-      // بيانات باللغة الحالية (مثلاً فرنسي)
-      const res1 = await fetch(
-        `${BASE}/api/Subcategories/by-subcategory/${subId}?lang=${language}`
-      );
-      const dataLang = await res1.json();
+      // بيانات فرنسية
+      const resFr = await fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=fr`);
+      const dataFr = await resFr.json();
   
-      // بيانات عربي — علشان السيرش
-      const res2 = await fetch(
-        `${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`
-      );
-      const dataAr = await res2.json();
+      // بيانات عربية
+      const resAr = await fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`);
+      const dataAr = await resAr.json();
   
-      // ندمج الاتنين على حسب id
-      const merged = dataLang.map((store) => {
-        const arVersion = dataAr.find((s) => s.id === store.id);
+      // دمج البيانات
+      const merged = dataFr.map((storeFr) => {
+        const storeAr = dataAr.find((s) => s.id === storeFr.id);
   
         return {
-          ...store,
-          nameAr: arVersion?.name || store.nameAr,
+          ...storeFr,              // البيانات الفرنسية كـ base
+          name: storeFr.name,      // اسم حسب اللغة الفرنسية
+          nameAr: storeAr?.name,   // الاسم العربي
         };
       });
   
+      // فلترة حسب المدينة
       const filtered = merged.filter((store) =>
         store.addressMain?.includes(selectedCity)
       );
@@ -114,6 +112,7 @@ const categoriesData = [
       setStores([]);
     }
   };
+  
   
 
   // ---------------------------
@@ -145,13 +144,13 @@ const categoriesData = [
   
   const filteredStores = stores.filter((store) => {
     const q = search.toLowerCase();
-  
     return (
-      store.name?.toLowerCase().includes(q) ||          // الاسم الحالي
-      store.nameAr?.toLowerCase().includes(q) ||        // عربي
-      store.nameFr?.toLowerCase().includes(q)           // فرنسي
+      store.name?.toLowerCase().includes(q) ||   // حسب اللغة الحالية (مثلاً فرنسي)
+      store.nameAr?.toLowerCase().includes(q)    // عربي
     );
   });
+  
+  
 
 
 const smartSearch = async (value) => {
