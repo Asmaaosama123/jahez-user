@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLang } from "../context/LanguageContext";
 import layer1 from "../assets/Layer 1.png";
@@ -13,25 +13,22 @@ export default function Home() {
   const navigate = useNavigate();
   const { t, language, changeLanguage } = useLang();
 
-  // Zoom
-  useEffect(() => {
-    document.body.style.zoom = "80%";
-  }, []);
+  useEffect(() => { document.body.style.zoom = "80%"; }, []);
 
   // ---------------------------
   // Categories ثابتة مع type
   // ---------------------------
-const categoriesData = [
-  { key: "restaurants", image: layer1, type: 1 },
-  { key: "supermarkets", image: store1, type: 2 },
-  { key: "bakeries", image: croissant, type: 3 },
-];
+  const categoriesData = useMemo(() => [
+    { key: "restaurants", image: layer1, type: 1 },
+    { key: "supermarkets", image: store1, type: 2 },
+    { key: "bakeries", image: croissant, type: 3 },
+  ], []);
 
-  const categories = categoriesData.map(c => ({
+  const categories = useMemo(() => categoriesData.map(c => ({
     name: t[c.key as keyof typeof t],
     image: c.image,
     type: c.type
-  }));
+  })), [categoriesData, t]);
 
   // ---------------------------
   // State
@@ -40,13 +37,11 @@ const categoriesData = [
   const [filters, setFilters] = useState<any[]>([]);
   const [filter, setFilter] = useState("");
   const [stores, setStores] = useState<any[]>([]);
+  const [allStores, setAllStores] = useState<any[]>([]);
   const [languageModal, setLanguageModal] = useState(false);
-  const [selectedCity, setSelectedCity] = useState(
-    localStorage.getItem("selectedCity") || "Nouakchott"
-  );
+  const [selectedCity, setSelectedCity] = useState(localStorage.getItem("selectedCity") || "Nouakchott");
   const [search, setSearch] = useState("");
 
-  
   // ---------------------------
   // Fetch subcategories عند تغيير الفئة أو المدينة أو اللغة
   // ---------------------------
@@ -62,7 +57,7 @@ const categoriesData = [
 
         if (data && data.length > 0) {
           setFilter(data[0].name);
-          await fetchStores(data[0].id);
+          fetchStores(data[0].id);
         } else {
           setFilter("");
           setStores([]);
@@ -73,47 +68,107 @@ const categoriesData = [
     };
 
     fetchData();
-  }, [category, selectedCity, language]);
+  }, [category, selectedCity, language, categoriesData]);
 
-
- 
   // ---------------------------
   // Fetch stores حسب subcategory
   // ---------------------------
-  const fetchStores = async (subId) => {
+  const fetchStores = useCallback(async (subId) => {
     try {
-      // بيانات فرنسية
-      const resFr = await fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=fr`);
-      const dataFr = await resFr.json();
-  
-      // بيانات عربية
-      const resAr = await fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`);
-      const dataAr = await resAr.json();
-  
-      // دمج البيانات
-      const merged = dataFr.map((storeFr) => {
-        const storeAr = dataAr.find((s) => s.id === storeFr.id);
-  
+      const [resFr, resAr] = await Promise.all([
+        fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=fr`),
+        fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`)
+      ]);
+      const [dataFr, dataAr] = await Promise.all([resFr.json(), resAr.json()]);
+
+      const merged = dataFr.map(storeFr => {
+        const storeAr = dataAr.find(s => s.id === storeFr.id);
         return {
-          ...storeFr,              // البيانات الفرنسية كـ base
-          name: storeFr.name,      // اسم حسب اللغة الفرنسية
-          nameAr: storeAr?.name,   // الاسم العربي
+          ...storeFr,
+          name: storeFr.name,
+          nameAr: storeAr?.name
         };
       });
-  
-      // فلترة حسب المدينة
-      const filtered = merged.filter((store) =>
-        store.addressMain?.includes(selectedCity)
-      );
-  
+
+      const filtered = merged.filter(store => store.addressMain?.includes(selectedCity));
       setStores(filtered);
     } catch (err) {
       console.log("Error fetching stores:", err);
       setStores([]);
     }
-  };
-  
-  
+  }, [selectedCity]);
+
+  // ---------------------------
+  // Fetch all stores مسبقاً لتحسين السيرش
+  // ---------------------------
+  useEffect(() => {
+    const fetchAllStores = async () => {
+      const tempStores: any[] = [];
+      for (const c of categoriesData) {
+        try {
+          const [resSubsFr, resSubsAr] = await Promise.all([
+            fetch(`${BASE}/api/Subcategories/by-category-type/${c.type}?lang=fr`),
+            fetch(`${BASE}/api/Subcategories/by-category-type/${c.type}?lang=ar`)
+          ]);
+          const [subsFr, subsAr] = await Promise.all([resSubsFr.json(), resSubsAr.json()]);
+
+          for (let i = 0; i < subsFr.length; i++) {
+            const subFr = subsFr[i];
+            const subAr = subsAr.find(s => s.id === subFr.id);
+
+            const [resStoresFr, resStoresAr] = await Promise.all([
+              fetch(`${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=fr`),
+              fetch(`${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=ar`)
+            ]);
+            const [storesFr, storesAr] = await Promise.all([resStoresFr.json(), resStoresAr.json()]);
+
+            storesFr.forEach(storeFr => {
+              const storeAr = storesAr.find(s => s.id === storeFr.id);
+              tempStores.push({
+                ...storeFr,
+                name: storeFr.name,
+                nameAr: storeAr?.name,
+                category: c.type,
+                subId: subFr.id
+              });
+            });
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      setAllStores(tempStores);
+      setStores(tempStores.filter(s => s.category === category && s.subId === filters[0]?.id));
+    };
+
+    fetchAllStores();
+  }, [categoriesData, category, selectedCity, language, filters]);
+
+  // ---------------------------
+  // Smart Search محسّن
+  // ---------------------------
+  const smartSearch = useCallback((value: string) => {
+    setSearch(value);
+
+    if (!value.trim()) {
+      setStores(allStores.filter(s => s.category === category && s.subId === filters[0]?.id));
+      return;
+    }
+
+    const q = value.toLowerCase();
+    const filtered = allStores.filter(store => 
+      store.addressMain?.includes(selectedCity) &&
+      (store.name?.toLowerCase().includes(q) || store.nameAr?.toLowerCase().includes(q))
+    );
+
+    if (filtered.length) {
+      setCategory(filtered[0].category);
+      const sub = filters.find(f => f.id === filtered[0].subId);
+      if (sub) setFilter(sub.name);
+      setStores(filtered);
+    }
+  }, [allStores, category, filters, selectedCity]);
+
 
   // ---------------------------
   // Navigate to restaurant
@@ -141,106 +196,44 @@ const categoriesData = [
     return `${BASE}/${url.replace(/^\/?images\/?/, "images/")}`;
   };
 
-  
   const filteredStores = stores.filter((store) => {
     const q = search.toLowerCase();
     return (
-      store.name?.toLowerCase().includes(q) ||   // حسب اللغة الحالية (مثلاً فرنسي)
-      store.nameAr?.toLowerCase().includes(q)    // عربي
+      store.name?.toLowerCase().includes(q) ||
+      store.nameAr?.toLowerCase().includes(q)
     );
   });
-  
-  
-
-
-const smartSearch = async (value) => {
-  setSearch(value);
-
-  // لو فاضي — رجّعي الوضع الطبيعي
-  if (!value.trim()) return;
-
-  // جرّبي كل الكاتيجوريات
-  for (const c of categoriesData) {
-    try {
-      const res = await fetch(
-        `${BASE}/api/Subcategories/by-category-type/${c.type}?lang=${language}`
-      );
-      const subs = await res.json();
-
-      for (const s of subs) {
-        const res2 = await fetch(
-          `${BASE}/api/Subcategories/by-subcategory/${s.id}?lang=${language}`
-        );
-        const storesData = await res2.json();
-
-        const filtered = storesData.filter((store) => {
-          const q = value.toLowerCase();
-        
-          return (
-            store.addressMain?.includes(selectedCity) &&
-            (
-              store.name?.toLowerCase().includes(q) ||
-              store.nameAr?.toLowerCase().includes(q) ||
-              store.nameFr?.toLowerCase().includes(q)
-            )
-          );
-        });
-        
-
-        // أول ما نلاقي نتيجة 👇
-        if (filtered.length) {
-          setCategory(c.type);   // نقلنا للكاتيجوري الصح
-          setFilters(subs);
-          setFilter(s.name);
-          setStores(filtered);
-          return;
-        }
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-};
-
 
   // ---------------------------
   // JSX
   // ---------------------------
   return (
-<div className="bg-white min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
+    <div className="bg-white min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-3">
-      
-        <button className="text-2xl" onClick={() => navigate("/cart")}>
-          {/* <img src="src/assets/shopping-basket.png" className="w-7 h-7" /> */}
-        </button>
+        <button className="text-2xl" onClick={() => navigate("/cart")}></button>
         <h1 className="text-7xl font-bold text-green-800">
           <img src={jahezLogo} className="w-37 h-8 object-cover" />
         </h1>
-
         <button
           className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shadow-md overflow-hidden"
           onClick={() => setLanguageModal(true)}
         >
-          <img src={languageIcon} className="w-full h-full object-cover" />
+          <img src={languageIcon} className="w-full h-full object-cover"                 loading="lazy"
+ />
         </button>
       </div>
 
       {/* Search */}
       <div className="px-4">
         <div className="bg-gray-100 rounded-xl flex items-center px-4 py-3 mt-3">
-        <input
-  className={`flex-1 bg-transparent outline-none text-gray-600 ${
-    language === "ar" ? "text-right" : "text-left"
-  }`}
-  dir={language === "ar" ? "rtl" : "ltr"}
-  placeholder={t.search}
-  value={search}
-  onChange={(e) => smartSearch(e.target.value)}
-/>
-
-
-
+          <input
+            className={`flex-1 bg-transparent outline-none text-gray-600 ${language === "ar" ? "text-right" : "text-left"}`}
+            dir={language === "ar" ? "rtl" : "ltr"}
+            placeholder={t.search}
+            value={search}
+            onChange={(e) => smartSearch(e.target.value)}
+          />
         </div>
       </div>
 
@@ -250,12 +243,12 @@ const smartSearch = async (value) => {
           <button
             key={c.type}
             onClick={() => setCategory(c.type)}
-            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${
-              category === c.type ? "bg-green-800 text-white" : "bg-gray-100 text-gray-600"
-            }`}
+            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${category === c.type ? "bg-green-800 text-white" : "bg-gray-100 text-gray-600"}`}
           >
             <div className="p-2 rounded-full bg-gray-100 w-9 h-9 flex items-center justify-center">
-              <img src={c.image} className="w-7 h-7 object-contain" />
+              <img src={c.image} className="w-7 h-7 object-contain" 
+                              loading="lazy"
+                              />
             </div>
             {c.name}
           </button>
@@ -273,11 +266,7 @@ const smartSearch = async (value) => {
                 setFilter(f.name);
                 fetchStores(f.id);
               }}
-              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${
-                filter === f.name
-                  ? "bg-green-800 text-white"
-                  : "bg-white text-gray-600"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${filter === f.name ? "bg-green-800 text-white" : "bg-white text-gray-600"}`}
             >
               {f.name}
             </button>
@@ -286,7 +275,7 @@ const smartSearch = async (value) => {
 
         {/* Stores list */}
         <div className="px-4 pb-10">
-        {filteredStores.map((r, i) => (
+          {filteredStores.map((r, i) => (
             <div
               key={i}
               onClick={() => goToRestaurant(r)}
@@ -297,16 +286,17 @@ const smartSearch = async (value) => {
                   src={imageUrl(r.profileImageUrl)}
                   className="w-full h-full object-cover"
                   alt={r.name}
+                  loading="lazy"
+
                 />
               </div>
 
               <div className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"}`}>
-  <h2 className="font-bold text-lg">{r.name}</h2>
-  <span className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}>
-    {r.isOpen ? t.open : t.closed}
-  </span>
-</div>
-
+                <h2 className="font-bold text-lg">{r.name}</h2>
+                <span className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}>
+                  {r.isOpen ? t.open : t.closed}
+                </span>
+              </div>
 
               <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-xs shadow">
                 {t.delivery}: {r.deliveryFee ?? "-"}

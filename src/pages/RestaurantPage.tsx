@@ -159,6 +159,7 @@ const isSupermarket = categoryType === 2;
           src={fixImageUrl(storeInfo?.coverImageUrl)}
           className="w-full h-60 object-cover"
           alt="cover"
+          loading="lazy"
         />
 
 <button
@@ -179,6 +180,7 @@ const isSupermarket = categoryType === 2;
     src={fixImageUrl(storeInfo?.profileImageUrl)}
     className="w-20 h-20 rounded-xl shadow-xl object-cover bg-white"
     alt="store"
+    loading="lazy"
   />
 
   {/* النصوص */}
@@ -234,6 +236,7 @@ const isSupermarket = categoryType === 2;
                   src={fixImageUrl(product.imageUrl)}
                   className="w-full h-full object-cover"
                   alt={product.name}
+                  loading="lazy"
                 />
               </div>
               <div
