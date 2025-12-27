@@ -260,31 +260,51 @@ const isSupermarket = categoryType === 2;
       </div>
 
       {/* BOTTOM BUTTON */}
-      <div className="fixed bottom-0 w-full">
-  {isSupermarket ? (
-    <button
+      {/* BOTTOM BUTTON */}
+<div className="fixed bottom-0 w-full">
+
+{isSupermarket ? (
+  // ——— السوبرماركت ———
+  <button
     onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
     className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
-    >
-      {t.rightyourorder}
-    </button>
-  ) : (
-    <>
-      {added && (
-        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg animate-bounce z-50">
-          ✔ تمت الإضافة للسلة
-        </div>
-      )}
+  >
+    {t.rightyourorder}
+  </button>
 
+) : (
+  // ——— المطاعم + المخابز ———
+  <>
+    {added && (
+      <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg animate-bounce z-50">
+        ✔ تمت الإضافة للسلة
+      </div>
+    )}
+
+    {Object.values(quantities).reduce((a, b) => a + b, 0) === 0 ? (
+
+      // لو مفيش منتجات مختارة → اكتب طلبك
+      <button
+        onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
+        className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+      >
+        {t.rightyourorder}
+      </button>
+
+    ) : (
+
+      // لو في منتجات → اطلب الآن
       <button
         onClick={handleOrderNow}
         className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
       >
         {t.orderNow} ({Object.values(quantities).reduce((a, b) => a + b, 0)})
       </button>
-    </>
-  )}
+    )}
+  </>
+)}
 </div>
+
 
 
       {/* PRODUCT MODAL */}
