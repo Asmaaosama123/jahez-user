@@ -145,6 +145,7 @@ useEffect(() => {
   }
 }, [storeInfo]);
 
+const getStoreName = (store: any) => language === "ar" ? store.nameAr || store.name : store.name;
 
 const isSupermarket = categoryType === 2;
 
@@ -189,7 +190,7 @@ const isSupermarket = categoryType === 2;
     language === "ar" ? "text-right items-start" : "text-left items-start"
   }`}
 >
-  <h1 className="text-xl font-bold">{storeInfo?.name || ""}</h1>
+<h1 className="text-xl font-bold">{getStoreName(storeInfo)}</h1>
   <span
     className={`text-[10px] mt-1 ${
       storeInfo?.isOpen ? "text-green-400" : "text-red-700"

@@ -177,7 +177,8 @@ export default function Home() {
     navigate(`/restaurant/${store.id}`, {
       state: {
         id: store.id,
-        name: store.name,
+        name: store.name,        // الاسم بالفرنسية أو الافتراضي
+        nameAr: store.nameAr,
         profileImageUrl: store.profileImageUrl,
         coverImageUrl: store.coverImageUrl,
         isOpen: store.isOpen,
@@ -292,7 +293,9 @@ export default function Home() {
               </div>
 
               <div className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"}`}>
-                <h2 className="font-bold text-lg">{r.name}</h2>
+              <h2 className="font-bold text-lg">
+  {language === "ar" ? r.nameAr || r.name : r.name}
+</h2>
                 <span className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}>
                   {r.isOpen ? t.open : t.closed}
                 </span>
