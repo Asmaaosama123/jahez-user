@@ -13,45 +13,53 @@ export default function Home() {
   const navigate = useNavigate();
   const { t, language, changeLanguage } = useLang();
 
-  useEffect(() => { document.body.style.zoom = "80%"; }, []);
+  useEffect(() => {
+    document.body.style.zoom = "80%";
+  }, []);
 
-  // ---------------------------
-  // Categories ثابتة مع type
-  // ---------------------------
-  const categoriesData = useMemo(() => [
-    { key: "restaurants", image: layer1, type: 1 },
-    { key: "supermarkets", image: store1, type: 2 },
-    { key: "bakeries", image: croissant, type: 3 },
-  ], []);
+  const categoriesData = useMemo(
+    () => [
+      { key: "restaurants", image: layer1, type: 1 },
+      { key: "supermarkets", image: store1, type: 2 },
+      { key: "bakeries", image: croissant, type: 3 },
+    ],
+    []
+  );
 
-  const categories = useMemo(() => categoriesData.map(c => ({
-    name: t[c.key as keyof typeof t],
-    image: c.image,
-    type: c.type
-  })), [categoriesData, t]);
+  const categories = useMemo(
+    () =>
+      categoriesData.map((c) => ({
+        name: t[c.key as keyof typeof t],
+        image: c.image,
+        type: c.type,
+      })),
+    [categoriesData, t]
+  );
 
-  // ---------------------------
-  // State
-  // ---------------------------
   const [category, setCategory] = useState(categories[0].type);
   const [filters, setFilters] = useState<any[]>([]);
   const [filter, setFilter] = useState("");
   const [stores, setStores] = useState<any[]>([]);
   const [allStores, setAllStores] = useState<any[]>([]);
   const [languageModal, setLanguageModal] = useState(false);
-  const [selectedCity, setSelectedCity] = useState(localStorage.getItem("selectedCity") || "Nouakchott");
+  const [selectedCity, setSelectedCity] = useState(
+    localStorage.getItem("selectedCity") || "Nouakchott"
+  );
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false); // <— NEW
 
   // ---------------------------
-  // Fetch subcategories عند تغيير الفئة أو المدينة أو اللغة
+  // Fetch subcategories
   // ---------------------------
   useEffect(() => {
     const fetchData = async () => {
-      const selectedCategory = categoriesData.find(c => c.type === category);
+      const selectedCategory = categoriesData.find((c) => c.type === category);
       if (!selectedCategory) return;
 
       try {
-        const res = await fetch(`${BASE}/api/Subcategories/by-category-type/${selectedCategory.type}?lang=${language}`);
+        const res = await fetch(
+          `${BASE}/api/Subcategories/by-category-type/${selectedCategory.type}?lang=${language}`
+        );
         const data = await res.json();
         setFilters(data || []);
 
@@ -60,7 +68,6 @@ export default function Home() {
           fetchStores(data[0].id);
         } else {
           setFilter("");
-          setStores([]);
         }
       } catch (err) {
         console.log("Error fetching filters:", err);
@@ -68,68 +75,98 @@ export default function Home() {
     };
 
     fetchData();
-  }, [category, selectedCity, language, categoriesData]);
+  }, [category, language, categoriesData, selectedCity]);
 
   // ---------------------------
-  // Fetch stores حسب subcategory
+  // Fetch stores by subcategory
   // ---------------------------
-  const fetchStores = useCallback(async (subId) => {
-    try {
-      const [resFr, resAr] = await Promise.all([
-        fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=fr`),
-        fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`)
-      ]);
-      const [dataFr, dataAr] = await Promise.all([resFr.json(), resAr.json()]);
+  const fetchStores = useCallback(
+    async (subId: any) => {
+      try {
+        setLoading(true);
 
-      const merged = dataFr.map(storeFr => {
-        const storeAr = dataAr.find(s => s.id === storeFr.id);
-        return {
-          ...storeFr,
-          name: storeFr.name,
-          nameAr: storeAr?.name
-        };
-      });
+        const [resFr, resAr] = await Promise.all([
+          fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=fr`),
+          fetch(`${BASE}/api/Subcategories/by-subcategory/${subId}?lang=ar`),
+        ]);
 
-      const filtered = merged.filter(store => store.addressMain?.includes(selectedCity));
-      setStores(filtered);
-    } catch (err) {
-      console.log("Error fetching stores:", err);
-      setStores([]);
-    }
-  }, [selectedCity]);
+        const [dataFr, dataAr] = await Promise.all([
+          resFr.json(),
+          resAr.json(),
+        ]);
+
+        const merged = dataFr.map((storeFr: any) => {
+          const storeAr = dataAr.find((s: any) => s.id === storeFr.id);
+          return {
+            ...storeFr,
+            name: storeFr.name,
+            nameAr: storeAr?.name,
+          };
+        });
+
+        const filtered = merged.filter((store: any) =>
+          store.addressMain?.includes(selectedCity)
+        );
+
+        setStores(filtered);
+      } catch (err) {
+        console.log("Error fetching stores:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedCity]
+  );
 
   // ---------------------------
-  // Fetch all stores مسبقاً لتحسين السيرش
+  // Prefetch all stores (for search)
   // ---------------------------
   useEffect(() => {
     const fetchAllStores = async () => {
       const tempStores: any[] = [];
+
       for (const c of categoriesData) {
         try {
           const [resSubsFr, resSubsAr] = await Promise.all([
-            fetch(`${BASE}/api/Subcategories/by-category-type/${c.type}?lang=fr`),
-            fetch(`${BASE}/api/Subcategories/by-category-type/${c.type}?lang=ar`)
+            fetch(
+              `${BASE}/api/Subcategories/by-category-type/${c.type}?lang=fr`
+            ),
+            fetch(
+              `${BASE}/api/Subcategories/by-category-type/${c.type}?lang=ar`
+            ),
           ]);
-          const [subsFr, subsAr] = await Promise.all([resSubsFr.json(), resSubsAr.json()]);
+
+          const [subsFr, subsAr] = await Promise.all([
+            resSubsFr.json(),
+            resSubsAr.json(),
+          ]);
 
           for (let i = 0; i < subsFr.length; i++) {
             const subFr = subsFr[i];
-            const subAr = subsAr.find(s => s.id === subFr.id);
+            const subAr = subsAr.find((s: any) => s.id === subFr.id);
 
             const [resStoresFr, resStoresAr] = await Promise.all([
-              fetch(`${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=fr`),
-              fetch(`${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=ar`)
+              fetch(
+                `${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=fr`
+              ),
+              fetch(
+                `${BASE}/api/Subcategories/by-subcategory/${subFr.id}?lang=ar`
+              ),
             ]);
-            const [storesFr, storesAr] = await Promise.all([resStoresFr.json(), resStoresAr.json()]);
 
-            storesFr.forEach(storeFr => {
-              const storeAr = storesAr.find(s => s.id === storeFr.id);
+            const [storesFr, storesAr] = await Promise.all([
+              resStoresFr.json(),
+              resStoresAr.json(),
+            ]);
+
+            storesFr.forEach((storeFr: any) => {
+              const storeAr = storesAr.find((s: any) => s.id === storeFr.id);
               tempStores.push({
                 ...storeFr,
                 name: storeFr.name,
                 nameAr: storeAr?.name,
                 category: c.type,
-                subId: subFr.id
+                subId: subFr.id,
               });
             });
           }
@@ -137,67 +174,61 @@ export default function Home() {
           console.log(err);
         }
       }
+
       setAllStores(tempStores);
-      setStores(tempStores.filter(s => s.category === category && s.subId === filters[0]?.id));
     };
 
     fetchAllStores();
-  }, [categoriesData, category, selectedCity, language, filters]);
+  }, [categoriesData, language]);
 
   // ---------------------------
-  // Smart Search محسّن
+  // Smart search
   // ---------------------------
-  const smartSearch = useCallback((value: string) => {
-    setSearch(value);
+  const smartSearch = useCallback(
+    (value: string) => {
+      setSearch(value);
 
-    if (!value.trim()) {
-      setStores(allStores.filter(s => s.category === category && s.subId === filters[0]?.id));
-      return;
-    }
+      if (!value.trim()) return;
 
-    const q = value.toLowerCase();
-    const filtered = allStores.filter(store => 
-      store.addressMain?.includes(selectedCity) &&
-      (store.name?.toLowerCase().includes(q) || store.nameAr?.toLowerCase().includes(q))
-    );
+      const q = value.toLowerCase();
 
-    if (filtered.length) {
-      setCategory(filtered[0].category);
-      const sub = filters.find(f => f.id === filtered[0].subId);
-      if (sub) setFilter(sub.name);
-      setStores(filtered);
-    }
-  }, [allStores, category, filters, selectedCity]);
+      const filtered = allStores.filter(
+        (store: any) =>
+          store.addressMain?.includes(selectedCity) &&
+          (store.name?.toLowerCase().includes(q) ||
+            store.nameAr?.toLowerCase().includes(q))
+      );
 
+      if (filtered.length) {
+        setCategory(filtered[0].category);
+        setStores(filtered);
+      }
+    },
+    [allStores, selectedCity]
+  );
 
-  // ---------------------------
-  // Navigate to restaurant
-  // ---------------------------
   const goToRestaurant = (store: any) => {
     navigate(`/restaurant/${store.id}`, {
       state: {
         id: store.id,
-        name: store.name,        // الاسم بالفرنسية أو الافتراضي
+        name: store.name,
         nameAr: store.nameAr,
         profileImageUrl: store.profileImageUrl,
         coverImageUrl: store.coverImageUrl,
         isOpen: store.isOpen,
         addressMain: store.addressMain,
-        StoreaddressSecondary: store.addressSecondary
-      }
+        StoreaddressSecondary: store.addressSecondary,
+      },
     });
   };
 
-  // ---------------------------
-  // Helper للصورة
-  // ---------------------------
   const imageUrl = (url: string | null) => {
     if (!url) return "./src/assets/Layer 1.png";
     if (url.startsWith("http")) return url;
     return `${BASE}/${url.replace(/^\/?images\/?/, "images/")}`;
   };
 
-  const filteredStores = stores.filter((store) => {
+  const filteredStores = stores.filter((store: any) => {
     const q = search.toLowerCase();
     return (
       store.name?.toLowerCase().includes(q) ||
@@ -205,11 +236,11 @@ export default function Home() {
     );
   });
 
-  // ---------------------------
-  // JSX
-  // ---------------------------
   return (
-    <div className="bg-white min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
+    <div
+      className="bg-white min-h-screen font-sans"
+      dir={language === "ar" ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <div className="flex justify-between items-center px-4 py-3">
         <button className="text-2xl" onClick={() => navigate("/cart")}></button>
@@ -220,8 +251,7 @@ export default function Home() {
           className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shadow-md overflow-hidden"
           onClick={() => setLanguageModal(true)}
         >
-          <img src={languageIcon} className="w-full h-full object-cover"                 loading="lazy"
- />
+          <img src={languageIcon} className="w-full h-full object-cover" loading="lazy" />
         </button>
       </div>
 
@@ -229,7 +259,9 @@ export default function Home() {
       <div className="px-4">
         <div className="bg-gray-100 rounded-xl flex items-center px-4 py-3 mt-3">
           <input
-            className={`flex-1 bg-transparent outline-none text-gray-600 ${language === "ar" ? "text-right" : "text-left"}`}
+            className={`flex-1 bg-transparent outline-none text-gray-600 ${
+              language === "ar" ? "text-right" : "text-left"
+            }`}
             dir={language === "ar" ? "rtl" : "ltr"}
             placeholder={t.search}
             value={search}
@@ -244,19 +276,24 @@ export default function Home() {
           <button
             key={c.type}
             onClick={() => setCategory(c.type)}
-            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${category === c.type ? "bg-green-800 text-white" : "bg-gray-100 text-gray-600"}`}
+            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${
+              category === c.type
+                ? "bg-green-800 text-white"
+                : "bg-gray-100 text-gray-600"
+            }`}
           >
             <div className="p-2 rounded-full bg-gray-100 w-9 h-9 flex items-center justify-center">
-              <img src={c.image} className="w-7 h-7 object-contain" 
-                              loading="lazy"
-                              />
+              <img
+                src={c.image}
+                className="w-7 h-7 object-contain"
+                loading="lazy"
+              />
             </div>
             {c.name}
           </button>
         ))}
       </div>
 
-      {/* Filters & Stores */}
       <div className="bg-gray-100 min-h-screen">
         {/* Filters */}
         <div className="flex gap-3 overflow-x-auto px-4 py-6">
@@ -267,45 +304,61 @@ export default function Home() {
                 setFilter(f.name);
                 fetchStores(f.id);
               }}
-              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${filter === f.name ? "bg-green-800 text-white" : "bg-white text-gray-600"}`}
+              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${
+                filter === f.name
+                  ? "bg-green-800 text-white"
+                  : "bg-white text-gray-600"
+              }`}
             >
               {f.name}
             </button>
           ))}
         </div>
 
-        {/* Stores list */}
+        {/* STORES */}
         <div className="px-4 pb-10">
-          {filteredStores.map((r, i) => (
-            <div
-              key={i}
-              onClick={() => goToRestaurant(r)}
-              className="bg-white rounded-xl p-4 flex items-center mb-4 hover:shadow-md cursor-pointer"
-            >
-              <div className="w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
-                <img
-                  src={imageUrl(r.profileImageUrl)}
-                  className="w-full h-full object-cover"
-                  alt={r.name}
-                  loading="lazy"
+          {loading ? (
+            <p className="text-center py-10">جارِ التحميل…</p>
+          ) : (
+            filteredStores.map((r: any, i: number) => (
+              <div
+                key={i}
+                onClick={() => goToRestaurant(r)}
+                className="bg-white rounded-xl p-4 flex items-center mb-4 hover:shadow-md cursor-pointer"
+              >
+                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <img
+                    src={imageUrl(r.profileImageUrl)}
+                    className="w-full h-full object-cover"
+                    alt={r.name}
+                    loading="lazy"
+                  />
+                </div>
 
-                />
-              </div>
+                <div
+                  className={`flex flex-col flex-1 ${
+                    language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
+                  }`}
+                >
+                  <h2 className="font-bold text-lg">
+                    {language === "ar" ? r.nameAr || r.name : r.name}
+                  </h2>
 
-              <div className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"}`}>
-              <h2 className="font-bold text-lg">
-  {language === "ar" ? r.nameAr || r.name : r.name}
-</h2>
-                <span className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"}`}>
-                  {r.isOpen ? t.open : t.closed}
+                  <span
+                    className={`text-[10px] ${
+                      r.isOpen ? "text-green-600" : "text-red-700"
+                    }`}
+                  >
+                    {r.isOpen ? t.open : t.closed}
+                  </span>
+                </div>
+
+                <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-xs shadow">
+                  {t.delivery}: {r.deliveryFee ?? "-"}
                 </span>
               </div>
-
-              <span className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-xs shadow">
-                {t.delivery}: {r.deliveryFee ?? "-"}
-              </span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -316,8 +369,7 @@ export default function Home() {
             <div className="border rounded-lg mb-4">
               <select
                 id="citySelect"
-                className="w-full h-14 bg-white text-right text-lg border border-gray-300 rounded-xl 
-                           focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
+                className="w-full h-14 bg-white text-right text-lg border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-700 focus:border-green-700"
                 defaultValue={selectedCity}
               >
                 <option value="Nouakchott">أنواكشوط</option>
@@ -338,8 +390,13 @@ export default function Home() {
 
             <button
               onClick={() => {
-                const city = (document.getElementById("citySelect") as HTMLSelectElement).value;
-                const lang = (document.getElementById("langSelect") as HTMLSelectElement).value;
+                const city = (
+                  document.getElementById("citySelect") as HTMLSelectElement
+                ).value;
+                const lang = (
+                  document.getElementById("langSelect") as HTMLSelectElement
+                ).value;
+
                 setSelectedCity(city);
                 localStorage.setItem("selectedCity", city);
                 changeLanguage(lang);
