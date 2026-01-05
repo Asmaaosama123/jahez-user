@@ -57,7 +57,7 @@ export default function RestaurantPage() {
   // --------------------------------
   const fetchSections = async (storeId: number) => {
     try {
-      const res = await fetch(`${BASE}/api/Subcategories/${storeId}/sections?lang=${language}`);
+      const res = await fetch(`${BASE}/api/CustomerGet/${storeId}/sections?lang=${language}`);
       const data = res.ok ? await res.json() : [];
       setSections(data);
 
@@ -152,6 +152,7 @@ const getStoreName = (store: any) => language === "ar" ? store.nameAr || store.n
 const isSupermarket = categoryType === 2;
 
   if (loading) return <div className="p-5 text-center">{t.loading}</div>;
+  const totalSelected = Object.values(quantities).reduce((a, b) => a + b, 0);
 
   return (
     <div className="relative bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -196,7 +197,7 @@ const isSupermarket = categoryType === 2;
   <h1 className="text-xl font-bold">{getStoreName(storeInfo)}</h1>
 
   {storeInfo.jahezBoxActive && (
-    <img src={VIPicon} className="w-4 h-4 object-contain" alt="VIP" />
+    <img src={VIPicon} className="w-5 h-5 object-contain" alt="VIP" />
   )}
 </div>
 
@@ -216,30 +217,64 @@ const isSupermarket = categoryType === 2;
       </div>
 
       {/* TABS */}
-      <div className="flex gap-2 overflow-x-auto px-3 py-5 bg-gray-100  shadow">
-      {storeInfo.jahezBoxActive && (
+      <div className="flex gap-2 overflow-x-auto px-4 py-5 bg-gray-100  shadow">
+      {/* {storeInfo.jahezBoxActive && (
       <img src={jahezbox} className="w-15 p-3 h-10 object-contain bg-blue-500 rounded-md" alt="VIP" />
-      )}
- 
-      {sections.map((tab) => (
-          <button
-            key={tab.id}
-            className={`px-6 py-2 rounded-md text-sm whitespace-nowrap ${
-              selectedTab === tab.name ? "bg-green-700 text-white" : "bg-white text-gray-600"
-            }`}
-            onClick={() => setSelectedTab(tab.name)}
-          >
-            {tab.name}
-          </button>
-        ))}
+      )} */}
+{/* أولًا: زر جاهز بوكس لو موجود ومفعل */}
+{/* زر جاهز بوكس responsive */}
+{/* زر جاهز بوكس دايمًا لو متاح */}
+{storeInfo.jahezBoxActive &&
+  sections.some(tab => tab.name === "جاهز بوكس" || tab.name === "Jahez Box") && (
+    <button
+      key="jahezbox"
+      className={`flex-shrink-0 rounded-md transition p-1 m-0 min-w-[80px] h-10 ${
+        selectedTab === "جاهز بوكس" ? "bg-blue-500" : "bg-gray-300"
+      }`}
+      onClick={() => setSelectedTab("جاهز بوكس")}
+    >
+      <img
+        src={jahezbox}
+        alt="Jahez Box"
+        className="w-20 h-full object-contain m-0 py-1 px-2 border-0"
+      />
+    </button>
+)}
+
+
+
+{/* باقي الأقسام العادية */}
+{sections
+  .filter(tab => tab.name !== "جاهز بوكس" && tab.name !== "Jahez Box")
+  .map((tab) => (
+    <button
+      key={tab.id}
+      className={`px-8 py-2 rounded-md text-sm whitespace-nowrap ${
+        selectedTab === tab.name ? "bg-green-700 text-white" : "bg-white text-gray-600"
+      }`}
+      onClick={() => setSelectedTab(tab.name)}
+    >
+      {tab.name}
+    </button>
+  ))}
+
+
       </div>
 
       {/* MENU */}
       <div className="px-3 pb-36">
 
         {sections
-          .filter(section => section.name === selectedTab)
-          .flatMap(section => products[section.id] || [])
+  .filter(section => {
+    // حالة السوبرماركت + "جاهز بوكس"
+    if (isSupermarket && selectedTab === "جاهز بوكس") {
+      return section.name === "جاهز بوكس" || section.name === "Jahez Box";
+    }
+    // باقي الأقسام العادية
+    return section.name === selectedTab;
+  })
+  .flatMap(section => products[section.id] || [])
+
           .map((product, i) => (
             <div
               key={i}
@@ -279,49 +314,55 @@ const isSupermarket = categoryType === 2;
 
       {/* BOTTOM BUTTON */}
       {/* BOTTOM BUTTON */}
-<div className="fixed bottom-0 w-full">
+      <div className="fixed bottom-0 w-full">
+  {isSupermarket ? (
+    <>
+      {totalSelected === 0 ? (
+        // لو مفيش منتجات مختارة → اكتب طلبك
+        <button
+          onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
+          className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+        >
+          {t.rightyourorder}
+        </button>
+      ) : (
+        // لو في منتجات → اطلب الآن
+        <button
+          onClick={handleOrderNow}
+          className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+        >
+          {t.orderNow} ({totalSelected})
+        </button>
+      )}
+    </>
+  ) : (
+    // باقي الحالات للمطاعم + المخابز
+    <>
+      {added && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg animate-bounce z-50">
+          ✔ تمت الإضافة للسلة
+        </div>
+      )}
 
-{isSupermarket ? (
-  // ——— السوبرماركت ———
-  <button
-    onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
-    className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
-  >
-    {t.rightyourorder}
-  </button>
-
-) : (
-  // ——— المطاعم + المخابز ———
-  <>
-    {added && (
-      <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-xl shadow-lg animate-bounce z-50">
-        ✔ تمت الإضافة للسلة
-      </div>
-    )}
-
-    {Object.values(quantities).reduce((a, b) => a + b, 0) === 0 ? (
-
-      // لو مفيش منتجات مختارة → اكتب طلبك
-      <button
-        onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
-        className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
-      >
-        {t.rightyourorder}
-      </button>
-
-    ) : (
-
-      // لو في منتجات → اطلب الآن
-      <button
-        onClick={handleOrderNow}
-        className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
-      >
-        {t.orderNow} ({Object.values(quantities).reduce((a, b) => a + b, 0)})
-      </button>
-    )}
-  </>
-)}
+      {totalSelected === 0 ? (
+        <button
+          onClick={() => navigate("/cart", { state: { manualOrder: true, storeInfo } })}
+          className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+        >
+          {t.rightyourorder}
+        </button>
+      ) : (
+        <button
+          onClick={handleOrderNow}
+          className="w-full bg-green-700 text-white py-4 text-lg font-bold shadow-xl"
+        >
+          {t.orderNow} ({totalSelected})
+        </button>
+      )}
+    </>
+  )}
 </div>
+
 
 
 

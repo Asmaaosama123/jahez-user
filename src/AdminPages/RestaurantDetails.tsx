@@ -272,10 +272,6 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
   // إخفاء المودال بعد التحديث
   setShowEditSectionModal(false);
 };
-
-
-  
-  
   // ---------- Delete Section ----------
   const handleDeleteSectionSuccess = (deletedId: number) => {
     setSections(prev => {
@@ -298,8 +294,6 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
     setSelectedSubForDelete(null);
   };
   
-  
-
   // تحديث البيانات فوراً بعد التعديل
   const handleRestaurantUpdated = async () => {
     try {
@@ -361,166 +355,215 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
                   </p>
                 </div>
                 
-                {categoryType !== "2" && (
-                  <>
-                    <div className="relative group">
-                      <button
-                        className="bg-green-700 text-white px-8 py-2 shadow mr-[480px]"
-                        onClick={() => setShowAddProductModal(true)}
-                      >
-                        إضافة منتج
-                      </button>
-                      <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
-                        سيتم إضافة المنتج إلى قسم: {selectedSection?.name}
-                      </div>
-                    </div>
-                  </>
-                )}
+               {/* زر إضافة المنتج */}
+{(categoryType !== "2" || (categoryType === "2" && selectedSection?.name === "جاهز بوكس")) && (
+  <div className="relative group">
+    <button
+      className="bg-green-700 text-white px-8 py-2 shadow mr-[480px]"
+      onClick={() => setShowAddProductModal(true)}
+    >
+      إضافة منتج
+    </button>
+    <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
+      سيتم إضافة المنتج إلى قسم: {selectedSection?.name}
+    </div>
+  </div>
+)}
+
               </div>
             </div>
 
             {/* الأقسام */}
-            {categoryType !== "2" && (
-              <>
-          <div className="mt-20 mr-5 w-full max-w-[850px] flex flex-wrap gap-3">
-  {sections.map(sec => (
-    <div key={sec.id} className="flex items-center gap-2">
+            <>
+  <div className="mt-20 mr-5 w-full max-w-[850px] flex flex-wrap">
+    {sections
+      .filter(sec => {
+        // لو سوبرماركت، نعرض فقط قسم "جاهز بوكس"
+        if (categoryType === "2") return sec.name === "جاهز بوكس";
+        // باقي الحالات نعرض كل الأقسام
+        return true;
+      })
+      .map(sec => (
+        <div key={sec.id} className="flex items-center">
 
-      {/* الزر الرئيسي */}
-      <button 
-        onClick={() => setSelectedSection(sec)}
-        className={`px-6 py-2 rounded transition
-          ${
-            selectedSection?.id === sec.id
-              ? "bg-green-800 text-white font-bold"
-              : "bg-gray-200 text-gray-700"
-          }`}
-      >
-        {sec.name}
-      </button>
-
-      {/* أزرار الاكشن */}
-      <button
-        onClick={() => handleEditSection(sec)}
-        className="p-1 rounded hover:bg-gray-100"
-        title="تعديل"
-      >
-        <PencilIcon className="w-5 h-5 text-gray-700" />
-      </button>
-
-      <button
-        onClick={() => handleDeleteSection(sec)}
-        className="p-1 rounded hover:bg-gray-100"
-        title="حذف"
-      >
-        <TrashIcon className="w-5 h-5 text-red-700" />
-      </button>
-    </div>
-  ))}
-
-  {/* زر إضافة سكشن */}
-  <button 
-    className="bg-gray-100 text-green-500 text-xl px-10 shadow rounded"
-    onClick={() => setShowAddSectionModal(true)}
-  >
-    +
-  </button>
-</div>
-
-
-
-                <div className="bg-white shadow overflow-hidden w-[850px] mr-5">
-                  <table className="w-full text-center">
-                    <thead className="bg-green-800 text-white">
-                      <tr>
-                        <th className="p-3">الصورة</th>
-                        <th className="p-3">الاسم عربي</th>
-                        <th className="p-3">الوصف</th>
-                        <th className="p-3">السعر</th>
-                        <th className="p-3">إجراءات</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="p-5 text-gray-500">لا توجد منتجات</td>
-                        </tr>
-                      ) : products.map(prod => (
-                        <tr key={prod.id} className="border-b">
-                          <td className="p-2">
-                            <img 
-                              src={getFullImageUrl(prod.imageUrl)} 
-                              className="w-14 h-14 object-cover rounded mx-auto"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://via.placeholder.com/56x56?text=صورة";
-                              }}
-                            />
-                          </td>
-                          <td>{prod.name}</td>
-                          <td>{prod.description || '-'}</td>
-                          <td>{prod.price} ر.م</td>
-                          <td className="flex justify-center gap-2 py-2">
-                            <button 
-                              className="bg-black rounded w-6 h-6" 
-                              onClick={() => editProduct(prod)}
-                            >
-                              <PencilIcon className="w-5 h-5 text-white" />
-                            </button>
-                            <button 
-                              className="bg-red-700 rounded w-6 h-6" 
-                              onClick={() => requestDeleteProduct(prod.id)}
-                            >
-                              <TrashIcon className="w-5 h-5 text-white" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+          {/* الزر الرئيسي */}
+          <button
+            onClick={() => setSelectedSection(sec)}
+            className={`
+              transition 
+              ${
+                sec.name === "جاهز بوكس"
+                  ? "py-3 px-6 bg-blue-500 border-0 w-21 h-10 hover:bg-blue-700"
+                  : selectedSection?.id === sec.id
+                    ? "px-6 py-2 bg-green-800 text-white font-bold border-1"
+                    : "px-6 py-2 bg-gray-200 text-gray-700"
+              }
+            `}
+          >
+            {sec.name === "جاهز بوكس" ? (
+              <img
+                src={JahezBox}
+                alt="Jahez Box"
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              sec.name
             )}
+          </button>
+
+          {/* أزرار الاكشن */}
+          {sec.name !== "جاهز بوكس" && categoryType !== "2" && (
+            <>
+              <button
+                onClick={() => handleEditSection(sec)}
+                className="p-1 rounded hover:bg-gray-100"
+                title="تعديل"
+              >
+                <PencilIcon className="w-5 h-5 text-gray-700" />
+              </button>
+
+              <button
+                onClick={() => handleDeleteSection(sec)}
+                className="p-1 rounded hover:bg-gray-100"
+                title="حذف"
+              >
+                <TrashIcon className="w-5 h-5 text-red-700" />
+              </button>
+            </>
+          )}
+        </div>
+      ))}
+
+    {/* زر إضافة سكشن يظهر فقط لو مش سوبرماركت */}
+    {categoryType !== "2" && (
+      <button 
+        className="bg-gray-100 text-green-500 text-xl px-10 shadow rounded"
+        onClick={() => setShowAddSectionModal(true)}
+      >
+        +
+      </button>
+    )}
+  </div>
+
+  {/* جدول المنتجات + زر إضافة منتج */}
+  {selectedSection && (
+    <>
+      {categoryType !== "2" || (categoryType === "2" && selectedSection.name === "جاهز بوكس") ? (
+        <>
+        
+
+          <div className="bg-white shadow overflow-hidden w-[850px] mr-5">
+            <table className="w-full text-center">
+              <thead className="bg-green-800 text-white">
+                <tr>
+                  <th className="p-3">الصورة</th>
+                  <th className="p-3">الاسم عربي</th>
+                  <th className="p-3">الوصف</th>
+                  <th className="p-3">السعر</th>
+                  <th className="p-3">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-5 text-gray-500">لا توجد منتجات</td>
+                  </tr>
+                ) : products.map(prod => (
+                  <tr key={prod.id} className="border-b">
+                    <td className="p-2">
+                      <img 
+                        src={getFullImageUrl(prod.imageUrl)} 
+                        className="w-14 h-14 object-cover rounded mx-auto"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://via.placeholder.com/56x56?text=صورة";
+                        }}
+                      />
+                    </td>
+                    <td>{prod.name}</td>
+                    <td>{prod.description || '-'}</td>
+                    <td>{prod.price} ر.م</td>
+                    <td className="flex justify-center gap-2 py-2">
+                      <button 
+                        className="bg-black rounded w-6 h-6" 
+                        onClick={() => editProduct(prod)}
+                      >
+                        <PencilIcon className="w-5 h-5 text-white" />
+                      </button>
+                      <button 
+                        className="bg-red-700 rounded w-6 h-6" 
+                        onClick={() => requestDeleteProduct(prod.id)}
+                      >
+                        <TrashIcon className="w-5 h-5 text-white" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : null}
+    </>
+  )}
+</>
+
           </div>
 
           {/* العمود الثاني: الحساب */}
           <div className="p-5 mt-5 shadow border border-black w-[350px] h-fit">
           <div className="flex items-center justify-between mb-2">
   <h1 className="text-2xl font-sans mb-2">الحساب</h1>
-  
   <button
-    className={`w-20 h-12 flex items-center px-3 py-6 justify-center mt-2 transition-all duration-300
-      ${jahezBoxActive ? 'bg-blue-500 border-blue-700 shadow-lg' : 'bg-gray-300 border-gray-500'} p-1 rounded-sm`}
-    onClick={async () => {
-      try {
-        // عكس القيمة الحالية
-        const newValue = !jahezBoxActive;
-        setJahezBoxActive(newValue);
+  className={`w-20 h-12 flex items-center px-3 py-6 justify-center mt-2 transition-all duration-300
+    ${jahezBoxActive ? 'bg-blue-500 border-blue-700 shadow-lg' : 'bg-gray-300 border-gray-500'} p-1 rounded-sm`}
+  onClick={async () => {
+    try {
+      const newValue = !jahezBoxActive;
+      setJahezBoxActive(newValue);
 
-        const res = await fetch(`${BASE}/api/CustomerGet/jahezbox/${restaurantData.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isActive: newValue }), // نرسل القيمة الحالية بعد العكس
+      const res = await fetch(`${BASE}/api/CustomerGet/jahezbox/${restaurantData.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newValue }),
+      });
+
+      if (!res.ok) throw new Error('تعذر تحديث الحالة');
+
+      // ✨ ناخد الرد من الـ API
+      const data = await res.json();
+
+      // (اختياري) نستخدم القيمة اللي رجعت من السيرفر
+      setJahezBoxActive(data.jahezBoxActive);
+
+      // ✨ لو رجّع SectionId
+      if (data.jahezSectionId) {
+        // نحدّث الأقسام
+        await fetchSections();
+
+        // نخلي السكشن ده متحدد
+        setSelectedSection({
+          id: data.jahezSectionId
         });
-
-        if (!res.ok) throw new Error('تعذر تحديث الحالة');
-
-        setToast(`تم تحديث جاهز بوكس بنجاح!`);
-        setTimeout(() => setToast(null), 2500);
-
-      } catch (err) {
-        console.error(err);
-        setJahezBoxActive(prev => !prev); // ترجع للقيمة القديمة لو فشل
-        setToast('حدث خطأ أثناء التحديث');
-        setTimeout(() => setToast(null), 2500);
       }
-    }}
-  >
-    <img 
-      src={JahezBox} 
-      loading="lazy" 
-      className={`w-15 h-10 transition-transform duration-300 ${jahezBoxActive ? 'scale-110' : 'scale-100 opacity-70'}`}
-    />
-  </button>
+
+      setToast(`تم تحديث جاهز بوكس بنجاح!`);
+      setTimeout(() => setToast(null), 2500);
+
+    } catch (err) {
+      console.error(err);
+      setJahezBoxActive(prev => !prev);
+      setToast('حدث خطأ أثناء التحديث');
+      setTimeout(() => setToast(null), 2500);
+    }
+  }}
+>
+  <img 
+    src={JahezBox} 
+    loading="lazy" 
+    className={`w-15 h-10 transition-transform duration-300 ${jahezBoxActive ? 'scale-110' : 'scale-100 opacity-70'}`}
+  />
+</button>
+
 
   {/* Toast Notification */}
   {toast && (
@@ -709,15 +752,6 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
     onDelete={(deletedId) => handleDeleteSectionSuccess(deletedId)}
   />
 )}
-
-
-
-
-
-     
-
-
-
       </div>
     </div>
   );
