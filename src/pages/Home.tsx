@@ -347,7 +347,7 @@ export default function Home() {
     {language === "ar" ? r.nameAr || r.name : r.name}
   </h2>
   {r.jahezBoxActive && (
-    <img src={VIPicon} className="w-4 h-4 object-contain" alt="VIP" />
+    <img src={VIPicon} className="w-5 h-5 object-contain" alt="VIP" />
   )}
   </div>
 
