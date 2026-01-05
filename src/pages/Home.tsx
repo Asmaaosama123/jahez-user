@@ -6,6 +6,7 @@ import store1 from "../assets/store (1).png";
 import croissant from "../assets/croissant.png";
 import jahezLogo from "../assets/jahez.png";
 import languageIcon from "../assets/language.png";
+import VIPicon from "../assets/Vip icon.png";
 
 const BASE = "https://jahezdelivery.com";
 
@@ -218,6 +219,7 @@ export default function Home() {
         isOpen: store.isOpen,
         addressMain: store.addressMain,
         StoreaddressSecondary: store.addressSecondary,
+        jahezBoxActive: store.jahezBoxActive,
       },
     });
   };
@@ -340,9 +342,15 @@ export default function Home() {
                     language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
                   }`}
                 >
-                  <h2 className="font-bold text-lg">
-                    {language === "ar" ? r.nameAr || r.name : r.name}
-                  </h2>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+  <h2 className="font-bold text-lg">
+    {language === "ar" ? r.nameAr || r.name : r.name}
+  </h2>
+  {r.jahezBoxActive && (
+    <img src={VIPicon} className="w-4 h-4 object-contain" alt="VIP" />
+  )}
+  </div>
+
 
                   <span
                     className={`text-[10px] ${

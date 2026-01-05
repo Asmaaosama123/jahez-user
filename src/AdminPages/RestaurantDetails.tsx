@@ -5,6 +5,10 @@ import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
 import EditRestaurantModal from "../components/EditRestaurantModal";
+import EditSectionModal from "../components/EditSectionModal";
+import DeleteSectionModal from "../components/DeleteSectionModal";
+import JahezBox from "../assets/Jahez BOX.png";
+
 import { useParams } from "react-router-dom";
 
 const BASE = "https://jahezdelivery.com";
@@ -61,6 +65,16 @@ export default function RestaurantDetailsPage() {
   const [newSectionAr, setNewSectionAr] = useState('');
   const [newSectionFr, setNewSectionFr] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditSectionModal, setShowEditSectionModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedSucForEdit, setSelectedSucForEdit] = useState<Section | null>(null);
+  const [selectedSubForDelete, setSelectedSubForDelete] = useState<Section | null>(null);
+  const [jahezBoxActive, setJahezBoxActive] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [selectedSectionForEdit, setSelectedSectionForEdit] = useState(null);
+const [selectedSectionForDelete, setSelectedSectionForDelete] = useState(null);
+const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false);
+
 
   const cityMap: { [key: string]: string } = {
     "Nouakchott": "أنواكشوط",
@@ -74,7 +88,6 @@ export default function RestaurantDetailsPage() {
     return `${BASE}/images/${url.replace(/^\/+/, "")}`;
   };
   
-
   // جلب نوع الفئة
   useEffect(() => {
     const fetchCategoryType = async () => {
@@ -124,6 +137,12 @@ export default function RestaurantDetailsPage() {
   
     if (id) fetchRestaurant();
   }, [id]);
+
+  useEffect(() => {
+    if (restaurantData) {
+      setJahezBoxActive(Boolean(restaurantData.jahezBoxActive));
+    }
+  }, [restaurantData]);
   
 
   const fetchProductsForSection = async (sectionId: number) => {
@@ -217,6 +236,70 @@ export default function RestaurantDetailsPage() {
     }
   };
 
+  const handleEditSection = (section: Section) => {
+    setSelectedSucForEdit(section);
+    setShowEditSectionModal(true);
+  };
+  
+  
+  const handleDeleteSection = (section: Section) => {
+    setSelectedSubForDelete(section);
+    setShowDeleteModal(true);
+  };
+
+  // Fetch Restaurant + Sections + Products + WorkingDays ...
+  // (احتفظي بالكود الأصلي بدون أي تعديل)
+
+  // ---------- Update Section ----------
+// ---------- Update Section ----------
+// ---------- Update Section ----------
+const handleUpdateSection = ({ id, nameAr, nameFr }) => {
+  // تحديث قائمة الأقسام
+  setSections(prev => prev.map(sec =>
+    sec.id === id ? { ...sec, nameAr, nameFr } : sec
+  ));
+
+  // تحديث القسم المحدد لو هو نفسه المحدث
+  if (selectedSection?.id === id) {
+    setSelectedSection(prev => ({ ...prev, nameAr, nameFr }));
+  }
+
+  // تحديث القسم في المودال نفسه لو مفتوح
+  if (selectedSucForEdit?.id === id) {
+    setSelectedSucForEdit(prev => ({ ...prev, nameAr, nameFr }));
+  }
+
+  // إخفاء المودال بعد التحديث
+  setShowEditSectionModal(false);
+};
+
+
+  
+  
+  // ---------- Delete Section ----------
+  const handleDeleteSectionSuccess = (deletedId: number) => {
+    setSections(prev => {
+      const updated = prev.filter(s => s.id !== deletedId);
+  
+      // إذا كان القسم المحدد هو اللي اتحذف
+      if (selectedSection?.id === deletedId) {
+        const newSelected = updated[0] || null;
+        setSelectedSection(newSelected);
+  
+        // جلب منتجات القسم الجديد لو موجود
+        if (newSelected) fetchProductsForSection(newSelected.id);
+        else setProducts([]);
+      }
+  
+      return updated;
+    });
+  
+    setShowDeleteModal(false);
+    setSelectedSubForDelete(null);
+  };
+  
+  
+
   // تحديث البيانات فوراً بعد التعديل
   const handleRestaurantUpdated = async () => {
     try {
@@ -299,23 +382,52 @@ export default function RestaurantDetailsPage() {
             {/* الأقسام */}
             {categoryType !== "2" && (
               <>
-                <div className="mt-20 flex overflow-x-auto mr-5">
-                  {sections.map(sec => (
-                    <button 
-                      key={sec.id} 
-                      onClick={() => setSelectedSection(sec)}
-                      className={`px-6 py-2 border-l-2 border-white ${selectedSection?.id === sec.id ? 'bg-green-800 text-white font-bold' : 'bg-gray-200 text-gray-700'}`}
-                    >
-                      {sec.name}
-                    </button>
-                  ))}
-                  <button 
-                    className="bg-gray-100 text-green-500 text-xl px-10 shadow"
-                    onClick={() => setShowAddSectionModal(true)}
-                  >
-                    +
-                  </button>
-                </div>
+          <div className="mt-20 mr-5 w-full max-w-[850px] flex flex-wrap gap-3">
+  {sections.map(sec => (
+    <div key={sec.id} className="flex items-center gap-2">
+
+      {/* الزر الرئيسي */}
+      <button 
+        onClick={() => setSelectedSection(sec)}
+        className={`px-6 py-2 rounded transition
+          ${
+            selectedSection?.id === sec.id
+              ? "bg-green-800 text-white font-bold"
+              : "bg-gray-200 text-gray-700"
+          }`}
+      >
+        {sec.name}
+      </button>
+
+      {/* أزرار الاكشن */}
+      <button
+        onClick={() => handleEditSection(sec)}
+        className="p-1 rounded hover:bg-gray-100"
+        title="تعديل"
+      >
+        <PencilIcon className="w-5 h-5 text-gray-700" />
+      </button>
+
+      <button
+        onClick={() => handleDeleteSection(sec)}
+        className="p-1 rounded hover:bg-gray-100"
+        title="حذف"
+      >
+        <TrashIcon className="w-5 h-5 text-red-700" />
+      </button>
+    </div>
+  ))}
+
+  {/* زر إضافة سكشن */}
+  <button 
+    className="bg-gray-100 text-green-500 text-xl px-10 shadow rounded"
+    onClick={() => setShowAddSectionModal(true)}
+  >
+    +
+  </button>
+</div>
+
+
 
                 <div className="bg-white shadow overflow-hidden w-[850px] mr-5">
                   <table className="w-full text-center">
@@ -372,7 +484,51 @@ export default function RestaurantDetailsPage() {
 
           {/* العمود الثاني: الحساب */}
           <div className="p-5 mt-5 shadow border border-black w-[350px] h-fit">
-            <h1 className="text-2xl font-sans mb-2">الحساب</h1>
+          <div className="flex items-center justify-between mb-2">
+  <h1 className="text-2xl font-sans mb-2">الحساب</h1>
+  
+  <button
+    className={`w-20 h-12 flex items-center px-3 py-6 justify-center mt-2 transition-all duration-300
+      ${jahezBoxActive ? 'bg-blue-500 border-blue-700 shadow-lg' : 'bg-gray-300 border-gray-500'} p-1 rounded-sm`}
+    onClick={async () => {
+      try {
+        // عكس القيمة الحالية
+        const newValue = !jahezBoxActive;
+        setJahezBoxActive(newValue);
+
+        const res = await fetch(`${BASE}/api/CustomerGet/jahezbox/${restaurantData.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: newValue }), // نرسل القيمة الحالية بعد العكس
+        });
+
+        if (!res.ok) throw new Error('تعذر تحديث الحالة');
+
+        setToast(`تم تحديث جاهز بوكس بنجاح!`);
+        setTimeout(() => setToast(null), 2500);
+
+      } catch (err) {
+        console.error(err);
+        setJahezBoxActive(prev => !prev); // ترجع للقيمة القديمة لو فشل
+        setToast('حدث خطأ أثناء التحديث');
+        setTimeout(() => setToast(null), 2500);
+      }
+    }}
+  >
+    <img 
+      src={JahezBox} 
+      loading="lazy" 
+      className={`w-15 h-10 transition-transform duration-300 ${jahezBoxActive ? 'scale-110' : 'scale-100 opacity-70'}`}
+    />
+  </button>
+
+  {/* Toast Notification */}
+  {toast && (
+    <div className="fixed top-20 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
+      {toast}
+    </div>
+  )}
+</div>
             <p className="text-xl bg-gray-100 pl-4 py-1 mb-2">{restaurantData?.nameAr}</p>
             <p className="text-xl bg-gray-100 pr-4 text-left pl-1 py-1 mb-2">{restaurantData?.nameFr}</p>
             {categoryType === "1" && <p className="text-xl bg-gray-100 pl-4 py-1 mb-2">مطعم</p>}
@@ -407,6 +563,8 @@ export default function RestaurantDetailsPage() {
             >
               حذف الحساب
             </button>
+           
+
           </div>
         </div>
 
@@ -531,6 +689,32 @@ export default function RestaurantDetailsPage() {
     onUpdated={handleRestaurantUpdated}
   />
 )}
+
+{showEditSectionModal && selectedSucForEdit && (
+  <EditSectionModal
+    section={selectedSucForEdit}
+    onClose={() => setShowEditSectionModal(false)}
+    onUpdate={handleUpdateSection} // هنا المودال بينادي الصفحة مباشرة
+  />
+)}
+
+
+{showDeleteModal && selectedSubForDelete && (
+  <DeleteSectionModal
+    section={selectedSubForDelete}
+    onClose={() => {
+      setShowDeleteModal(false);
+      setSelectedSubForDelete(null);
+    }}
+    onDelete={(deletedId) => handleDeleteSectionSuccess(deletedId)}
+  />
+)}
+
+
+
+
+
+     
 
 
 
