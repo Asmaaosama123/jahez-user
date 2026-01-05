@@ -3,6 +3,8 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { IoArrowForward } from "react-icons/io5";
 import { useCart } from "../context/CartContext";
 import { useLang } from "../context/LanguageContext";
+import VIPicon from "../assets/Vip icon.png";
+import jahezbox from "../assets/Jahez BOX.png";
 
 const BASE = "https://jahezdelivery.com";
 
@@ -190,7 +192,14 @@ const isSupermarket = categoryType === 2;
     language === "ar" ? "text-right items-start" : "text-left items-start"
   }`}
 >
-<h1 className="text-xl font-bold">{getStoreName(storeInfo)}</h1>
+<div className="flex items-center gap-2 rtl:space-x-reverse">
+  <h1 className="text-xl font-bold">{getStoreName(storeInfo)}</h1>
+
+  {storeInfo.jahezBoxActive && (
+    <img src={VIPicon} className="w-4 h-4 object-contain" alt="VIP" />
+  )}
+</div>
+
   <span
     className={`text-[10px] mt-1 ${
       storeInfo?.isOpen ? "text-green-400" : "text-red-700"
@@ -207,8 +216,12 @@ const isSupermarket = categoryType === 2;
       </div>
 
       {/* TABS */}
-      <div className="flex gap-2 overflow-x-auto px-3 py-5 bg-gray-100 shadow">
-        {sections.map((tab) => (
+      <div className="flex gap-2 overflow-x-auto px-3 py-5 bg-gray-100  shadow">
+      {storeInfo.jahezBoxActive && (
+      <img src={jahezbox} className="w-15 p-3 h-10 object-contain bg-blue-500 rounded-md" alt="VIP" />
+      )}
+ 
+      {sections.map((tab) => (
           <button
             key={tab.id}
             className={`px-6 py-2 rounded-md text-sm whitespace-nowrap ${
@@ -223,6 +236,7 @@ const isSupermarket = categoryType === 2;
 
       {/* MENU */}
       <div className="px-3 pb-36">
+
         {sections
           .filter(section => section.name === selectedTab)
           .flatMap(section => products[section.id] || [])
