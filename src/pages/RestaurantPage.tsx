@@ -68,8 +68,12 @@ export default function RestaurantPage() {
       }
       setProducts(productsMap);
 
-      if (data.length > 0) setSelectedTab(data[0].name); // اختر أول تاب افتراضياً
-
+      if (data.length > 0) {
+        // لو فيه قسم "جاهز بوكس"، نخليه أول قسم محدد، وإلا أول قسم عادي
+        const jahezTab = data.find(s => ["جاهز بوكس", "Jahez Box"].includes(s.name));
+        setSelectedTab(jahezTab ? jahezTab.name : data[0].name);
+      }
+      
       const initialQuantities: { [key: string]: number } = {};
       Object.values(productsMap).flat().forEach((p: any) => { initialQuantities[p.id] = 0; });
       setQuantities(initialQuantities);
@@ -217,21 +221,21 @@ const isSupermarket = categoryType === 2;
       </div>
 
       {/* TABS */}
-      <div className="flex gap-2 overflow-x-auto px-4 py-5 bg-gray-100  shadow">
-      {/* {storeInfo.jahezBoxActive && (
-      <img src={jahezbox} className="w-15 p-3 h-10 object-contain bg-blue-500 rounded-md" alt="VIP" />
-      )} */}
-{/* أولًا: زر جاهز بوكس لو موجود ومفعل */}
-{/* زر جاهز بوكس responsive */}
-{/* زر جاهز بوكس دايمًا لو متاح */}
-{storeInfo.jahezBoxActive &&
-  sections.some(tab => tab.name === "جاهز بوكس" || tab.name === "Jahez Box") && (
+  {/* TABS */}
+<div className="flex gap-2 overflow-x-auto px-4 py-5 bg-gray-100 shadow">
+  {/* زر جاهز بوكس */}
+  {storeInfo.jahezBoxActive &&
+  sections.some(tab => ["جاهز بوكس", "Jahez Box"].includes(tab.name)) && (
     <button
       key="jahezbox"
       className={`flex-shrink-0 rounded-md transition p-1 m-0 min-w-[80px] h-10 ${
-        selectedTab === "جاهز بوكس" ? "bg-blue-500" : "bg-gray-300"
+        selectedTab === "جاهز بوكس" || selectedTab === "Jahez Box" ? "bg-blue-500 text-white" : "bg-gray-300 text-black"
       }`}
-      onClick={() => setSelectedTab("جاهز بوكس")}
+      onClick={() => {
+        // لما تدوس على الزر، نختار الاسم الصحيح حسب اللغة
+        const tabName = language === "ar" ? "جاهز بوكس" : "Jahez Box";
+        setSelectedTab(tabName);
+      }}
     >
       <img
         src={jahezbox}
@@ -242,25 +246,21 @@ const isSupermarket = categoryType === 2;
 )}
 
 
-
-{/* باقي الأقسام العادية */}
-{sections
-  .filter(tab => tab.name !== "جاهز بوكس" && tab.name !== "Jahez Box")
-  .map((tab) => (
-    <button
-      key={tab.id}
-      className={`px-8 py-2 rounded-md text-sm whitespace-nowrap ${
-        selectedTab === tab.name ? "bg-green-700 text-white" : "bg-white text-gray-600"
-      }`}
-      onClick={() => setSelectedTab(tab.name)}
-    >
-      {tab.name}
-    </button>
-  ))}
-
-
-      </div>
-
+  {/* باقي الأقسام العادية */}
+  {sections
+    .filter(tab => tab.name !== "جاهز بوكس" && tab.name !== "Jahez Box")
+    .map((tab) => (
+      <button
+        key={tab.id}
+        className={`px-8 py-2 rounded-md text-sm whitespace-nowrap ${
+          selectedTab === tab.name ? "bg-green-700 text-white" : "bg-white text-gray-600"
+        }`}
+        onClick={() => setSelectedTab(tab.name)}
+      >
+        {tab.name}
+      </button>
+    ))}
+</div>
       {/* MENU */}
       <div className="px-3 pb-36">
 
