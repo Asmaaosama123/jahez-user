@@ -264,52 +264,46 @@ const isSupermarket = categoryType === 2;
       {/* MENU */}
       <div className="px-3 pb-36">
 
-        {sections
+      {sections
   .filter(section => {
-    // حالة السوبرماركت + "جاهز بوكس"
-    if (isSupermarket && selectedTab === "جاهز بوكس") {
-      return section.name === "جاهز بوكس" || section.name === "Jahez Box";
+    if (selectedTab === "جاهز بوكس") {
+      // أي قسم جاهز بوكس سواء بالعربي أو الإنجليزي
+      return ["جاهز بوكس", "Jahez Box"].includes(section.name);
     }
-    // باقي الأقسام العادية
     return section.name === selectedTab;
   })
   .flatMap(section => products[section.id] || [])
+  .map((product, i) => (
+    <div
+      key={i}
+      onClick={() => setSelectedProduct(product)}
+      className="bg-white rounded-xl p-2 mt-2 flex items-center mb-5 shadow-sm cursor-pointer"
+    >
+      <div className="w-20 h-20 rounded-xl overflow-hidden border flex items-center justify-center bg-gray-100">
+        <img
+          src={fixImageUrl(product.imageUrl)}
+          className="w-full h-full object-cover"
+          alt={product.name}
+          loading="lazy"
+        />
+      </div>
+      <div className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"}`}>
+        <h2 className="font-bold text-lg">{product.name}</h2>
+        <span className="text-sm text-green-600">{product.price} MRU</span>
+      </div>
 
-          .map((product, i) => (
-            <div
-              key={i}
-              onClick={() => setSelectedProduct(product)}
-              className="bg-white rounded-xl p-2 mt-2 flex items-center mb-5 shadow-sm cursor-pointer"
-            >
-              <div className="w-20 h-20 rounded-xl overflow-hidden border flex items-center justify-center bg-gray-100">
-                <img
-                  src={fixImageUrl(product.imageUrl)}
-                  className="w-full h-full object-cover"
-                  alt={product.name}
-                  loading="lazy"
-                />
-              </div>
-              <div
-  className={`flex flex-col flex-1 ${
-    language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
-  }`}
->
-  <h2 className="font-bold text-lg">{product.name}</h2>
-  <span className="text-sm text-green-600">{product.price} MRU</span>
-</div>
+      <div
+        className={`flex border rounded-lg overflow-hidden 
+        ${quantities[product.id] > 0 ? "bg-green-100 border-green-600" : "bg-gray-100"}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button className="px-2 py-0.5 border-l text-lg" onClick={() => handleQuantityChange(product.id.toString(), 1)}>+</button>
+        <span className="px-3 py-0.5">{quantities[product.id] || 0}</span>
+        <button className="px-2 py-0.5 border-r text-lg" onClick={() => handleQuantityChange(product.id.toString(), -1)}>-</button>
+      </div>
+    </div>
+  ))}
 
-              <div
-  className={`flex border rounded-lg overflow-hidden 
-    ${quantities[product.id] > 0 ? "bg-green-100 border-green-600" : "bg-gray-100"}`}
-  onClick={(e) => e.stopPropagation()}
->
-
-                <button className="px-2 py-0.5 border-l text-lg" onClick={() => handleQuantityChange(product.id.toString(), 1)}>+</button>
-                <span className="px-3 py-0.5">{quantities[product.id] || 0}</span>
-                <button className="px-2 py-0.5 border-r text-lg" onClick={() => handleQuantityChange(product.id.toString(), -1)}>-</button>
-              </div>
-            </div>
-          ))}
       </div>
 
       {/* BOTTOM BUTTON */}
