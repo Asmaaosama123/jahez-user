@@ -9,6 +9,7 @@ export default function Cart() {
   const location = useLocation();
   const { t, language } = useLang();
   const { cart, updateCart, clearCart } = useCart();
+  const [showConfirm, setShowConfirm] = useState(false);
 
   // بيانات من الصفحة اللي قبلها
   const manualOrder = location.state?.manualOrder || false;
@@ -50,8 +51,8 @@ export default function Cart() {
   const getProductName = (item: any) => language === "ar" ? (item.nameAr || item.name || "") : (item.nameFr || item.name || "");
 
   // إرسال الطلب عبر WhatsApp أو API
-const handleSendWhatsApp = async () => {
-  if (!phone || !address) {
+  const handleSendOrder = async () => {
+    if (!phone || !address) {
     alert(language === "ar" ? "يرجى إدخال رقم الهاتف والعنوان" : "Please enter phone and address");
     return;
   }
@@ -98,10 +99,8 @@ const handleSendWhatsApp = async () => {
     const publicOrderLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
 
     // ✅ واتساب – اللينك فقط
-    const waNumber = "22224262427";
-    const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(publicOrderLink)}`;
     await saveOrderLink(orderId);
-    window.open(waLink, "_blank");
+    navigate("/order-success");
 
   } catch (err: any) {
     alert(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
@@ -264,13 +263,46 @@ const saveOrderLink = async (orderId: string) => {
           onChange={e => setPhone(e.target.value)}
         />
         <button
-          onClick={handleSendWhatsApp}
-          disabled={loading || (manualOrder ? manualRequest.trim() === "" : Object.keys(filteredCart).length === 0)}
+onClick={() => setShowConfirm(true)}
+disabled={loading || (manualOrder ? manualRequest.trim() === "" : Object.keys(filteredCart).length === 0)}
           className="w-full bg-green-700 text-white py-3 text-base font-bold shadow-xl"
         >
           {loading ? (language === "ar" ? "جارٍ الإرسال..." : "sending") : (language === "ar" ? "تأكيد الطلب" : "Confirm Order")}
         </button>
       </div>
+      {showConfirm && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl p-6 w-80 text-center animate-scaleIn">
+
+      <h2 className="text-xl font-bold mb-4">
+        {language === "ar"
+          ? "هل أنت متأكد من إرسال الطلب؟"
+          : "Êtes-vous sûr d’envoyer la commande ?"}
+      </h2>
+
+      <div className="flex gap-3">
+        <button
+          className="flex-1 border border-gray-400 py-2 rounded"
+          onClick={() => setShowConfirm(false)}
+        >
+          {language === "ar" ? "إلغاء" : "Annuler"}
+        </button>
+
+        <button
+          className="flex-1 bg-green-700 text-white py-2 rounded"
+          onClick={async () => {
+            setShowConfirm(false);
+            await handleSendOrder();
+          }}
+        >
+          {language === "ar" ? "نعم" : "Oui"}
+        </button>
+      </div>
     </div>
+  </div>
+)}
+
+    </div>
+    
   );
 }
