@@ -247,7 +247,7 @@ export default function Home() {
       <div className="flex justify-between items-center px-4 py-3">
         <button className="text-2xl" onClick={() => navigate("/cart")}></button>
         <h1 className="text-7xl font-bold text-green-800">
-          <img src={jahezLogo} className="w-37 h-8 object-cover" />
+          <img src={jahezLogo} className="w-35 h-8 object-cover" />
         </h1>
         <button
           className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shadow-md overflow-hidden"
