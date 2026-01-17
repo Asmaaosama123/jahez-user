@@ -110,7 +110,25 @@ const handleSendWhatsApp = async () => {
   }
 };
 
-  
+useEffect(() => {
+  const bar = document.getElementById("bottomBar");
+
+  const updatePosition = () => {
+    if (window.visualViewport && bar) {
+      const offset =
+        window.innerHeight - window.visualViewport.height;
+      bar.style.bottom = `${offset}px`;
+    }
+  };
+
+  updatePosition();
+  window.visualViewport?.addEventListener("resize", updatePosition);
+
+  return () => {
+    window.visualViewport?.removeEventListener("resize", updatePosition);
+  };
+}, []);
+
 const saveOrderLink = async (orderId: string) => {
   const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
 
@@ -229,7 +247,10 @@ const saveOrderLink = async (orderId: string) => {
       )}
 
       {/* Bottom form */}
-      <div className="fixed bottom-0 left-0 w-full bg-white p-3 border-t shadow-lg">
+      <div
+  id="bottomBar"
+  className="fixed left-0 w-full bg-white p-3 border-t shadow-lg z-50"
+>
         <input
           className="w-full border p-2 text-sm mb-2"
           placeholder={t.addressPlaceholder}
