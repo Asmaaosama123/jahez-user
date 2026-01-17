@@ -152,7 +152,7 @@ const saveOrderLink = async (orderId: string) => {
 
 
   return (
-    <div className="overflow-y-auto pb-30 bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"} >
+    <div className="overflow-y-auto pb-40 bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"} >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-white shadow relative">
       <button
