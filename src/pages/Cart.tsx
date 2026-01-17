@@ -260,7 +260,7 @@ const saveOrderLink = async (orderId: string) => {
   type="tel"
   inputMode="numeric"
   pattern="[0-9]*"
-  className="w-full border p-2 mb-2 text-sm"
+  className={`w-full border p-2 mb-2 text-sm ${language === "ar" ? "text-right" : "text-left"}`}
   placeholder={t.phonePlaceholder}
   value={phone}
   onChange={e => {
