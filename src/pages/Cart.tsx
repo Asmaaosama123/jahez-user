@@ -256,12 +256,20 @@ const saveOrderLink = async (orderId: string) => {
           value={address}
           onChange={e => setAddress(e.target.value)}
         />
-        <input
-          className="w-full border p-2 mb-2 text-sm"
-          placeholder={t.phonePlaceholder}
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-        />
+       <input
+  type="tel"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-full border p-2 mb-2 text-sm"
+  placeholder={t.phonePlaceholder}
+  value={phone}
+  onChange={e => {
+    // يمنع أي حاجة غير أرقام
+    const onlyNums = e.target.value.replace(/[^0-9]/g, "");
+    setPhone(onlyNums);
+  }}
+/>
+
         <button
 onClick={() => setShowConfirm(true)}
 disabled={loading || (manualOrder ? manualRequest.trim() === "" : Object.keys(filteredCart).length === 0)}
