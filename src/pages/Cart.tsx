@@ -123,25 +123,30 @@ export default function Cart() {
   };
 
   // تعديل Bottom Bar عند ظهور الكيبورد
-  useEffect(() => {
-    const bar = document.getElementById("bottomBar");
-    if (!bar || !window.visualViewport) return;
+  // تعديل Bottom Bar عند ظهور الكيبورد
+useEffect(() => {
+  const bar = document.getElementById("bottomBar");
+  if (!bar || !window.visualViewport) return;
 
-    const adjustBar = () => {
-      const keyboardHeight = window.innerHeight - window.visualViewport.height;
-      bar.style.transform = `translateY(${keyboardHeight > 120 ? -keyboardHeight : 0}px)`;
-    };
+  const adjustBottom = () => {
+    const keyboardHeight = window.innerHeight - window.visualViewport.height;
+    bar.style.bottom = `${keyboardHeight > 0 ? keyboardHeight : 0}px`;
+  };
 
-    window.visualViewport.addEventListener("resize", adjustBar);
-    window.addEventListener("focusin", adjustBar);
-    window.addEventListener("focusout", adjustBar);
+  window.visualViewport.addEventListener("resize", adjustBottom);
+  window.addEventListener("focusin", adjustBottom);
+  window.addEventListener("focusout", adjustBottom);
 
-    return () => {
-      window.visualViewport.removeEventListener("resize", adjustBar);
-      window.removeEventListener("focusin", adjustBar);
-      window.removeEventListener("focusout", adjustBar);
-    };
-  }, []);
+  // ضبط أول مرة
+  adjustBottom();
+
+  return () => {
+    window.visualViewport.removeEventListener("resize", adjustBottom);
+    window.removeEventListener("focusin", adjustBottom);
+    window.removeEventListener("focusout", adjustBottom);
+  };
+}, []);
+
 
   return (
     <div className="overflow-y-auto pb-[200px] bg-gray-100 min-h-screen font-sans" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -215,29 +220,33 @@ export default function Cart() {
       )}
 
       {/* Bottom Bar */}
-      <div id="bottomBar" className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50">
-        <button
-          onClick={() => {
-            setLoading(true);
-            setTimeout(() => {
-              setShowFormModal(true);
-              setLoading(false);
-            }, 300);
-          }}
-          className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg flex items-center justify-center"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              {language === "ar" ? "جارٍ التحميل..." : "Loading..."}
-              <svg className="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-              </svg>
-            </>
-          ) : language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
-        </button>
-      </div>
+      <div
+  id="bottomBar"
+  className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50"
+>
+  <button
+    onClick={() => {
+      setLoading(true);
+      setTimeout(() => {
+        setShowFormModal(true);
+        setLoading(false);
+      }, 300);
+    }}
+    className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg flex items-center justify-center"
+    disabled={loading}
+  >
+    {loading ? (
+      <>
+        {language === "ar" ? "جارٍ التحميل..." : "Loading..."}
+        <svg className="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </>
+    ) : language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
+  </button>
+</div>
+
 
       {/* Form Modal */}
       {showFormModal && (
