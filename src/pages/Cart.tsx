@@ -11,6 +11,7 @@ export default function Cart() {
   const { cart, updateCart, clearCart } = useCart();
   const [showConfirm, setShowConfirm] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // بيانات من الصفحة اللي قبلها
   const manualOrder = location.state?.manualOrder || false;
@@ -57,8 +58,7 @@ export default function Cart() {
   // فلتر الكارت
   const filteredCart = Object.fromEntries(
     Object.entries(cart).filter(
-      ([_, storeData]) =>
-        (storeData?.items?.length || 0) > 0
+      ([_, storeData]) => (storeData?.items?.length || 0) > 0
     )
   );
 
@@ -69,17 +69,7 @@ export default function Cart() {
 
   // إرسال الطلب
   const handleSendOrder = async () => {
-    if (!phone || !address) {
-      alert(
-        language === "ar"
-          ? "يرجى إدخال رقم الهاتف والعنوان"
-          : "Please enter phone and address"
-      );
-      return;
-    }
-
     setLoading(true);
-
     try {
       let orderPayload = {
         customerPhone: phone,
@@ -93,16 +83,13 @@ export default function Cart() {
         orderPayload.storeId = storeInfo?.id;
         orderPayload.orderContent = manualRequest;
       } else {
-        const [storeId, storeData] =
-          Object.entries(filteredCart)[0];
+        const [storeId, storeData] = Object.entries(filteredCart)[0];
         orderPayload.storeId = storeId;
-        orderPayload.items = storeData.items.map(
-          (item) => ({
-            productId: item.id,
-            qty: item.qty,
-            price: item.price,
-          })
-        );
+        orderPayload.items = storeData.items.map((item) => ({
+          productId: item.id,
+          qty: item.qty,
+          price: item.price,
+        }));
       }
 
       const res = await fetch(
@@ -116,8 +103,7 @@ export default function Cart() {
         }
       );
 
-      if (!res.ok)
-        throw new Error("فشل إنشاء الطلب");
+      if (!res.ok) throw new Error("فشل إنشاء الطلب");
 
       const data = await res.json();
       const orderId = data.orderId;
@@ -125,7 +111,7 @@ export default function Cart() {
       await saveOrderLink(orderId);
       navigate("/order-success");
     } catch (err) {
-      alert(
+      setErrorMessage(
         language === "ar"
           ? `حدث خطأ: ${err.message}`
           : `Error: ${err.message}`
@@ -134,48 +120,6 @@ export default function Cart() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const bar = document.getElementById("bottomBar");
-  
-    const isInputFocused = () => {
-      const el = document.activeElement;
-      return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
-    };
-  
-    const updatePosition = () => {
-      if (!bar || !window.visualViewport) return;
-  
-      const diff =
-        window.innerHeight - window.visualViewport.height;
-  
-      // لو مفيش input متحدد → رجّع البار مكانه الطبيعي
-      if (!isInputFocused()) {
-        bar.style.transform = "translateY(0px)";
-        return;
-      }
-  
-      // لو الفرق صغير → ده مش كيبورد حقيقي
-      if (diff < 120) {
-        bar.style.transform = "translateY(0px)";
-        return;
-      }
-  
-      // كيبورد مفتوح فعليًا
-      bar.style.transform = `translateY(-${diff}px)`;
-    };
-  
-    window.visualViewport.addEventListener("resize", updatePosition);
-    window.addEventListener("focusin", updatePosition);
-    window.addEventListener("focusout", updatePosition);
-  
-    return () => {
-      window.visualViewport.removeEventListener("resize", updatePosition);
-      window.removeEventListener("focusin", updatePosition);
-      window.removeEventListener("focusout", updatePosition);
-    };
-  }, []);
-  
 
   const saveOrderLink = async (orderId) => {
     const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
@@ -191,11 +135,43 @@ export default function Cart() {
       }
     );
 
-    if (!res.ok)
-      throw new Error("فشل حفظ رابط الطلب");
+    if (!res.ok) throw new Error("فشل حفظ رابط الطلب");
 
     return await res.json();
   };
+
+  // Bottom bar adjustment عند الكيبورد
+  useEffect(() => {
+    const bar = document.getElementById("bottomBar");
+
+    const isInputFocused = () => {
+      const el = document.activeElement;
+      return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+    };
+
+    const updatePosition = () => {
+      if (!bar || !window.visualViewport) return;
+
+      const diff = window.innerHeight - window.visualViewport.height;
+
+      if (!isInputFocused() || diff < 120) {
+        bar.style.transform = "translateY(0px)";
+        return;
+      }
+
+      bar.style.transform = `translateY(-${diff}px)`;
+    };
+
+    window.visualViewport.addEventListener("resize", updatePosition);
+    window.addEventListener("focusin", updatePosition);
+    window.addEventListener("focusout", updatePosition);
+
+    return () => {
+      window.visualViewport.removeEventListener("resize", updatePosition);
+      window.removeEventListener("focusin", updatePosition);
+      window.removeEventListener("focusout", updatePosition);
+    };
+  }, []);
 
   return (
     <div
@@ -211,15 +187,11 @@ export default function Cart() {
           onClick={() => navigate(-1)}
         >
           <IoArrowForward
-            className={`text-white text-xl ${
-              language === "fr" ? "rotate-180" : ""
-            }`}
+            className={`text-white text-xl ${language === "fr" ? "rotate-180" : ""}`}
           />
         </button>
         <h1 className="text-xl font-bold text-black m-auto">
-          <span className="text-black font-bold text-2xl">
-            {t.Orderdetails}
-          </span>
+          <span className="text-black font-bold text-2xl">{t.Orderdetails}</span>
         </h1>
       </div>
 
@@ -227,208 +199,138 @@ export default function Cart() {
       {manualOrder ? (
         <div className="bg-white p-3 mb-3 mt-5 mx-3 rounded-xl">
           <div className="flex items-center gap-3 mb-4">
-            <img
-              src={storeInfo?.profileImageUrl}
-              className="w-16 h-16 rounded-full object-cover"
-            />
+            <img src={storeInfo?.profileImageUrl} className="w-16 h-16 rounded-full object-cover" />
             <div>
-              <h2 className="text-xl font-bold">
-                {storeInfo?.name}
-              </h2>
+              <h2 className="text-xl font-bold">{storeInfo?.name}</h2>
               {storeInfo?.StoreaddressSecondary && (
-                <p className="text-sm text-green-700">
-                  {storeInfo.StoreaddressSecondary}
-                </p>
+                <p className="text-sm text-green-700">{storeInfo.StoreaddressSecondary}</p>
               )}
             </div>
           </div>
-
           <textarea
             className="w-full p-3 border rounded-lg mb-4 text-base"
             rows={6}
             placeholder={t.Pleaseenteryourdetailshere}
             value={manualRequest}
-            onChange={(e) =>
-              setManualRequest(e.target.value)
-            }
+            onChange={(e) => setManualRequest(e.target.value)}
           />
         </div>
       ) : (
-        Object.entries(filteredCart).map(
-          ([storeId, storeData]) => (
-            <div
-              key={storeId}
-              className="bg-white p-3 mb-3 mt-5 mx-3 rounded-xl"
-            >
-              {/* معلومات المتجر */}
-              <div className="flex items-center mb-3 gap-2">
-                <img
-                  src={storeData.storeImage}
-                  alt={storeData.storeName}
-                  className="w-16 h-16 rounded-full object-cover shrink-0"
-                />
-
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-bold truncate">
-                    {storeData.storeName}
-                  </h2>
-                  {storeData.StoreaddressSecondary && (
-                    <p className="text-sm text-green-700 truncate">
-                      {
-                        storeData.StoreaddressSecondary
-                      }
-                    </p>
-                  )}
+        Object.entries(filteredCart).map(([storeId, storeData]) => (
+          <div key={storeId} className="bg-white p-3 mb-3 mt-5 mx-3 rounded-xl">
+            <div className="flex items-center mb-3 gap-2">
+              <img src={storeData.storeImage} alt={storeData.storeName} className="w-16 h-16 rounded-full object-cover shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold truncate">{storeData.storeName}</h2>
+                {storeData.StoreaddressSecondary && (
+                  <p className="text-sm text-green-700 truncate">{storeData.StoreaddressSecondary}</p>
+                )}
+              </div>
+              <div className="shrink-0 ml-2 mr-2">
+                <span className="text-white text-sm sm:text-base bg-green-700 px-4 py-2 rounded font-bold whitespace-nowrap">
+                  {totalPrice} MRU
+                </span>
+              </div>
+            </div>
+            <hr className="border-t border-black my-4" />
+            {(storeData.items || []).map((item) => (
+              <div key={item.id} className="flex items-center border rounded-xl p-2 mb-2">
+                <img src={item.imageUrl || ""} className="w-12 h-12 rounded-xl border-2 border-green-500 shrink-0" alt={getProductName(item)} />
+                <div className={`${language === "fr" ? "ml-2" : "mr-2"} shadow-sm bg-white min-w-0`}>
+                  <p className="font-bold text-sm truncate">{getProductName(item)}</p>
+                  <p className="text-green-700 text-xs">{item.price} MRU</p>
                 </div>
-
-                <div className="shrink-0 ml-2 mr-2">
-                  <span className="text-white text-sm sm:text-base bg-green-700 px-4 py-2 rounded font-bold whitespace-nowrap">
-                    {totalPrice} MRU
-                  </span>
+                <div className={`flex items-center gap-1 ${language === "fr" ? "ml-auto" : "mr-auto"} text-green-700 font-bold`}>
+                  <button onClick={() => increaseQty(storeId, item.id)} className="border px-2 py-1 rounded border-green-600">+</button>
+                  <div className="border px-2 py-1 rounded text-sm min-w-[32px] text-center">{item.qty}</div>
+                  <button onClick={() => decreaseQty(storeId, item.id)} className="border px-2 py-1 rounded border-green-600">-</button>
                 </div>
               </div>
-
-              <hr className="border-t border-black my-4" />
-
-              {/* منتجات المطعم */}
-              {(storeData.items || []).map(
-                (item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center border rounded-xl p-2 mb-2"
-                  >
-                    <img
-                      src={item.imageUrl || ""}
-                      className="w-12 h-12 rounded-xl border-2 border-green-500 shrink-0"
-                      alt={getProductName(item)}
-                    />
-                    <div
-                      className={`${
-                        language === "fr"
-                          ? "ml-2"
-                          : "mr-2"
-                      } shadow-sm bg-white min-w-0`}
-                    >
-                      <p className="font-bold text-sm truncate">
-                        {getProductName(item)}
-                      </p>
-                      <p className="text-green-700 text-xs">
-                        {item.price} MRU
-                      </p>
-                    </div>
-
-                    <div
-                      className={`flex items-center gap-1 ${
-                        language === "fr"
-                          ? "ml-auto"
-                          : "mr-auto"
-                      } text-green-700 font-bold`}
-                    >
-                      <button
-                        onClick={() =>
-                          increaseQty(
-                            storeId,
-                            item.id
-                          )
-                        }
-                        className="border px-2 py-1 rounded border-green-600"
-                      >
-                        +
-                      </button>
-                      <div className="border px-2 py-1 rounded text-sm min-w-[32px] text-center">
-                        {item.qty}
-                      </div>
-                      <button
-                        onClick={() =>
-                          decreaseQty(
-                            storeId,
-                            item.id
-                          )
-                        }
-                        className="border px-2 py-1 rounded border-green-600"
-                      >
-                        -
-                      </button>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          )
-        )
+            ))}
+          </div>
+        ))
       )}
 
-      {/* Bottom form */}
+      {/* Bottom Bar */}
       <div
-  id="bottomBar"
-  className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50"
-  style={{
-    paddingBottom: "env(safe-area-inset-bottom)"
-  }}
->
-
-        {/* <input
-          className="w-full border p-2 text-base mb-2 h-12 rounded-lg"
-          placeholder={t.addressPlaceholder}
-          value={address}
-          onChange={(e) =>
-            setAddress(e.target.value)
-          }
-        />
-
-        <input
-          type="tel"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          className={`w-full border p-2 mb-2 text-base h-12 rounded-lg ${
-            language === "ar"
-              ? "text-right"
-              : "text-left"
-          }`}
-          placeholder={t.phonePlaceholder}
-          value={phone}
-          onChange={(e) => {
-            const onlyNums =
-              e.target.value.replace(
-                /[^0-9]/g,
-                ""
-              );
-            setPhone(onlyNums);
-          }}
-        /> */}
-<button
-  onClick={() => setShowFormModal(true)}
-  disabled={manualOrder ? manualRequest.trim() === "" : Object.keys(filteredCart).length === 0}
-  className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg"
->
-  {language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
-</button>
-
-
+        id="bottomBar"
+        className={`fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50 transition-transform duration-200`}
+      >
+        <button
+          onClick={() => setShowFormModal(true)}
+          className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg"
+        >
+          {language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
+        </button>
       </div>
+
+      {/* Form Modal */}
+      {showFormModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md p-5 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">{language === "ar" ? "معلومات التوصيل" : "Delivery Information"}</h2>
+            <input
+              className="w-full border p-3 mb-3 rounded-lg text-base"
+              placeholder={t.addressPlaceholder}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              className="w-full border p-3 mb-3 rounded-lg text-base"
+              placeholder={t.phonePlaceholder}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+            />
+            <button
+              onClick={() => {
+                if (!address || !phone) {
+                  setErrorMessage(
+                    language === "ar"
+                      ? "يرجى إدخال رقم الهاتف والعنوان"
+                      : "Please enter phone and address"
+                  );
+                  return;
+                }
+                setErrorMessage("");
+                setShowFormModal(false); // اغلاق الفورم
+                setShowConfirm(true);    // فتح Confirm Modal
+              }}
+              className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg"
+            >
+              {language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
+            </button>
+            {errorMessage && (
+              <div className="text-red-600 text-sm mt-2 text-center font-bold">
+                {errorMessage}
+              </div>
+            )}
+            <button
+              onClick={() => setShowFormModal(false)}
+              className="w-full mt-3 border border-gray-300 py-3 rounded-lg text-base font-bold"
+            >
+              {language === "ar" ? "إلغاء" : "Cancel"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Confirm Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-70">
           <div className="bg-white rounded-xl p-6 w-80 text-center">
             <h2 className="text-xl font-bold mb-4">
-              {language === "ar"
-                ? "هل أنت متأكد من إرسال الطلب؟"
-                : "Êtes-vous sûr d’envoyer la commande ?"}
+              {language === "ar" ? "هل أنت متأكد من إرسال الطلب؟" : "Êtes-vous sûr d’envoyer la commande ?"}
             </h2>
-
             <div className="flex gap-3">
               <button
                 className="flex-1 border border-gray-400 py-2 rounded"
-                onClick={() =>
-                  setShowConfirm(false)
-                }
+                onClick={() => setShowConfirm(false)}
               >
-                {language === "ar"
-                  ? "إلغاء"
-                  : "Annuler"}
+                {language === "ar" ? "إلغاء" : "Annuler"}
               </button>
-
               <button
                 className="flex-1 bg-green-700 text-white py-2 rounded"
                 onClick={async () => {
@@ -436,72 +338,12 @@ export default function Cart() {
                   await handleSendOrder();
                 }}
               >
-                {language === "ar"
-                  ? "نعم"
-                  : "Oui"}
+                {language === "ar" ? "نعم" : "Oui"}
               </button>
             </div>
           </div>
         </div>
       )}
-
-{showFormModal && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div className="bg-white w-full max-w-md p-5 rounded-2xl shadow-lg">
-      <h2 className="text-xl font-bold mb-4">
-        {language === "ar" ? "معلومات التوصيل" : "Delivery Information"}
-      </h2>
-      
-      {/* عنوان */}
-      <input
-        className="w-full border p-3 mb-3 rounded-lg text-base"
-        placeholder={t.addressPlaceholder}
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
-      
-      {/* رقم الهاتف */}
-      <input
-        type="tel"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        className="w-full border p-3 mb-3 rounded-lg text-base"
-        placeholder={t.phonePlaceholder}
-        value={phone}
-        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
-      />
-
-      {/* زر إرسال الطلب */}
-      <button
-      
-        onClick={async () => {
-          setShowFormModal(false); // غلق الـ Modal
-          await handleSendOrder(); // تنفيذ إرسال الطلب
-        }}
-        disabled={loading || !address || !phone}
-        className="w-full bg-green-700 text-white py-3 rounded-lg font-bold"
-      >
-        {loading
-          ? language === "ar"
-            ? "جارٍ الإرسال..."
-            : "Sending..."
-          : language === "ar"
-          ? "تأكيد الطلب"
-          : "Confirm Order"}
-      </button>
-
-      {/* زر إلغاء */}
-      <button
-        onClick={() => setShowFormModal(false)}
-        className="w-full mt-3 border border-gray-300 py-3 rounded-lg text-base font-bold"
-      >
-        {language === "ar" ? "إلغاء" : "Cancel"}
-      </button>
-    </div>
-  </div>
-)}
-
-
     </div>
   );
 }
