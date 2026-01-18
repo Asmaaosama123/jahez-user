@@ -161,8 +161,9 @@ input, textarea {
 }
 
 #bottomBar {
-  padding-bottom: calc(0.75rem + var(--safe-bottom));
-  -webkit-transform: translateZ(0);
+  transition: transform 0.15s ease-out;
   will-change: transform;
 }
+
+
 

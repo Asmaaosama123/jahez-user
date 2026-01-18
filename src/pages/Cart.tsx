@@ -134,32 +134,47 @@ export default function Cart() {
     }
   };
 
-  // تحريك البوتوم بار مع الكيبورد
   useEffect(() => {
     const bar = document.getElementById("bottomBar");
-
-    const updatePosition = () => {
-      if (window.visualViewport && bar) {
-        const offset =
-          window.innerHeight -
-          window.visualViewport.height;
-        bar.style.bottom = `${offset}px`;
-      }
+  
+    const isInputFocused = () => {
+      const el = document.activeElement;
+      return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
     };
-
-    updatePosition();
-    window.visualViewport?.addEventListener(
-      "resize",
-      updatePosition
-    );
-
+  
+    const updatePosition = () => {
+      if (!bar || !window.visualViewport) return;
+  
+      const diff =
+        window.innerHeight - window.visualViewport.height;
+  
+      // لو مفيش input متحدد → رجّع البار مكانه الطبيعي
+      if (!isInputFocused()) {
+        bar.style.transform = "translateY(0px)";
+        return;
+      }
+  
+      // لو الفرق صغير → ده مش كيبورد حقيقي
+      if (diff < 120) {
+        bar.style.transform = "translateY(0px)";
+        return;
+      }
+  
+      // كيبورد مفتوح فعليًا
+      bar.style.transform = `translateY(-${diff}px)`;
+    };
+  
+    window.visualViewport.addEventListener("resize", updatePosition);
+    window.addEventListener("focusin", updatePosition);
+    window.addEventListener("focusout", updatePosition);
+  
     return () => {
-      window.visualViewport?.removeEventListener(
-        "resize",
-        updatePosition
-      );
+      window.visualViewport.removeEventListener("resize", updatePosition);
+      window.removeEventListener("focusin", updatePosition);
+      window.removeEventListener("focusout", updatePosition);
     };
   }, []);
+  
 
   const saveOrderLink = async (orderId) => {
     const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
@@ -344,9 +359,13 @@ export default function Cart() {
 
       {/* Bottom form */}
       <div
-        id="bottomBar"
-        className="fixed left-0 right-0 bg-white p-3 border-t shadow-lg z-50"
-      >
+  id="bottomBar"
+  className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50"
+  style={{
+    paddingBottom: "env(safe-area-inset-bottom)"
+  }}
+>
+
         <input
           className="w-full border p-2 text-base mb-2 h-12 rounded-lg"
           placeholder={t.addressPlaceholder}
