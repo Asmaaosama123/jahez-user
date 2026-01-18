@@ -172,7 +172,26 @@ export default function Cart() {
       window.removeEventListener("focusout", updatePosition);
     };
   }, []);
-
+  useEffect(() => {
+    const bar = document.getElementById("bottomBar");
+  
+    const adjustBottom = () => {
+      if (!bar || !window.visualViewport) return;
+      const keyboardHeight = window.innerHeight - window.visualViewport.height;
+      bar.style.bottom = `${keyboardHeight > 0 ? keyboardHeight : 0}px`;
+    };
+  
+    window.visualViewport.addEventListener("resize", adjustBottom);
+    window.addEventListener("focusin", adjustBottom);
+    window.addEventListener("focusout", adjustBottom);
+  
+    return () => {
+      window.visualViewport.removeEventListener("resize", adjustBottom);
+      window.removeEventListener("focusin", adjustBottom);
+      window.removeEventListener("focusout", adjustBottom);
+    };
+  }, []);
+  
   return (
     <div
       className="overflow-y-auto pb-[160px] sm:pb-[180px] md:pb-[200px] bg-gray-100 min-h-screen font-sans"
@@ -253,15 +272,33 @@ export default function Cart() {
 
       {/* Bottom Bar */}
       <div
-        id="bottomBar"
-        className={`fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50 transition-transform duration-200`}
-      >
-        <button
-          onClick={() => setShowFormModal(true)}
-          className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg"
-        >
-          {language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
-        </button>
+  id="bottomBar"
+  className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50"
+>
+      <button
+  onClick={() => {
+    setLoading(true);        // يبدأ Loading
+    setTimeout(() => {
+      setShowFormModal(true); // يفتح الفورم بعد الضغط
+      setLoading(false);      // يوقف Loading
+    }, 300); // 0.3 ثانية لتأثير سريع، ممكن تغييره حسب الحاجة
+  }}
+  className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg flex items-center justify-center"
+  disabled={loading} // يمنع الضغط المتكرر
+>
+  {loading ? (
+    <>
+      {language === "ar" ? "جارٍ التحميل..." : "Loading..."}
+      <svg className="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+    </>
+  ) : (
+    language === "ar" ? "تأكيد الطلب" : "Confirm Order"
+  )}
+</button>
+
       </div>
 
       {/* Form Modal */}
@@ -279,8 +316,9 @@ export default function Cart() {
               type="tel"
               inputMode="numeric"
               pattern="[0-9]*"
-              className="w-full border p-3 mb-3 rounded-lg text-base"
-              placeholder={t.phonePlaceholder}
+              className={`w-full border p-3 mb-3 rounded-lg text-base ${
+                language === "ar" ? "text-right placeholder:text-right" : "text-left placeholder:text-left"
+              }`}              placeholder={t.phonePlaceholder}
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
             />
@@ -332,18 +370,28 @@ export default function Cart() {
                 {language === "ar" ? "إلغاء" : "Annuler"}
               </button>
               <button
-                className="flex-1 bg-green-700 text-white py-2 rounded"
-                onClick={async () => {
-                  setShowConfirm(false);
-                  await handleSendOrder();
-                }}
-              >
-                {language === "ar" ? "نعم" : "Oui"}
-              </button>
+  className="flex-1 bg-green-700 text-white py-2 rounded"
+  onClick={async () => {
+    setLoading(true);         // يبدأ Loading
+    setShowConfirm(false);    // يغلق Confirm Modal
+    try {
+      await handleSendOrder(); // هنا بيبعت الطلب
+    } finally {
+      setLoading(false);      // يوقف Loading
+    }
+  }}
+  disabled={loading}          // يمنع الضغط المتكرر
+>
+  {loading
+    ? language === "ar" ? "جارٍ الإرسال..." : "Sending..."
+    : language === "ar" ? "نعم" : "Oui"}
+</button>
+
             </div>
           </div>
         </div>
       )}
     </div>
+    
   );
 }
