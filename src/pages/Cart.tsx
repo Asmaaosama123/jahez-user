@@ -10,6 +10,7 @@ export default function Cart() {
   const { t, language } = useLang();
   const { cart, updateCart, clearCart } = useCart();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
 
   // بيانات من الصفحة اللي قبلها
   const manualOrder = location.state?.manualOrder || false;
@@ -366,7 +367,7 @@ export default function Cart() {
   }}
 >
 
-        <input
+        {/* <input
           className="w-full border p-2 text-base mb-2 h-12 rounded-lg"
           placeholder={t.addressPlaceholder}
           value={address}
@@ -394,27 +395,16 @@ export default function Cart() {
               );
             setPhone(onlyNums);
           }}
-        />
+        /> */}
+<button
+  onClick={() => setShowFormModal(true)}
+  disabled={manualOrder ? manualRequest.trim() === "" : Object.keys(filteredCart).length === 0}
+  className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg"
+>
+  {language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
+</button>
 
-        <button
-          onClick={() => setShowConfirm(true)}
-          disabled={
-            loading ||
-            (manualOrder
-              ? manualRequest.trim() === ""
-              : Object.keys(filteredCart)
-                  .length === 0)
-          }
-          className="w-full bg-green-700 text-white py-3 text-base font-bold shadow-xl rounded-lg"
-        >
-          {loading
-            ? language === "ar"
-              ? "جارٍ الإرسال..."
-              : "sending"
-            : language === "ar"
-            ? "تأكيد الطلب"
-            : "Confirm Order"}
-        </button>
+
       </div>
 
       {/* Confirm Modal */}
@@ -454,6 +444,64 @@ export default function Cart() {
           </div>
         </div>
       )}
+
+{showFormModal && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white w-full max-w-md p-5 rounded-2xl shadow-lg">
+      <h2 className="text-xl font-bold mb-4">
+        {language === "ar" ? "معلومات التوصيل" : "Delivery Information"}
+      </h2>
+      
+      {/* عنوان */}
+      <input
+        className="w-full border p-3 mb-3 rounded-lg text-base"
+        placeholder={t.addressPlaceholder}
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+      />
+      
+      {/* رقم الهاتف */}
+      <input
+        type="tel"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        className="w-full border p-3 mb-3 rounded-lg text-base"
+        placeholder={t.phonePlaceholder}
+        value={phone}
+        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
+      />
+
+      {/* زر إرسال الطلب */}
+      <button
+      
+        onClick={async () => {
+          setShowFormModal(false); // غلق الـ Modal
+          await handleSendOrder(); // تنفيذ إرسال الطلب
+        }}
+        disabled={loading || !address || !phone}
+        className="w-full bg-green-700 text-white py-3 rounded-lg font-bold"
+      >
+        {loading
+          ? language === "ar"
+            ? "جارٍ الإرسال..."
+            : "Sending..."
+          : language === "ar"
+          ? "تأكيد الطلب"
+          : "Confirm Order"}
+      </button>
+
+      {/* زر إلغاء */}
+      <button
+        onClick={() => setShowFormModal(false)}
+        className="w-full mt-3 border border-gray-300 py-3 rounded-lg text-base font-bold"
+      >
+        {language === "ar" ? "إلغاء" : "Cancel"}
+      </button>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }
