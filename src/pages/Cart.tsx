@@ -251,8 +251,8 @@ const saveOrderLink = async (orderId: string) => {
   className="fixed left-0 w-full bg-white p-3 border-t shadow-lg z-50"
 >
         <input
-          className="w-full border p-2 text-sm mb-2"
-          placeholder={t.addressPlaceholder}
+  className="w-full border p-2 text-base mb-2"
+  placeholder={t.addressPlaceholder}
           value={address}
           onChange={e => setAddress(e.target.value)}
         />
@@ -260,7 +260,7 @@ const saveOrderLink = async (orderId: string) => {
   type="tel"
   inputMode="numeric"
   pattern="[0-9]*"
-  className={`w-full border p-2 mb-2 text-sm ${language === "ar" ? "text-right" : "text-left"}`}
+  className={`w-full border p-2 mb-2 text-base ${language === "ar" ? "text-right" : "text-left"}`}
   placeholder={t.phonePlaceholder}
   value={phone}
   onChange={e => {
