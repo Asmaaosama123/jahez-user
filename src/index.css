@@ -156,3 +156,13 @@
 input, textarea {
   font-size: 16px;
 }
+:root {
+  --safe-bottom: env(safe-area-inset-bottom);
+}
+
+#bottomBar {
+  padding-bottom: calc(0.75rem + var(--safe-bottom));
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
