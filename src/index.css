@@ -161,9 +161,13 @@ input, textarea {
 }
 
 #bottomBar {
-  transition: transform 0.15s ease-out;
-  will-change: transform;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0; /* يثبت الزر أسفل الشاشة دايمًا */
+  z-index: 50;
 }
+
 
 
 
