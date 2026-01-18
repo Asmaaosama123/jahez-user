@@ -56,7 +56,7 @@ export default function OrderSuccess() {
       <p className="text-gray-500 mt-2 text-center px-6">
         {language === "ar"
           ? "سيتم الاتصال بك قريبًا من طرف أحد مندوبي التوصيل"
-          : "Vous serez contacté prochainement par l’un de nos agents"}
+          : "Vous serez contacté prochainement par l’un de nos livreurs de livraison"}
       </p>
       <button
   onClick={() => navigate("/")}
