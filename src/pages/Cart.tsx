@@ -17,6 +17,7 @@ export default function Cart() {
   const [phone, setPhone] = useState("");
   const [manualRequest, setManualRequest] = useState("");
   const [loading, setLoading] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   const manualOrder = location.state?.manualOrder || false;
   const storeInfo = location.state?.storeInfo || null;
@@ -124,28 +125,21 @@ export default function Cart() {
 
   // تعديل Bottom Bar عند ظهور الكيبورد
   // تعديل Bottom Bar عند ظهور الكيبورد
-useEffect(() => {
-  const bar = document.getElementById("bottomBar");
-  if (!bar || !window.visualViewport) return;
-
-  const adjustBottom = () => {
-    const keyboardHeight = window.innerHeight - window.visualViewport.height;
-    bar.style.bottom = `${keyboardHeight > 0 ? keyboardHeight : 0}px`;
-  };
-
-  window.visualViewport.addEventListener("resize", adjustBottom);
-  window.addEventListener("focusin", adjustBottom);
-  window.addEventListener("focusout", adjustBottom);
-
-  // ضبط أول مرة
-  adjustBottom();
-
-  return () => {
-    window.visualViewport.removeEventListener("resize", adjustBottom);
-    window.removeEventListener("focusin", adjustBottom);
-    window.removeEventListener("focusout", adjustBottom);
-  };
-}, []);
+  useEffect(() => {
+    if (!window.visualViewport) return;
+  
+    const handleResize = () => {
+      const isOpen = window.innerHeight - window.visualViewport.height > 150;
+      setKeyboardOpen(isOpen);
+    };
+  
+    window.visualViewport.addEventListener("resize", handleResize);
+  
+    return () => {
+      window.visualViewport.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  
 
 
   return (
@@ -220,10 +214,17 @@ useEffect(() => {
       )}
 
       {/* Bottom Bar */}
-      <div
+     
+<div
   id="bottomBar"
-  className="fixed left-0 right-0 bottom-0 bg-white p-3 border-t shadow-lg z-50"
+  className={`
+    fixed left-0 right-0
+    bg-white p-3 border-t shadow-lg z-50
+    transition-all duration-300 ease-in-out
+    ${keyboardOpen ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"}
+  `}
 >
+
   <button
     onClick={() => {
       setLoading(true);

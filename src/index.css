@@ -164,9 +164,11 @@ input, textarea {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0; /* يثبت الزر أسفل الشاشة دايمًا */
+  bottom: env(safe-area-inset-bottom);
+  
   z-index: 50;
 }
+
 
 
 
