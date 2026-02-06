@@ -184,12 +184,27 @@ const isSupermarket = categoryType === 2;
   } text-white flex items-center gap-3`}
 >
   {/* الصورة دائمًا أول عنصر */}
-  <img
-    src={fixImageUrl(storeInfo?.profileImageUrl)}
-    className="w-20 h-20 rounded-xl shadow-xl object-cover bg-white"
-    alt="store"
-    loading="lazy"
-  />
+  <div className="flex flex-col">
+  <div className="relative w-20 h-20">
+    <img
+      src={fixImageUrl(storeInfo?.profileImageUrl)}
+      className="w-full h-full rounded-xl shadow-xl object-cover bg-white"
+      alt="store"
+      loading="lazy"
+    />
+
+    {storeInfo.isVerified && (
+      <div className="absolute bottom-0 left-0 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+        <span className="text-white text-[10px] font-bold">✓</span>
+      </div>
+    )}
+  </div>
+
+  {/* نص التوثيق */}
+  {storeInfo?.isVerified && (
+    <span className="text-green-600 text-xs mt-1 font-semibold">موثق</span>
+  )}
+</div>
 
   {/* النصوص */}
   <div

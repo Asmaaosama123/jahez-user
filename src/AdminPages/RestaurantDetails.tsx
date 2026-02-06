@@ -20,6 +20,7 @@ interface Restaurant {
   coverImageUrl: string;
   profileImageUrl: string;
   isOpen: boolean;
+  isVerified?: boolean; // أضف هذا الحقل
   addressMain: string;
   addressSecondary: string;
 }
@@ -72,10 +73,10 @@ export default function RestaurantDetailsPage() {
   const [jahezBoxActive, setJahezBoxActive] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [selectedSectionForEdit, setSelectedSectionForEdit] = useState(null);
-const [selectedSectionForDelete, setSelectedSectionForDelete] = useState(null);
-const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false);
-
-
+  const [selectedSectionForDelete, setSelectedSectionForDelete] = useState(null);
+  const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+const [verifyToast, setVerifyToast] = useState<string | null>(null);
   const cityMap: { [key: string]: string } = {
     "Nouakchott": "أنواكشوط",
     "Nouadhibou": "أنواذيبو",
@@ -320,6 +321,44 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
     }
   };
 
+  const toggleVerifyStore = async () => {
+    if (!restaurantData?.id) return;
+  
+    try {
+      setIsVerifying(true);
+  
+      // القيمة الجديدة هي العكس من الحالي
+      const newVerifiedStatus = !restaurantData.isVerified;
+  
+      const res = await fetch(`${BASE}/api/CustomerGet/verified/${restaurantData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'accept': '*/*',
+        },
+        body: JSON.stringify({ isVerified: newVerifiedStatus }),
+      });
+  
+      if (!res.ok) throw new Error("تعذر تحديث التوثيق");
+  
+      const data = await res.json();
+  
+      setVerifyToast(data.message || (newVerifiedStatus ? 'تم التوثيق بنجاح' : 'تم إزالة التوثيق'));
+      setTimeout(() => setVerifyToast(null), 2500);
+  
+      // تحديث الحالة في React state
+      setRestaurantData(prev => prev ? { ...prev, isVerified: newVerifiedStatus } : prev);
+  
+    } catch (err) {
+      console.error(err);
+      setVerifyToast("حدث خطأ أثناء التحديث");
+      setTimeout(() => setVerifyToast(null), 2500);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+  
+  
   return (
     <div className="flex bg-gray-50 min-h-screen" dir="rtl">
       <Sidebar />
@@ -606,7 +645,66 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
             >
               حذف الحساب
             </button>
-           
+           {/* ---------- زر التوثيق Toggle ---------- */}
+{restaurantData && (
+  <div className="mt-2 relative">
+    <button
+      className={`
+        relative mt-2 py-2 w-full flex items-center justify-center gap-2
+        transition-all duration-300 overflow-hidden group
+        ${restaurantData.isVerified 
+          ? 'bg-green-700 text-white shadow-lg' 
+          : 'bg-gray-200 text-gray-700 hover:bg-green-200 hover:text-green-800'
+        }
+        ${isVerifying ? 'opacity-70 cursor-not-allowed' : ''}
+      `}
+      onClick={toggleVerifyStore}
+      disabled={isVerifying}
+    >
+      {/* تأثير الخلفية */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+        translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+      {/* مؤشر التحميل */}
+      {isVerifying && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/30">
+          <div className="w-5 h-5 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* محتوى الزر */}
+      <div className={`relative flex items-center gap-2 ${isVerifying ? 'opacity-0' : 'opacity-100'}`}>
+        {/* الأيقونة */}
+        <div className={`
+          w-8 h-8 flex items-center justify-center rounded-full
+          ${restaurantData.isVerified ? 'bg-white/30' : 'bg-green-100'}
+        `}>
+          {restaurantData.isVerified ? (
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+        </div>
+
+        {/* النص */}
+        <span className="font-bold">
+          {restaurantData.isVerified ? 'موثق ✅' : 'توثيق المطعم'}
+        </span>
+      </div>
+    </button>
+
+    {/* Toast للنجاح أو الخطأ */}
+    {verifyToast && (
+      <div className="fixed top-24 right-5 bg-green-700 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
+        {verifyToast}
+      </div>
+    )}
+  </div>
+)}
 
           </div>
         </div>

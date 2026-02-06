@@ -220,6 +220,7 @@ export default function Home() {
         addressMain: store.addressMain,
         StoreaddressSecondary: store.addressSecondary,
         jahezBoxActive: store.jahezBoxActive,
+        isVerified: store.isVerified,
       },
     });
   };
@@ -328,14 +329,33 @@ export default function Home() {
                 onClick={() => goToRestaurant(r)}
                 className="bg-white rounded-xl p-4 flex items-center mb-4 hover:shadow-md cursor-pointer"
               >
-                <div className="w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <img
-                    src={imageUrl(r.profileImageUrl)}
-                    className="w-full h-full object-cover"
-                    alt={r.name}
-                    loading="lazy"
-                  />
-                </div>
+<div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+  <img
+    src={imageUrl(r.profileImageUrl)}
+    className="w-full h-full object-cover"
+    alt={r.name}
+    loading="lazy"
+  />
+
+  {/* علامة التوثيق فوق الصورة */}
+  {r.isVerified && (
+    <div className="absolute bottom-1 left-1 w-6 h-6 bg-green-600 rounded-full border-2 border-white flex items-center translate-x-1/7 translate-y-1/8 justify-center shadow">
+    <svg
+        className="w-3 h-3 text-white"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fillRule="evenodd"
+          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+          clipRule="evenodd"
+        />
+      </svg>
+    </div>
+  )}
+</div>
+
+
 
                 <div
                   className={`flex flex-col flex-1 ${
