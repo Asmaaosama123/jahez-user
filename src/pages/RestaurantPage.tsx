@@ -200,10 +200,6 @@ const isSupermarket = categoryType === 2;
     )}
   </div>
 
-  {/* نص التوثيق */}
-  {storeInfo?.isVerified && (
-    <span className="text-green-600 text-xs mt-1 font-semibold">موثق</span>
-  )}
 </div>
 
   {/* النصوص */}

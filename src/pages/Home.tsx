@@ -339,7 +339,7 @@ export default function Home() {
 
   {/* علامة التوثيق فوق الصورة */}
   {r.isVerified && (
-    <div className="absolute bottom-1 left-1 w-6 h-6 bg-green-600 rounded-full border-2 border-white flex items-center translate-x-1/7 translate-y-1/8 justify-center shadow">
+    <div className="absolute bottom-0 left-0 w-8 h-8 bg-green-600 rounded-full border-2 border-white flex items-center translate-x-1/7 translate-y-1/8 justify-center shadow">
     <svg
         className="w-3 h-3 text-white"
         fill="currentColor"
