@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
 const WhatsAppOrderButton = ({ cart, phone, address, storeNames, productNames }) => {
   const [loading, setLoading] = useState(false);
@@ -12,7 +13,7 @@ const WhatsAppOrderButton = ({ cart, phone, address, storeNames, productNames })
     setLoading(true);
     try {
       // 1️⃣ حفظ الطلب في قاعدة البيانات
-      const resOrder = await fetch("https://jahezdelivery.com/api/Orders", {
+      const resOrder = await fetch(`${BASE_URL}/api/Orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phone, address, cart })

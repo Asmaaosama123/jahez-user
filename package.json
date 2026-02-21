@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
+    "@microsoft/signalr": "^10.0.0",
     "@supabase/supabase-js": "^2.75.0",
     "axios": "^1.12.2",
     "i18next": "^25.6.3",

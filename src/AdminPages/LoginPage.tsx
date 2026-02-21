@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../utils/apiConfig";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("https://jahezdelivery.com/api/admin/login", {
+      const res = await fetch(`${BASE_URL}/api/admin/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -30,15 +31,15 @@ export default function LoginPage() {
         return;
       }
 
-     // ✅ التحقق من 2FA
-if (data.requires2FA) {
-  localStorage.setItem("tempAdminEmail", email); // تخزين email مؤقت
-  navigate("/admin/otp"); // توجيه OTP
-} else {
-  localStorage.setItem("adminToken", data.token); // JWT النهائي
-  navigate("/admin/orders");
-}
-      
+      // ✅ التحقق من 2FA
+      if (data.requires2FA) {
+        localStorage.setItem("tempAdminEmail", email); // تخزين email مؤقت
+        navigate("/admin/otp"); // توجيه OTP
+      } else {
+        localStorage.setItem("adminToken", data.token); // JWT النهائي
+        navigate("/admin/orders");
+      }
+
     } catch (err) {
       setError("حدث خطأ في الخادم. حاول مرة أخرى.");
     } finally {
@@ -56,23 +57,23 @@ if (data.requires2FA) {
 
         <label className="block mb-2">البريد الإلكتروني</label>
         <input
-  type="email"
-  value={email}
-  onChange={(e) => setEmail(e.target.value)}
-  className="w-full p-2 mb-4 border rounded"
-  required
-  disabled={isLoading}
-/>
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+          required
+          disabled={isLoading}
+        />
 
         <label className="block mb-2">كلمة المرور</label>
         <input
-  type="password"
-  value={password}
-  onChange={(e) => setPassword(e.target.value)}
-  className="w-full p-2 mb-4 border rounded"
-  required
-  disabled={isLoading}
-/>
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 mb-4 border rounded"
+          required
+          disabled={isLoading}
+        />
 
         {error && <p className="text-red-500 mb-4">{error}</p>}
 

@@ -10,8 +10,9 @@ import DeleteSectionModal from "../components/DeleteSectionModal";
 import JahezBox from "../assets/Jahez BOX.png";
 
 import { useParams } from "react-router-dom";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 interface Restaurant {
   id: number;
@@ -76,7 +77,7 @@ export default function RestaurantDetailsPage() {
   const [selectedSectionForDelete, setSelectedSectionForDelete] = useState(null);
   const [showDeleteSectionModal, setShowDeleteSectionModal] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
-const [verifyToast, setVerifyToast] = useState<string | null>(null);
+  const [verifyToast, setVerifyToast] = useState<string | null>(null);
   const cityMap: { [key: string]: string } = {
     "Nouakchott": "أنواكشوط",
     "Nouadhibou": "أنواذيبو",
@@ -88,7 +89,7 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
     if (url.startsWith("http")) return url;
     return `${BASE}/images/${url.replace(/^\/+/, "")}`;
   };
-  
+
   // جلب نوع الفئة
   useEffect(() => {
     const fetchCategoryType = async () => {
@@ -135,7 +136,7 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
         setLoading(false);
       }
     };
-  
+
     if (id) fetchRestaurant();
   }, [id]);
 
@@ -144,7 +145,7 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
       setJahezBoxActive(Boolean(restaurantData.jahezBoxActive));
     }
   }, [restaurantData]);
-  
+
 
   const fetchProductsForSection = async (sectionId: number) => {
     try {
@@ -199,7 +200,7 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
 
   // ---------- PRODUCT ACTIONS ----------
   const requestDeleteProduct = (id: number) => setConfirmDelete({ show: true, productId: id });
-  
+
   const confirmDeleteProduct = async () => {
     if (!confirmDelete.productId) return;
     try {
@@ -208,7 +209,7 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
         setProducts(products.filter(p => p.id !== confirmDelete.productId));
         setConfirmDelete({ show: false, productId: null });
       }
-    } catch {}
+    } catch { }
   };
 
   const editProduct = (p: Product) => setEditingProduct(p);
@@ -241,8 +242,8 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
     setSelectedSucForEdit(section);
     setShowEditSectionModal(true);
   };
-  
-  
+
+
   const handleDeleteSection = (section: Section) => {
     setSelectedSubForDelete(section);
     setShowDeleteModal(true);
@@ -252,67 +253,67 @@ const [verifyToast, setVerifyToast] = useState<string | null>(null);
   // (احتفظي بالكود الأصلي بدون أي تعديل)
 
   // ---------- Update Section ----------
-// ---------- Update Section ----------
-// ---------- Update Section ----------
-const handleUpdateSection = ({ id, nameAr, nameFr }) => {
-  // تحديث قائمة الأقسام
-  setSections(prev => prev.map(sec =>
-    sec.id === id ? { ...sec, nameAr, nameFr } : sec
-  ));
+  // ---------- Update Section ----------
+  // ---------- Update Section ----------
+  const handleUpdateSection = ({ id, nameAr, nameFr }) => {
+    // تحديث قائمة الأقسام
+    setSections(prev => prev.map(sec =>
+      sec.id === id ? { ...sec, nameAr, nameFr } : sec
+    ));
 
-  // تحديث القسم المحدد لو هو نفسه المحدث
-  if (selectedSection?.id === id) {
-    setSelectedSection(prev => ({ ...prev, nameAr, nameFr }));
-  }
+    // تحديث القسم المحدد لو هو نفسه المحدث
+    if (selectedSection?.id === id) {
+      setSelectedSection(prev => ({ ...prev, nameAr, nameFr }));
+    }
 
-  // تحديث القسم في المودال نفسه لو مفتوح
-  if (selectedSucForEdit?.id === id) {
-    setSelectedSucForEdit(prev => ({ ...prev, nameAr, nameFr }));
-  }
+    // تحديث القسم في المودال نفسه لو مفتوح
+    if (selectedSucForEdit?.id === id) {
+      setSelectedSucForEdit(prev => ({ ...prev, nameAr, nameFr }));
+    }
 
-  // إخفاء المودال بعد التحديث
-  setShowEditSectionModal(false);
-};
+    // إخفاء المودال بعد التحديث
+    setShowEditSectionModal(false);
+  };
   // ---------- Delete Section ----------
   const handleDeleteSectionSuccess = (deletedId: number) => {
     setSections(prev => {
       const updated = prev.filter(s => s.id !== deletedId);
-  
+
       // إذا كان القسم المحدد هو اللي اتحذف
       if (selectedSection?.id === deletedId) {
         const newSelected = updated[0] || null;
         setSelectedSection(newSelected);
-  
+
         // جلب منتجات القسم الجديد لو موجود
         if (newSelected) fetchProductsForSection(newSelected.id);
         else setProducts([]);
       }
-  
+
       return updated;
     });
-  
+
     setShowDeleteModal(false);
     setSelectedSubForDelete(null);
   };
-  
+
   // تحديث البيانات فوراً بعد التعديل
   const handleRestaurantUpdated = async () => {
     try {
       // جلب بيانات المطعم المحدثة
       const res = await fetch(`${BASE}/api/CustomerGet/store/${restaurantData.id}`);
       const updatedStore = await res.json();
-      
+
       // تحديث الصور مع إضافة timestamp لمنع الكاش
       const timestamp = new Date().getTime();
       updatedStore.coverImageUrl = `${getFullImageUrl(updatedStore.coverImageUrl)}?t=${timestamp}`;
       updatedStore.profileImageUrl = `${getFullImageUrl(updatedStore.profileImageUrl)}?t=${timestamp}`;
-      
+
       setRestaurantData(updatedStore);
-      
+
       // تحديث كل البيانات
       fetchSections();
       fetchWorkingDays();
-      
+
       if (selectedSection) {
         fetchProducts();
       }
@@ -323,13 +324,13 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
 
   const toggleVerifyStore = async () => {
     if (!restaurantData?.id) return;
-  
+
     try {
       setIsVerifying(true);
-  
+
       // القيمة الجديدة هي العكس من الحالي
       const newVerifiedStatus = !restaurantData.isVerified;
-  
+
       const res = await fetch(`${BASE}/api/CustomerGet/verified/${restaurantData.id}`, {
         method: 'PATCH',
         headers: {
@@ -338,17 +339,17 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
         },
         body: JSON.stringify({ isVerified: newVerifiedStatus }),
       });
-  
+
       if (!res.ok) throw new Error("تعذر تحديث التوثيق");
-  
+
       const data = await res.json();
-  
+
       setVerifyToast(data.message || (newVerifiedStatus ? 'تم التوثيق بنجاح' : 'تم إزالة التوثيق'));
       setTimeout(() => setVerifyToast(null), 2500);
-  
+
       // تحديث الحالة في React state
       setRestaurantData(prev => prev ? { ...prev, isVerified: newVerifiedStatus } : prev);
-  
+
     } catch (err) {
       console.error(err);
       setVerifyToast("حدث خطأ أثناء التحديث");
@@ -357,8 +358,8 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
       setIsVerifying(false);
     }
   };
-  
-  
+
+
   return (
     <div className="flex bg-gray-50 min-h-screen" dir="rtl">
       <Sidebar />
@@ -372,16 +373,16 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
           <div className="flex flex-col">
             {/* الغلاف + الصورة الشخصية */}
             <div className="flex flex-col w-[850px] mr-5">
-              <img 
-                src={getFullImageUrl(restaurantData?.coverImageUrl || '')} 
+              <img
+                src={getFullImageUrl(restaurantData?.coverImageUrl || '')}
                 className="w-full h-64 object-cover shadow-lg"
                 onError={(e) => {
                   e.currentTarget.src = "https://via.placeholder.com/850x256?text=صورة+الغلاف";
                 }}
               />
               <div className="flex items-end gap-2 -mt-12 mr-6">
-                <img 
-                  src={getFullImageUrl(restaurantData?.profileImageUrl || '')} 
+                <img
+                  src={getFullImageUrl(restaurantData?.profileImageUrl || '')}
                   className="w-24 h-24 rounded-full shadow-lg border-4 border-white"
                   onError={(e) => {
                     e.currentTarget.src = "https://via.placeholder.com/100x100?text=البروفايل";
@@ -393,224 +394,223 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
                     {restaurantData?.isOpen ? 'مفتوح' : 'مغلق'}
                   </p>
                 </div>
-                
-               {/* زر إضافة المنتج */}
-{(categoryType !== "2" || (categoryType === "2" && selectedSection?.name === "جاهز بوكس")) && (
-  <div className="relative group">
-    <button
-      className="bg-green-700 text-white px-8 py-2 shadow mr-[480px]"
-      onClick={() => setShowAddProductModal(true)}
-    >
-      إضافة منتج
-    </button>
-    <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
-      سيتم إضافة المنتج إلى قسم: {selectedSection?.name}
-    </div>
-  </div>
-)}
+
+                {/* زر إضافة المنتج */}
+                {(categoryType !== "2" || (categoryType === "2" && selectedSection?.name === "جاهز بوكس")) && (
+                  <div className="relative group">
+                    <button
+                      className="bg-green-700 text-white px-8 py-2 shadow mr-[480px]"
+                      onClick={() => setShowAddProductModal(true)}
+                    >
+                      إضافة منتج
+                    </button>
+                    <div className="absolute top-full left-0 mb-2 hidden group-hover:block bg-black text-white text-sm py-1 px-2 rounded shadow-lg whitespace-nowrap">
+                      سيتم إضافة المنتج إلى قسم: {selectedSection?.name}
+                    </div>
+                  </div>
+                )}
 
               </div>
             </div>
 
             {/* الأقسام */}
             <>
-  <div className="mt-20 mr-5 w-full max-w-[850px] flex flex-wrap">
-    {sections
-      .filter(sec => {
-        // لو سوبرماركت، نعرض فقط قسم "جاهز بوكس"
-        if (categoryType === "2") return sec.name === "جاهز بوكس";
-        // باقي الحالات نعرض كل الأقسام
-        return true;
-      })
-      .map(sec => (
-        <div key={sec.id} className="flex items-center">
+              <div className="mt-20 mr-5 w-full max-w-[850px] flex flex-wrap">
+                {sections
+                  .filter(sec => {
+                    // لو سوبرماركت، نعرض فقط قسم "جاهز بوكس"
+                    if (categoryType === "2") return sec.name === "جاهز بوكس";
+                    // باقي الحالات نعرض كل الأقسام
+                    return true;
+                  })
+                  .map(sec => (
+                    <div key={sec.id} className="flex items-center">
 
-          {/* الزر الرئيسي */}
-          <button
-            onClick={() => setSelectedSection(sec)}
-            className={`
+                      {/* الزر الرئيسي */}
+                      <button
+                        onClick={() => setSelectedSection(sec)}
+                        className={`
               transition 
-              ${
-                sec.name === "جاهز بوكس"
-                  ? "py-3 px-6 bg-blue-500 border-0 w-21 h-10 hover:bg-blue-700"
-                  : selectedSection?.id === sec.id
-                    ? "px-6 py-2 bg-green-800 text-white font-bold border-1"
-                    : "px-6 py-2 bg-gray-200 text-gray-700"
-              }
+              ${sec.name === "جاهز بوكس"
+                            ? "py-3 px-6 bg-blue-500 border-0 w-21 h-10 hover:bg-blue-700"
+                            : selectedSection?.id === sec.id
+                              ? "px-6 py-2 bg-green-800 text-white font-bold border-1"
+                              : "px-6 py-2 bg-gray-200 text-gray-700"
+                          }
             `}
-          >
-            {sec.name === "جاهز بوكس" ? (
-              <img
-                src={JahezBox}
-                alt="Jahez Box"
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              sec.name
-            )}
-          </button>
+                      >
+                        {sec.name === "جاهز بوكس" ? (
+                          <img
+                            src={JahezBox}
+                            alt="Jahez Box"
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          sec.name
+                        )}
+                      </button>
 
-          {/* أزرار الاكشن */}
-          {sec.name !== "جاهز بوكس" && categoryType !== "2" && (
-            <>
-              <button
-                onClick={() => handleEditSection(sec)}
-                className="p-1 rounded hover:bg-gray-100"
-                title="تعديل"
-              >
-                <PencilIcon className="w-5 h-5 text-gray-700" />
-              </button>
+                      {/* أزرار الاكشن */}
+                      {sec.name !== "جاهز بوكس" && categoryType !== "2" && (
+                        <>
+                          <button
+                            onClick={() => handleEditSection(sec)}
+                            className="p-1 rounded hover:bg-gray-100"
+                            title="تعديل"
+                          >
+                            <PencilIcon className="w-5 h-5 text-gray-700" />
+                          </button>
 
-              <button
-                onClick={() => handleDeleteSection(sec)}
-                className="p-1 rounded hover:bg-gray-100"
-                title="حذف"
-              >
-                <TrashIcon className="w-5 h-5 text-red-700" />
-              </button>
+                          <button
+                            onClick={() => handleDeleteSection(sec)}
+                            className="p-1 rounded hover:bg-gray-100"
+                            title="حذف"
+                          >
+                            <TrashIcon className="w-5 h-5 text-red-700" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+
+                {/* زر إضافة سكشن يظهر فقط لو مش سوبرماركت */}
+                {categoryType !== "2" && (
+                  <button
+                    className="bg-gray-100 text-green-500 text-xl px-10 shadow rounded"
+                    onClick={() => setShowAddSectionModal(true)}
+                  >
+                    +
+                  </button>
+                )}
+              </div>
+
+              {/* جدول المنتجات + زر إضافة منتج */}
+              {selectedSection && (
+                <>
+                  {categoryType !== "2" || (categoryType === "2" && selectedSection.name === "جاهز بوكس") ? (
+                    <>
+
+
+                      <div className="bg-white shadow overflow-hidden w-[850px] mr-5">
+                        <table className="w-full text-center">
+                          <thead className="bg-green-800 text-white">
+                            <tr>
+                              <th className="p-3">الصورة</th>
+                              <th className="p-3">الاسم عربي</th>
+                              <th className="p-3">الوصف</th>
+                              <th className="p-3">السعر</th>
+                              <th className="p-3">إجراءات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {products.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="p-5 text-gray-500">لا توجد منتجات</td>
+                              </tr>
+                            ) : products.map(prod => (
+                              <tr key={prod.id} className="border-b">
+                                <td className="p-2">
+                                  <img
+                                    src={getFullImageUrl(prod.imageUrl)}
+                                    className="w-14 h-14 object-cover rounded mx-auto"
+                                    onError={(e) => {
+                                      e.currentTarget.src = "https://via.placeholder.com/56x56?text=صورة";
+                                    }}
+                                  />
+                                </td>
+                                <td>{prod.name}</td>
+                                <td>{prod.description || '-'}</td>
+                                <td>{prod.price} ر.م</td>
+                                <td className="flex justify-center gap-2 py-2">
+                                  <button
+                                    className="bg-black rounded w-6 h-6"
+                                    onClick={() => editProduct(prod)}
+                                  >
+                                    <PencilIcon className="w-5 h-5 text-white" />
+                                  </button>
+                                  <button
+                                    className="bg-red-700 rounded w-6 h-6"
+                                    onClick={() => requestDeleteProduct(prod.id)}
+                                  >
+                                    <TrashIcon className="w-5 h-5 text-white" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : null}
+                </>
+              )}
             </>
-          )}
-        </div>
-      ))}
-
-    {/* زر إضافة سكشن يظهر فقط لو مش سوبرماركت */}
-    {categoryType !== "2" && (
-      <button 
-        className="bg-gray-100 text-green-500 text-xl px-10 shadow rounded"
-        onClick={() => setShowAddSectionModal(true)}
-      >
-        +
-      </button>
-    )}
-  </div>
-
-  {/* جدول المنتجات + زر إضافة منتج */}
-  {selectedSection && (
-    <>
-      {categoryType !== "2" || (categoryType === "2" && selectedSection.name === "جاهز بوكس") ? (
-        <>
-        
-
-          <div className="bg-white shadow overflow-hidden w-[850px] mr-5">
-            <table className="w-full text-center">
-              <thead className="bg-green-800 text-white">
-                <tr>
-                  <th className="p-3">الصورة</th>
-                  <th className="p-3">الاسم عربي</th>
-                  <th className="p-3">الوصف</th>
-                  <th className="p-3">السعر</th>
-                  <th className="p-3">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-5 text-gray-500">لا توجد منتجات</td>
-                  </tr>
-                ) : products.map(prod => (
-                  <tr key={prod.id} className="border-b">
-                    <td className="p-2">
-                      <img 
-                        src={getFullImageUrl(prod.imageUrl)} 
-                        className="w-14 h-14 object-cover rounded mx-auto"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://via.placeholder.com/56x56?text=صورة";
-                        }}
-                      />
-                    </td>
-                    <td>{prod.name}</td>
-                    <td>{prod.description || '-'}</td>
-                    <td>{prod.price} ر.م</td>
-                    <td className="flex justify-center gap-2 py-2">
-                      <button 
-                        className="bg-black rounded w-6 h-6" 
-                        onClick={() => editProduct(prod)}
-                      >
-                        <PencilIcon className="w-5 h-5 text-white" />
-                      </button>
-                      <button 
-                        className="bg-red-700 rounded w-6 h-6" 
-                        onClick={() => requestDeleteProduct(prod.id)}
-                      >
-                        <TrashIcon className="w-5 h-5 text-white" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
-      ) : null}
-    </>
-  )}
-</>
 
           </div>
 
           {/* العمود الثاني: الحساب */}
           <div className="p-5 mt-5 shadow border border-black w-[350px] h-fit">
-          <div className="flex items-center justify-between mb-2">
-  <h1 className="text-2xl font-sans mb-2">الحساب</h1>
-  <button
-  className={`w-20 h-12 flex items-center px-3 py-6 justify-center mt-2 transition-all duration-300
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-2xl font-sans mb-2">الحساب</h1>
+              <button
+                className={`w-20 h-12 flex items-center px-3 py-6 justify-center mt-2 transition-all duration-300
     ${jahezBoxActive ? 'bg-blue-500 border-blue-700 shadow-lg' : 'bg-gray-300 border-gray-500'} p-1 rounded-sm`}
-  onClick={async () => {
-    try {
-      const newValue = !jahezBoxActive;
-      setJahezBoxActive(newValue);
+                onClick={async () => {
+                  try {
+                    const newValue = !jahezBoxActive;
+                    setJahezBoxActive(newValue);
 
-      const res = await fetch(`${BASE}/api/CustomerGet/jahezbox/${restaurantData.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: newValue }),
-      });
+                    const res = await fetch(`${BASE}/api/CustomerGet/jahezbox/${restaurantData.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ isActive: newValue }),
+                    });
 
-      if (!res.ok) throw new Error('تعذر تحديث الحالة');
+                    if (!res.ok) throw new Error('تعذر تحديث الحالة');
 
-      // ✨ ناخد الرد من الـ API
-      const data = await res.json();
+                    // ✨ ناخد الرد من الـ API
+                    const data = await res.json();
 
-      // (اختياري) نستخدم القيمة اللي رجعت من السيرفر
-      setJahezBoxActive(data.jahezBoxActive);
+                    // (اختياري) نستخدم القيمة اللي رجعت من السيرفر
+                    setJahezBoxActive(data.jahezBoxActive);
 
-      // ✨ لو رجّع SectionId
-      if (data.jahezSectionId) {
-        // نحدّث الأقسام
-        await fetchSections();
+                    // ✨ لو رجّع SectionId
+                    if (data.jahezSectionId) {
+                      // نحدّث الأقسام
+                      await fetchSections();
 
-        // نخلي السكشن ده متحدد
-        setSelectedSection({
-          id: data.jahezSectionId
-        });
-      }
+                      // نخلي السكشن ده متحدد
+                      setSelectedSection({
+                        id: data.jahezSectionId
+                      });
+                    }
 
-      setToast(`تم تحديث جاهز بوكس بنجاح!`);
-      setTimeout(() => setToast(null), 2500);
+                    setToast(`تم تحديث جاهز بوكس بنجاح!`);
+                    setTimeout(() => setToast(null), 2500);
 
-    } catch (err) {
-      console.error(err);
-      setJahezBoxActive(prev => !prev);
-      setToast('حدث خطأ أثناء التحديث');
-      setTimeout(() => setToast(null), 2500);
-    }
-  }}
->
-  <img 
-    src={JahezBox} 
-    loading="lazy" 
-    className={`w-15 h-10 transition-transform duration-300 ${jahezBoxActive ? 'scale-110' : 'scale-100 opacity-70'}`}
-  />
-</button>
+                  } catch (err) {
+                    console.error(err);
+                    setJahezBoxActive(prev => !prev);
+                    setToast('حدث خطأ أثناء التحديث');
+                    setTimeout(() => setToast(null), 2500);
+                  }
+                }}
+              >
+                <img
+                  src={JahezBox}
+                  loading="lazy"
+                  className={`w-15 h-10 transition-transform duration-300 ${jahezBoxActive ? 'scale-110' : 'scale-100 opacity-70'}`}
+                />
+              </button>
 
 
-  {/* Toast Notification */}
-  {toast && (
-    <div className="fixed top-20 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
-      {toast}
-    </div>
-  )}
-</div>
+              {/* Toast Notification */}
+              {toast && (
+                <div className="fixed top-20 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
+                  {toast}
+                </div>
+              )}
+            </div>
             <p className="text-xl bg-gray-100 pl-4 py-1 mb-2">{restaurantData?.nameAr}</p>
             <p className="text-xl bg-gray-100 pr-4 text-left pl-1 py-1 mb-2">{restaurantData?.nameFr}</p>
             {categoryType === "1" && <p className="text-xl bg-gray-100 pl-4 py-1 mb-2">مطعم</p>}
@@ -633,7 +633,7 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
               ))}
             </div>
 
-            <button 
+            <button
               className="bg-green-700 text-white mt-4 py-2 w-full"
               onClick={() => setShowEditModal(true)}
             >
@@ -645,96 +645,96 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
             >
               حذف الحساب
             </button>
-           {/* ---------- زر التوثيق Toggle ---------- */}
-{restaurantData && (
-  <div className="mt-2 relative">
-    <button
-      className={`
+            {/* ---------- زر التوثيق Toggle ---------- */}
+            {restaurantData && (
+              <div className="mt-2 relative">
+                <button
+                  className={`
         relative mt-2 py-2 w-full flex items-center justify-center gap-2
         transition-all duration-300 overflow-hidden group
-        ${restaurantData.isVerified 
-          ? 'bg-green-700 text-white shadow-lg' 
-          : 'bg-gray-200 text-gray-700 hover:bg-green-200 hover:text-green-800'
-        }
+        ${restaurantData.isVerified
+                      ? 'bg-green-700 text-white shadow-lg'
+                      : 'bg-gray-200 text-gray-700 hover:bg-green-200 hover:text-green-800'
+                    }
         ${isVerifying ? 'opacity-70 cursor-not-allowed' : ''}
       `}
-      onClick={toggleVerifyStore}
-      disabled={isVerifying}
-    >
-      {/* تأثير الخلفية */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+                  onClick={toggleVerifyStore}
+                  disabled={isVerifying}
+                >
+                  {/* تأثير الخلفية */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
         translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
-      {/* مؤشر التحميل */}
-      {isVerifying && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/30">
-          <div className="w-5 h-5 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+                  {/* مؤشر التحميل */}
+                  {isVerifying && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30">
+                      <div className="w-5 h-5 border-2 border-green-700 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
 
-      {/* محتوى الزر */}
-      <div className={`relative flex items-center gap-2 ${isVerifying ? 'opacity-0' : 'opacity-100'}`}>
-        {/* الأيقونة */}
-        <div className={`
+                  {/* محتوى الزر */}
+                  <div className={`relative flex items-center gap-2 ${isVerifying ? 'opacity-0' : 'opacity-100'}`}>
+                    {/* الأيقونة */}
+                    <div className={`
           w-8 h-8 flex items-center justify-center rounded-full
           ${restaurantData.isVerified ? 'bg-white/30' : 'bg-green-100'}
         `}>
-          {restaurantData.isVerified ? (
-            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          ) : (
-            <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        </div>
+                      {restaurantData.isVerified ? (
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </div>
 
-        {/* النص */}
-        <span className="font-bold">
-          {restaurantData.isVerified ? 'موثق ✅' : 'توثيق المطعم'}
-        </span>
-      </div>
-    </button>
+                    {/* النص */}
+                    <span className="font-bold">
+                      {restaurantData.isVerified ? 'موثق ✅' : 'توثيق المطعم'}
+                    </span>
+                  </div>
+                </button>
 
-    {/* Toast للنجاح أو الخطأ */}
-    {verifyToast && (
-      <div className="fixed top-24 right-5 bg-green-700 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
-        {verifyToast}
-      </div>
-    )}
-  </div>
-)}
+                {/* Toast للنجاح أو الخطأ */}
+                {verifyToast && (
+                  <div className="fixed top-24 right-5 bg-green-700 text-white px-4 py-2 rounded shadow-lg animate-fadeIn">
+                    {verifyToast}
+                  </div>
+                )}
+              </div>
+            )}
 
           </div>
         </div>
 
         {/* ************** MODALS ************** */}
         {showAddProductModal && selectedSection && (
-          <AddProductModal 
-            storeSectionId={selectedSection.id} 
-            onClose={() => setShowAddProductModal(false)} 
-            onAdded={fetchProducts} 
+          <AddProductModal
+            storeSectionId={selectedSection.id}
+            onClose={() => setShowAddProductModal(false)}
+            onAdded={fetchProducts}
           />
         )}
-        
-        {editingProduct && (
-  <EditProductModal 
-    productId={editingProduct.id} 
-    currentImage={editingProduct.imageUrl} // أضف هذا السطر
-    onClose={() => setEditingProduct(null)} 
-    onUpdated={fetchProducts} 
-  />
-)}
 
-        
+        {editingProduct && (
+          <EditProductModal
+            productId={editingProduct.id}
+            currentImage={editingProduct.imageUrl} // أضف هذا السطر
+            onClose={() => setEditingProduct(null)}
+            onUpdated={fetchProducts}
+          />
+        )}
+
+
         {confirmDelete.show && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50 animate-fadeIn">
             <div className="bg-white p-6 rounded shadow w-80 text-center animate-slideDown">
               <h2 className="text-lg font-bold mb-4">هل أنت متأكد من حذف هذا المنتج؟</h2>
               <div className="flex justify-center gap-4">
                 <button className="bg-red-600 text-white px-4 py-1 rounded" onClick={confirmDeleteProduct}>حذف</button>
-                <button 
+                <button
                   className="bg-gray-100 border-2 border-gray-600 text-gray-700 px-4 py-1 rounded"
                   onClick={() => setConfirmDelete({ show: false, productId: null })}
                 >
@@ -744,41 +744,41 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
             </div>
           </div>
         )}
-        
+
         {showAddSectionModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
             <div className="bg-white p-6 rounded shadow w-96 text-center">
               <h2 className="text-xl font-bold mb-3">إضافة قسم جديد</h2>
-              <input 
-                className="border p-2 mb-3 w-full bg-gray-200" 
-                placeholder="الاسم بالعربي" 
-                value={newSectionAr} 
-                onChange={(e) => setNewSectionAr(e.target.value)} 
+              <input
+                className="border p-2 mb-3 w-full bg-gray-200"
+                placeholder="الاسم بالعربي"
+                value={newSectionAr}
+                onChange={(e) => setNewSectionAr(e.target.value)}
               />
-              <input 
-                className="border p-2 mb-3 w-full bg-gray-200" 
-                placeholder="الاسم بالفرنسي" 
-                value={newSectionFr} 
-                onChange={(e) => setNewSectionFr(e.target.value)} 
+              <input
+                className="border p-2 mb-3 w-full bg-gray-200"
+                placeholder="الاسم بالفرنسي"
+                value={newSectionFr}
+                onChange={(e) => setNewSectionFr(e.target.value)}
               />
               <div className="flex mt-4 justify-center">
-                <button 
-                  className="bg-green-700 text-white px-12 py-1 ml-2" 
+                <button
+                  className="bg-green-700 text-white px-12 py-1 ml-2"
                   onClick={async () => {
-                    if (!newSectionAr || !newSectionFr) { 
-                      alert("رجاءً املأ الاسم بالعربي والفرنسي"); 
-                      return; 
+                    if (!newSectionAr || !newSectionFr) {
+                      alert("رجاءً املأ الاسم بالعربي والفرنسي");
+                      return;
                     }
                     const form = new FormData();
                     form.append("NameAr", newSectionAr);
                     form.append("NameFr", newSectionFr);
                     form.append("StoreId", restaurantData.id.toString());
                     const res = await fetch(`${BASE}/api/Post/store-section`, { method: "POST", body: form });
-                    if (res.ok) { 
-                      setShowAddSectionModal(false); 
-                      setNewSectionAr(""); 
-                      setNewSectionFr(""); 
-                      fetchSections(); 
+                    if (res.ok) {
+                      setShowAddSectionModal(false);
+                      setNewSectionAr("");
+                      setNewSectionFr("");
+                      fetchSections();
                     }
                   }}
                 >
@@ -794,7 +794,7 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
             </div>
           </div>
         )}
-        
+
         {showDeleteStoreConfirm && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded shadow w-80 text-center">
@@ -821,35 +821,35 @@ const handleUpdateSection = ({ id, nameAr, nameFr }) => {
             </div>
           </div>
         )}
-       {showEditModal && (
-  <EditRestaurantModal
-    restaurantId={restaurantData.id}
-    currentCover={getFullImageUrl(restaurantData.coverImageUrl)} 
-    currentProfile={getFullImageUrl(restaurantData.profileImageUrl)} 
-    onClose={() => setShowEditModal(false)}
-    onUpdated={handleRestaurantUpdated}
-  />
-)}
+        {showEditModal && (
+          <EditRestaurantModal
+            restaurantId={restaurantData.id}
+            currentCover={getFullImageUrl(restaurantData.coverImageUrl)}
+            currentProfile={getFullImageUrl(restaurantData.profileImageUrl)}
+            onClose={() => setShowEditModal(false)}
+            onUpdated={handleRestaurantUpdated}
+          />
+        )}
 
-{showEditSectionModal && selectedSucForEdit && (
-  <EditSectionModal
-    section={selectedSucForEdit}
-    onClose={() => setShowEditSectionModal(false)}
-    onUpdate={handleUpdateSection} // هنا المودال بينادي الصفحة مباشرة
-  />
-)}
+        {showEditSectionModal && selectedSucForEdit && (
+          <EditSectionModal
+            section={selectedSucForEdit}
+            onClose={() => setShowEditSectionModal(false)}
+            onUpdate={handleUpdateSection} // هنا المودال بينادي الصفحة مباشرة
+          />
+        )}
 
 
-{showDeleteModal && selectedSubForDelete && (
-  <DeleteSectionModal
-    section={selectedSubForDelete}
-    onClose={() => {
-      setShowDeleteModal(false);
-      setSelectedSubForDelete(null);
-    }}
-    onDelete={(deletedId) => handleDeleteSectionSuccess(deletedId)}
-  />
-)}
+        {showDeleteModal && selectedSubForDelete && (
+          <DeleteSectionModal
+            section={selectedSubForDelete}
+            onClose={() => {
+              setShowDeleteModal(false);
+              setSelectedSubForDelete(null);
+            }}
+            onDelete={(deletedId) => handleDeleteSectionSuccess(deletedId)}
+          />
+        )}
       </div>
     </div>
   );

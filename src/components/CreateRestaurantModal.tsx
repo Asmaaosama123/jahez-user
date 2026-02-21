@@ -1,7 +1,8 @@
 // components/CreateRestaurantModal.jsx
 import React, { useState } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
   const initialWorkingDays = [
@@ -13,7 +14,7 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     { openTime: "10:00", closeTime: "15:00", is24Hours: false }, // الجمعة
     { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // السبت
   ];
-  
+
   const [form, setForm] = useState({
     NameAr: "",
     NameFr: "",
@@ -29,7 +30,7 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
   });
 
   const daysAr = [
-    "الأحد", "الإثنين", "الثلاثاء", 
+    "الأحد", "الإثنين", "الثلاثاء",
     "الأربعاء", "الخميس", "الجمعة", "السبت"
   ];
 
@@ -43,20 +44,20 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
 
   const handleDayChange = (index, field, value) => {
     const newDays = [...form.workingDays];
-    
+
     if (field === 'is24Hours') {
       if (value) {
         // إذا تم تفعيل 24 ساعة، ضع الأوقات على 00:00 - 23:59
-        newDays[index] = { 
-          ...newDays[index], 
-          is24Hours: true, 
-          openTime: "00:00", 
-          closeTime: "23:59" 
+        newDays[index] = {
+          ...newDays[index],
+          is24Hours: true,
+          openTime: "00:00",
+          closeTime: "23:59"
         };
       } else {
         // إذا تم إلغاء 24 ساعة، أعد الأوقات إلى القيم الافتراضية
-        newDays[index] = { 
-          ...newDays[index], 
+        newDays[index] = {
+          ...newDays[index],
           is24Hours: false,
           openTime: initialWorkingDays[index].openTime,
           closeTime: initialWorkingDays[index].closeTime
@@ -65,47 +66,47 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     } else {
       newDays[index] = { ...newDays[index], [field]: value };
     }
-    
+
     setForm(prev => ({ ...prev, workingDays: newDays }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const data = new FormData();
     const addressText = form.AddressMain === "1" ? "أنواذيبو" : "أنواكشوط";
-    
+
     // Add text fields
     const fields = [
       "NameAr", "NameFr", "AddressMain", "AddressSecondary",
       "DeliveryFee", "SubcategoryId", "Phone1", "Phone2"
     ];
-    
+
     fields.forEach(field => {
       if (form[field]) data.append(field, form[field]);
     });
-    
+
     data.append("Address", `${form.AddressSecondary}, ${addressText}`);
-    
+
     // Add images
     if (form.CoverImage) data.append("CoverImage", form.CoverImage);
     if (form.ProfileImage) data.append("ProfileImage", form.ProfileImage);
-    
+
     // Add working days
     const workingDaysArray = form.workingDays.map((day, index) => ({
       Day: index,
       OpenTime: day.openTime ? `${day.openTime}:00` : "",
       CloseTime: day.closeTime ? `${day.closeTime}:00` : "",
     }));
-    
+
     data.append("WorkingDays", JSON.stringify(workingDaysArray));
-    
+
     try {
       const res = await fetch(`${BASE}/api/Post/create-store`, {
         method: "POST",
         body: data,
       });
-      
+
       const result = await res.json();
       alert(result.message || "تم إنشاء المطعم بنجاح");
       onClose();
@@ -218,7 +219,7 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                           className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                           id={`24h-${index}`}
                         />
-                        <label 
+                        <label
                           htmlFor={`24h-${index}`}
                           className="font-medium text-gray-700 w-24 cursor-pointer"
                         >
@@ -231,9 +232,8 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                           value={form.workingDays[index].openTime}
                           onChange={(e) => handleDayChange(index, 'openTime', e.target.value)}
                           disabled={form.workingDays[index].is24Hours}
-                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                            form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
-                          }`}
+                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                            }`}
                         />
                         <span className="text-gray-400">إلى</span>
                         <input
@@ -241,9 +241,8 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                           value={form.workingDays[index].closeTime}
                           onChange={(e) => handleDayChange(index, 'closeTime', e.target.value)}
                           disabled={form.workingDays[index].is24Hours}
-                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                            form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
-                          }`}
+                          className={`border border-gray-300 rounded-lg px-3 py-2 text-center focus:ring-2 focus:ring-green-500 focus:border-transparent ${form.workingDays[index].is24Hours ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''
+                            }`}
                         />
                         {form.workingDays[index].is24Hours && (
                           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
@@ -302,20 +301,20 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">المدينة *</label>
                   <select
-  name="AddressMain"
-  value={form.AddressMain}
-  onChange={(e) => 
-    setForm(prev => ({
-      ...prev,
-      AddressMain: parseInt(e.target.value) // ← هتحول القيمة لرقم
-    }))
-  }
-  required
-  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
->
-  <option value={2}>أنواكشوط</option>
-  <option value={1}>أنواذيبو</option>
-</select>
+                    name="AddressMain"
+                    value={form.AddressMain}
+                    onChange={(e) =>
+                      setForm(prev => ({
+                        ...prev,
+                        AddressMain: parseInt(e.target.value) // ← هتحول القيمة لرقم
+                      }))
+                    }
+                    required
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                  >
+                    <option value={2}>أنواكشوط</option>
+                    <option value={1}>أنواذيبو</option>
+                  </select>
 
                 </div>
 

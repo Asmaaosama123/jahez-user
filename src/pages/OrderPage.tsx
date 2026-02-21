@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { IoArrowForward } from "react-icons/io5";
+import { BASE_URL } from "../utils/apiConfig";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function Cart() {
   const handleOrder = async () => {
     setLoading(true);
     try {
-      const response = await fetch("https://jahezdelivery.com/api/Orders", {
+      const response = await fetch(`${BASE_URL}/api/Orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -83,15 +84,15 @@ export default function Cart() {
           .flatMap(store => store.items)
           .map(item => `${item.name} - ${item.qty} × ${item.price} MRU`)
           .join('%0A');
-        
+
         const message = `طلب جديد%0A%0Aالعميل: ${phone}%0Aالعنوان: ${address}%0A%0Aالتفاصيل:%0A${orderDetails}%0A%0Aالمجموع: ${totalPrice} MRU%0A%0Aرابط الطلب: ${data.orderLink}`;
-        
+
         const whatsappUrl = `https://wa.me/201006621660?text=${message}`;
         window.open(whatsappUrl, '_blank');
-        
+
         localStorage.removeItem("cart");
         setCart({});
-        
+
         alert("✅ تم إرسال الطلب بنجاح!");
       } else {
         alert("❌ لم يتم إنشاء الطلب.");
@@ -191,14 +192,14 @@ export function OrderPage() {
 
   useEffect(() => {
     document.body.style.zoom = "80%";
-    
+
     // محاكاة لجلب بيانات الطلب (يجب استبدالها بالاستدعاء الفعلي للAPI)
     const fetchOrder = async () => {
       try {
         // هنا يجب استدعاء API لجلب بيانات الطلب باستخدام orderId
         // const response = await fetch(`https://deliver-web-app2.runasp.net/api/Orders/${orderId}`);
         // const orderData = await response.json();
-        
+
         // محاكاة للبيانات لحين توصيل الAPI
         setTimeout(() => {
           const mockOrder = {

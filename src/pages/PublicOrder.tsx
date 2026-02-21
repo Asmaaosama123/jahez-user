@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PhoneIcon } from "@heroicons/react/24/solid";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 interface OrderItem {
   qty: number;
@@ -31,14 +32,14 @@ export default function PublicOrder() {
 
   useEffect(() => {
     if (!orderId) return;
-    fetch(`https://jahezdelivery.com/api/Orders/PublicOrder/${orderId}`)
+    fetch(`${BASE_URL}/api/Orders/PublicOrder/${orderId}`)
       .then(res => res.json())
       .then(setData);
   }, [orderId]);
 
   const fixImageUrl = (url: string | null) => {
     if (!url) return "./src/assets/Layer 1.png";
-    
+
     // فصل البروتوكول عن باقي الرابط
     const parts = url.split("://");
     if (parts.length !== 2) return url; // لو مش صحيح
@@ -46,7 +47,7 @@ export default function PublicOrder() {
     const path = parts[1].replace(/\/{2,}/g, "/"); // إصلاح الـ double slash فقط في المسار
     return `${protocol}://${path}`;
   };
-  
+
 
   const grandTotal =
     data && data.type === "items"
@@ -54,24 +55,24 @@ export default function PublicOrder() {
       : 0;
 
 
-      const saveOrderLink = async (orderId: string) => {
-  const publicLink = `${window.location.origin}/public-order/${orderId}`;
+  const saveOrderLink = async (orderId: string) => {
+    const publicLink = `${window.location.origin}/public-order/${orderId}`;
 
-  const res = await fetch(
-    `${BASE}/api/Orders/SetOrderLink/${orderId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(publicLink),
-    }
-  );
+    const res = await fetch(
+      `${BASE}/api/Orders/SetOrderLink/${orderId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(publicLink),
+      }
+    );
 
-  return await res.json();
-};
-const USER_IMAGE =
-  "https://i.pinimg.com/736x/33/f8/26/33f8266681c946cd80de486c499fe992.jpg";
+    return await res.json();
+  };
+  const USER_IMAGE =
+    "https://i.pinimg.com/736x/33/f8/26/33f8266681c946cd80de486c499fe992.jpg";
 
   if (!data) return <div className="p-6">جاري التحميل...</div>;
 
@@ -99,23 +100,23 @@ const USER_IMAGE =
               />
             )}
             <div>
-            <p className="font-bold uppercase">{data.storeName ?? "-"}</p>
-            <a
-      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        data.storeAddress ?? ""
-      )}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-sm text-green-700"
-    >{data.storeAddress ?? "-"}    </a>
+              <p className="font-bold uppercase">{data.storeName ?? "-"}</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  data.storeAddress ?? ""
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-green-700"
+              >{data.storeAddress ?? "-"}    </a>
 
             </div>
           </div>
 
-          
-        <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white">
-        <a href={`tel:${ data.storePhone?? ""}`}>
-            <PhoneIcon className="w-5 h-5" />
+
+          <div className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white">
+            <a href={`tel:${data.storePhone ?? ""}`}>
+              <PhoneIcon className="w-5 h-5" />
             </a>
           </div>
         </div>
@@ -124,39 +125,39 @@ const USER_IMAGE =
 
         {/* العميل */}
         <div className="flex justify-between items-center">
-  <div className="flex items-center gap-2">
-    {/* صورة اليوزر */}
-    <img
-      src={USER_IMAGE}
-      alt="User"
-      className="w-14 h-14 rounded-full object-cover border"
-    />
+          <div className="flex items-center gap-2">
+            {/* صورة اليوزر */}
+            <img
+              src={USER_IMAGE}
+              alt="User"
+              className="w-14 h-14 rounded-full object-cover border"
+            />
 
-    <div>
-      <p className="text-sm font-medium">
-        ID{data.orderId ? data.orderId.slice(0, 6) : "-"}
-      </p>
+            <div>
+              <p className="text-sm font-medium">
+                ID{data.orderId ? data.orderId.slice(0, 6) : "-"}
+              </p>
 
-      <a
-        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          data.customerAddress ?? ""
-        )}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-sm text-green-700"
-      >
-        {data.customerAddress ?? "-"}
-      </a>
-    </div>
-  </div>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  data.customerAddress ?? ""
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-green-700"
+              >
+                {data.customerAddress ?? "-"}
+              </a>
+            </div>
+          </div>
 
-  <a
-    href={`tel:${data.customerPhone ?? ""}`}
-    className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white"
-  >
-    <PhoneIcon className="w-5 h-5" />
-  </a>
-</div>
+          <a
+            href={`tel:${data.customerPhone ?? ""}`}
+            className="w-10 h-10 bg-green-700 rounded-full flex items-center justify-center text-white"
+          >
+            <PhoneIcon className="w-5 h-5" />
+          </a>
+        </div>
 
       </div>
 

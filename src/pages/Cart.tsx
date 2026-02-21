@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { IoArrowForward } from "react-icons/io5";
 import { useLang } from "../context/LanguageContext";
+import { BASE_URL } from "../utils/apiConfig";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -51,8 +52,8 @@ export default function Cart() {
     },
     [cart, updateCart]
   );
-  
-  
+
+
 
   // حساب السعر الكلي
   const totalPrice = Object.values(cart)
@@ -92,7 +93,7 @@ export default function Cart() {
         }));
       }
 
-      const res = await fetch("https://jahezdelivery.com/api/Orders/CreateOrder", {
+      const res = await fetch(`${BASE_URL}/api/Orders/CreateOrder`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderPayload),
@@ -114,7 +115,7 @@ export default function Cart() {
 
   const saveOrderLink = async (orderId) => {
     const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
-    const res = await fetch(`https://jahezdelivery.com/api/Orders/SetOrderLink/${orderId}`, {
+    const res = await fetch(`${BASE_URL}/api/Orders/SetOrderLink/${orderId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(publicLink),
@@ -127,19 +128,19 @@ export default function Cart() {
   // تعديل Bottom Bar عند ظهور الكيبورد
   useEffect(() => {
     if (!window.visualViewport) return;
-  
+
     const handleResize = () => {
       const isOpen = window.innerHeight - window.visualViewport.height > 150;
       setKeyboardOpen(isOpen);
     };
-  
+
     window.visualViewport.addEventListener("resize", handleResize);
-  
+
     return () => {
       window.visualViewport.removeEventListener("resize", handleResize);
     };
   }, []);
-  
+
 
 
   return (
@@ -214,39 +215,39 @@ export default function Cart() {
       )}
 
       {/* Bottom Bar */}
-     
-<div
-  id="bottomBar"
-  className={`
+
+      <div
+        id="bottomBar"
+        className={`
     fixed left-0 right-0
     bg-white p-3 border-t shadow-lg z-50
     transition-all duration-300 ease-in-out
     ${keyboardOpen ? "translate-y-full opacity-0" : "translate-y-0 opacity-100"}
   `}
->
+      >
 
-  <button
-    onClick={() => {
-      setLoading(true);
-      setTimeout(() => {
-        setShowFormModal(true);
-        setLoading(false);
-      }, 300);
-    }}
-    className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg flex items-center justify-center"
-    disabled={loading}
-  >
-    {loading ? (
-      <>
-        {language === "ar" ? "جارٍ التحميل..." : "Loading..."}
-        <svg className="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-      </>
-    ) : language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
-  </button>
-</div>
+        <button
+          onClick={() => {
+            setLoading(true);
+            setTimeout(() => {
+              setShowFormModal(true);
+              setLoading(false);
+            }, 300);
+          }}
+          className="w-full bg-green-700 text-white py-3 text-base font-bold rounded-lg flex items-center justify-center"
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              {language === "ar" ? "جارٍ التحميل..." : "Loading..."}
+              <svg className="animate-spin h-5 w-5 ml-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            </>
+          ) : language === "ar" ? "تأكيد الطلب" : "Confirm Order"}
+        </button>
+      </div>
 
 
       {/* Form Modal */}

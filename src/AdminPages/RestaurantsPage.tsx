@@ -7,8 +7,9 @@ import CreateRestaurantModal from "../components/CreateRestaurantModal";
 import EditSubCategoryModal from "../components/EditSubCategoryModal";
 import DeleteSubCategoryModal from "../components/DeleteSubCategoryModal";
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 export default function RestaurantsPage() {
   const { categoryType } = useParams();
@@ -113,8 +114,8 @@ export default function RestaurantsPage() {
 
   const handleUpdateSubCategory = (updatedSub) => {
     // تحديث القائمة بعد التعديل
-    setSubCategories(prev => 
-      prev.map(sub => sub.id === updatedSub.id ? 
+    setSubCategories(prev =>
+      prev.map(sub => sub.id === updatedSub.id ?
         { ...sub, name: updatedSub.nameAr, nameAr: updatedSub.nameAr, nameFr: updatedSub.nameFr } : sub
       )
     );
@@ -139,10 +140,10 @@ export default function RestaurantsPage() {
   return (
     <div className="flex bg-gray-100" dir="rtl">
       <Sidebar />
-      
+
       <div className="flex-1 mt-[77px]">
         <Header />
-        
+
         <div className="p-6">
           <button
             onClick={() => setShowCreateModal(true)}
@@ -160,15 +161,14 @@ export default function RestaurantsPage() {
                     setSelectedSub(sub.id);
                     fetchStores(sub.id, selectedCity);
                   }}
-                  className={`px-6 py-3 border ${
-                    selectedSub === sub.id
-                      ? "bg-green-800 text-white font-bold shadow"
-                      : "bg-green-200 hover:bg-white text-gray-700"
-                  }`}
+                  className={`px-6 py-3 border ${selectedSub === sub.id
+                    ? "bg-green-800 text-white font-bold shadow"
+                    : "bg-green-200 hover:bg-white text-gray-700"
+                    }`}
                 >
                   {sub.name}
                 </button>
-                
+
                 {/* أزرار Edit و Delete */}
                 <div className="flex">
                   <button
@@ -176,7 +176,7 @@ export default function RestaurantsPage() {
                     className="px-1 py-1 mx-1 text-white text-sm rounded hover:border border-2"
                     title="تعديل"
                   >
-                                                  <PencilIcon className="w-5 h-5 text-gray-700" />
+                    <PencilIcon className="w-5 h-5 text-gray-700" />
 
                   </button>
                   <button
@@ -184,13 +184,13 @@ export default function RestaurantsPage() {
                     className="px-1 py-1 mx-1 text-white text-sm rounded hover:border border-2"
                     title="حذف"
                   >
-                                                  <TrashIcon className="w-5 h-5 text-red-700" />
+                    <TrashIcon className="w-5 h-5 text-red-700" />
 
                   </button>
                 </div>
               </div>
             ))}
-            
+
             <button
               onClick={() => setShowAddModal(true)}
               className="px-8 py-3 bg-white text-green-800 border rounded font-bold ml-2 hover:border-green-800"

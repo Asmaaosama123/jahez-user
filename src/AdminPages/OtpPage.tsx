@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { BASE_URL } from "../utils/apiConfig";
 
 export default function OtpPage() {
   const [code, setCode] = useState("");
@@ -22,7 +23,7 @@ export default function OtpPage() {
 
     try {
       const res = await fetch(
-        `https://jahezdelivery.com/api/admin/verify-2fa?email=${email}&code=${code}`,
+        `${BASE_URL}/api/admin/verify-2fa?email=${email}&code=${code}`,
         {
           method: "POST",
           headers: {

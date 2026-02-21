@@ -7,8 +7,9 @@ import croissant from "../assets/croissant.png";
 import jahezLogo from "../assets/jahez.png";
 import languageIcon from "../assets/language.png";
 import VIPicon from "../assets/Vip icon.png";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 export default function Home() {
   const navigate = useNavigate();
@@ -262,9 +263,8 @@ export default function Home() {
       <div className="px-4">
         <div className="bg-gray-100 rounded-xl flex items-center px-4 py-3 mt-3">
           <input
-            className={`flex-1 bg-transparent outline-none text-gray-600 ${
-              language === "ar" ? "text-right" : "text-left"
-            }`}
+            className={`flex-1 bg-transparent outline-none text-gray-600 ${language === "ar" ? "text-right" : "text-left"
+              }`}
             dir={language === "ar" ? "rtl" : "ltr"}
             placeholder={t.search}
             value={search}
@@ -279,11 +279,10 @@ export default function Home() {
           <button
             key={c.type}
             onClick={() => setCategory(c.type)}
-            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${
-              category === c.type
-                ? "bg-green-800 text-white"
-                : "bg-gray-100 text-gray-600"
-            }`}
+            className={`py-2 rounded-xl text-[10px] font-bold border flex flex-col items-center gap-2 transition-all ${category === c.type
+              ? "bg-green-800 text-white"
+              : "bg-gray-100 text-gray-600"
+              }`}
           >
             <div className="p-2 rounded-full bg-gray-100 w-9 h-9 flex items-center justify-center">
               <img
@@ -307,11 +306,10 @@ export default function Home() {
                 setFilter(f.name);
                 fetchStores(f.id);
               }}
-              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${
-                filter === f.name
-                  ? "bg-green-800 text-white"
-                  : "bg-white text-gray-600"
-              }`}
+              className={`px-6 py-2 rounded-md text-sm whitespace-nowrap transition-all ${filter === f.name
+                ? "bg-green-800 text-white"
+                : "bg-white text-gray-600"
+                }`}
             >
               {f.name}
             </button>
@@ -329,53 +327,51 @@ export default function Home() {
                 onClick={() => goToRestaurant(r)}
                 className="bg-white rounded-xl p-4 flex items-center mb-4 hover:shadow-md cursor-pointer"
               >
-<div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
-  <img
-    src={imageUrl(r.profileImageUrl)}
-    className="w-full h-full object-cover"
-    alt={r.name}
-    loading="lazy"
-  />
+                <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <img
+                    src={imageUrl(r.profileImageUrl)}
+                    className="w-full h-full object-cover"
+                    alt={r.name}
+                    loading="lazy"
+                  />
 
-  {/* علامة التوثيق فوق الصورة */}
-  {r.isVerified && (
-    <div className="absolute bottom-0 left-0 w-8 h-8 bg-green-600 rounded-full border-2 border-white flex items-center translate-x-1/7 translate-y-1/8 justify-center shadow">
-    <svg
-        className="w-3 h-3 text-white"
-        fill="currentColor"
-        viewBox="0 0 20 20"
-      >
-        <path
-          fillRule="evenodd"
-          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-          clipRule="evenodd"
-        />
-      </svg>
-    </div>
-  )}
-</div>
+                  {/* علامة التوثيق فوق الصورة */}
+                  {r.isVerified && (
+                    <div className="absolute bottom-0 left-0 w-8 h-8 bg-green-600 rounded-full border-2 border-white flex items-center translate-x-1/7 translate-y-1/8 justify-center shadow">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
 
 
                 <div
-                  className={`flex flex-col flex-1 ${
-                    language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
-                  }`}
+                  className={`flex flex-col flex-1 ${language === "ar" ? "mr-4 text-right" : "ml-4 text-left"
+                    }`}
                 >
-                <div className="flex items-center space-x-2 rtl:space-x-reverse">
-  <h2 className="font-bold text-lg">
-    {language === "ar" ? r.nameAr || r.name : r.name}
-  </h2>
-  {r.jahezBoxActive && (
-    <img src={VIPicon} className="w-5 h-5 object-contain" alt="VIP" />
-  )}
-  </div>
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <h2 className="font-bold text-lg">
+                      {language === "ar" ? r.nameAr || r.name : r.name}
+                    </h2>
+                    {r.jahezBoxActive && (
+                      <img src={VIPicon} className="w-5 h-5 object-contain" alt="VIP" />
+                    )}
+                  </div>
 
 
                   <span
-                    className={`text-[10px] ${
-                      r.isOpen ? "text-green-600" : "text-red-700"
-                    }`}
+                    className={`text-[10px] ${r.isOpen ? "text-green-600" : "text-red-700"
+                      }`}
                   >
                     {r.isOpen ? t.open : t.closed}
                   </span>

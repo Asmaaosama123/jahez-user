@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 interface EditRestaurantModalProps {
   restaurantId: number;
@@ -30,16 +31,16 @@ interface FormData {
   workingDays: Array<{ openTime: string; closeTime: string }>;
 }
 
-const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({ 
-  restaurantId, 
-  onClose, 
+const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
+  restaurantId,
+  onClose,
   onUpdated,
   currentCover,
   currentProfile
 }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
   const [form, setForm] = useState<FormData>({
     Id: restaurantId,
     NameAr: "",
@@ -58,8 +59,8 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
     coverImageUrl: currentCover || "",
     profileImageUrl: currentProfile || ""
   });
-  
-  
+
+
 
   const daysAr = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
   const daysEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -86,16 +87,16 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
           profileImageUrl: getFullImageUrl(storeData.profileImageUrl)
         });
 
-        const addressMainValue = storeData.addressMain === "Nouakchott" ? "2" : 
-                                storeData.addressMain === "Nouadhibou" ? "1" : "2";
+        const addressMainValue = storeData.addressMain === "Nouakchott" ? "2" :
+          storeData.addressMain === "Nouadhibou" ? "1" : "2";
 
         const preparedWorkingDays = Array(7).fill({ openTime: "", closeTime: "" });
         if (Array.isArray(daysData)) {
           daysData.forEach((dayItem: any) => {
             const dayIndex = daysEn.findIndex(day => day === dayItem.day);
             if (dayIndex !== -1) {
-              const openTime = dayItem.openTime ? dayItem.openTime.split(':').slice(0,2).join(':') : "";
-              const closeTime = dayItem.closeTime ? dayItem.closeTime.split(':').slice(0,2).join(':') : "";
+              const openTime = dayItem.openTime ? dayItem.openTime.split(':').slice(0, 2).join(':') : "";
+              const closeTime = dayItem.closeTime ? dayItem.closeTime.split(':').slice(0, 2).join(':') : "";
               preparedWorkingDays[dayIndex] = { openTime, closeTime };
             }
           });
@@ -112,7 +113,7 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
           Phone2: storeData.phone2 || "",
           workingDays: preparedWorkingDays,
         }));
-        
+
       } catch (error: any) {
         console.error("Error fetching restaurant data:", error);
         alert("حدث خطأ في تحميل بيانات المطعم: " + error.message);
@@ -126,7 +127,7 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, files } = e.target as HTMLInputElement;
-    
+
     if (files && files[0]) {
       setForm(prev => ({ ...prev, [name]: files[0] }));
     } else {
@@ -153,8 +154,8 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
       data.append("DeliveryFee", form.DeliveryFee || "0");
       data.append("Phone1", form.Phone1);
       data.append("Phone2", form.Phone2 || "");
-     
-     
+
+
       if (form.CoverImage instanceof File) data.append("CoverImage", form.CoverImage);
       if (form.ProfileImage instanceof File) data.append("ProfileImage", form.ProfileImage);
 
@@ -182,12 +183,12 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
   };
 
   const getCoverImageSrc = () =>
-  form.CoverImage ? URL.createObjectURL(form.CoverImage) : currentCover || "https://via.placeholder.com/400x150?text=صورة+الغلاف";
+    form.CoverImage ? URL.createObjectURL(form.CoverImage) : currentCover || "https://via.placeholder.com/400x150?text=صورة+الغلاف";
 
-const getProfileImageSrc = () =>
-  form.ProfileImage ? URL.createObjectURL(form.ProfileImage) : currentProfile || "https://via.placeholder.com/100x100?text=البروفايل";
+  const getProfileImageSrc = () =>
+    form.ProfileImage ? URL.createObjectURL(form.ProfileImage) : currentProfile || "https://via.placeholder.com/100x100?text=البروفايل";
 
-  
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" dir="rtl">
@@ -223,11 +224,11 @@ const getProfileImageSrc = () =>
                   صورة الغلاف
                 </label>
                 <div className="relative">
-                <img
-  src={getCoverImageSrc()}
-  alt="Cover"
-  className="w-full h-40 object-cover rounded-lg border border-gray-300"
-/>
+                  <img
+                    src={getCoverImageSrc()}
+                    alt="Cover"
+                    className="w-full h-40 object-cover rounded-lg border border-gray-300"
+                  />
                   <div className="absolute bottom-2 left-2">
                     <label className="cursor-pointer bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm hover:bg-opacity-70">
                       تغيير الصورة
@@ -235,7 +236,7 @@ const getProfileImageSrc = () =>
                         type="file"
                         accept="image/*"
                         name="CoverImage"
-                        onChange={e => setForm({...form, CoverImage: e.target.files?.[0] || null })}                        className="hidden"
+                        onChange={e => setForm({ ...form, CoverImage: e.target.files?.[0] || null })} className="hidden"
                       />
                     </label>
                   </div>
@@ -248,11 +249,11 @@ const getProfileImageSrc = () =>
                   صورة البروفايل
                 </label>
                 <div className="relative">
-                <img
-  src={getProfileImageSrc()}
-  alt="Profile"
-  className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg mx-auto"
-/>
+                  <img
+                    src={getProfileImageSrc()}
+                    alt="Profile"
+                    className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-lg mx-auto"
+                  />
                   <div className="text-center mt-2">
                     <label className="cursor-pointer bg-black bg-opacity-50 text-white px-3 py-1 rounded text-sm hover:bg-opacity-70">
                       تغيير الصورة
@@ -260,7 +261,7 @@ const getProfileImageSrc = () =>
                         type="file"
                         accept="image/*"
                         name="ProfileImage"
-                        onChange={e => setForm({...form, ProfileImage: e.target.files?.[0] || null })}                        className="hidden"
+                        onChange={e => setForm({ ...form, ProfileImage: e.target.files?.[0] || null })} className="hidden"
                       />
                     </label>
                   </div>

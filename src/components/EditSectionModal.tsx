@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
 const EditSectionModal = ({ section, onClose, onUpdate }) => {
   const [nameAr, setNameAr] = useState("");
@@ -13,7 +14,7 @@ const EditSectionModal = ({ section, onClose, onUpdate }) => {
     const fetchSection = async () => {
       setIsFetching(true);
       try {
-        const res = await fetch(`https://jahezdelivery.com/api/Subcategories/GetSectionByid/${section.id}`, {
+        const res = await fetch(`${BASE_URL}/api/Subcategories/GetSectionByid/${section.id}`, {
           headers: { accept: "*/*" },
         });
         if (res.ok) {
@@ -37,10 +38,10 @@ const EditSectionModal = ({ section, onClose, onUpdate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-  
+
     try {
       const response = await fetch(
-        `https://jahezdelivery.com/api/Subcategories/UpdateSectionByid/${section.id}`,
+        `${BASE_URL}/api/Subcategories/UpdateSectionByid/${section.id}`,
         {
           method: "PUT",
           headers: {
@@ -50,7 +51,7 @@ const EditSectionModal = ({ section, onClose, onUpdate }) => {
           body: JSON.stringify({ nameAr, nameFr }),
         }
       );
-  
+
       if (response.ok) {
         // بدل الاعتماد على response
         onUpdate({ id: section.id, nameAr, nameFr });
@@ -65,7 +66,7 @@ const EditSectionModal = ({ section, onClose, onUpdate }) => {
       setIsLoading(false);
     }
   };
-  
+
 
   if (isFetching) {
     return (

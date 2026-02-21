@@ -1,5 +1,6 @@
 // components/DeleteSubCategoryModal.jsx
 import React, { useState } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
 const DeleteSubCategoryModal = ({ subcategory, onClose, onDelete }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -13,7 +14,7 @@ const DeleteSubCategoryModal = ({ subcategory, onClose, onDelete }) => {
 
     try {
       const response = await fetch(
-        `https://jahezdelivery.com/api/Subcategories/DeleleSubCategoryByid/${subcategory.id}`,
+        `${BASE_URL}/api/Subcategories/DeleleSubCategoryByid/${subcategory.id}`,
         {
           method: "DELETE",
           headers: {
@@ -42,7 +43,7 @@ const DeleteSubCategoryModal = ({ subcategory, onClose, onDelete }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-lg w-96">
         <h2 className="text-xl font-bold mb-4 text-center text-red-600">تأكيد الحذف</h2>
-        
+
         <div className="mb-6">
           <p className="text-gray-700 text-center">
             هل أنت متأكد من حذف القسم الفرعي:
@@ -52,7 +53,7 @@ const DeleteSubCategoryModal = ({ subcategory, onClose, onDelete }) => {
             ⚠️ تحذير: هذا الإجراء لا يمكن التراجع عنه
           </p>
         </div>
-        
+
         <div className="flex justify-center gap-3">
           <button
             onClick={onClose}

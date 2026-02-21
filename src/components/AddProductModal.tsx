@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
   const [newProductAr, setNewProductAr] = useState("");
@@ -13,7 +14,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   // Refs لضبط مؤشر الكتابة في textarea
   const descArRef = useRef(null);
   const descFrRef = useRef(null);
@@ -50,7 +51,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
     }
 
     setIsSubmitting(true);
-    
+
     const form = new FormData();
     form.append("NameAr", newProductAr);
     form.append("NameFr", newProductFr);
@@ -70,7 +71,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
       if (res.ok) {
         // عرض رسالة النجاح مع أنيميشن
         setShowSuccess(true);
-        
+
         // تأخير بسيط لمشاهدة الأنيميشن
         setTimeout(() => {
           onAdded();
@@ -97,17 +98,17 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
           </div>
         </div>
       )}
-      
+
       <div className="bg-white  shadow-2xl w-full max-w-md md:max-w-lg mx-4 flex flex-col max-h-[100vh] overflow-hidden">
         {/* الهيدر ثابت */}
         <div className="p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 text-center">إضافة منتج جديد</h2>
         </div>
-        
+
         {/* المحتوى القابل للتمرير */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {/* مربع رفع الصورة مع المعاينة */}
-          <div 
+          <div
             className="relative border-2 border-dashed border-gray-300  p-4 mb-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
             onClick={() => document.getElementById('fileInput').click()}
           >
@@ -118,12 +119,12 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
               accept="image/*"
               onChange={handleImageChange}
             />
-            
+
             {imagePreview ? (
               <div className="relative">
-                <img 
-                  src={imagePreview} 
-                  alt="معاينة الصورة" 
+                <img
+                  src={imagePreview}
+                  alt="معاينة الصورة"
                   className="w-full h-40 md:h-48 object-cover "
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center  opacity-0 hover:opacity-100 transition-opacity">
@@ -193,22 +194,22 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
               />
             </div>
             <div>
-            <select
-              className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50
+              <select
+                className="w-full p-2 md:p-3 border border-gray-300 bg-gray-50
                         focus:bg-white focus:border-green-500 focus:ring-2
                         focus:ring-green-200 transition-all text-right text-sm md:text-base"
-              value={isAvailable}
-              onChange={(e) => setIsAvailable(e.target.value === "true")}
-              style={{ textAlign: "right", direction: "rtl" }}
-            >
-              <option value="true">متاح</option>
-              <option value="false">غير متاح</option>
-            </select>
-          </div>
+                value={isAvailable}
+                onChange={(e) => setIsAvailable(e.target.value === "true")}
+                style={{ textAlign: "right", direction: "rtl" }}
+              >
+                <option value="true">متاح</option>
+                <option value="false">غير متاح</option>
+              </select>
+            </div>
 
           </div>
         </div>
-        
+
         {/* أزرار التحكم ثابتة في الأسفل */}
         <div className="p-4 md:p-6 border-t border-gray-200 bg-white flex-shrink-0">
           <div className="flex gap-2 md:gap-3">
@@ -228,7 +229,7 @@ export default function AddProductModal({ storeSectionId, onClose, onAdded }) {
                 </>
               )}
             </button>
-            
+
             <button
               className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-50 font-semibold py-2 md:py-3 px-2 md:px-4  transition-all text-sm md:text-base"
               onClick={onClose}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from "../utils/apiConfig";
 
 const EditSubCategoryModal = ({ subcategory, onClose, onUpdate }) => {
   const [nameAr, setNameAr] = useState("");
@@ -13,7 +14,7 @@ const EditSubCategoryModal = ({ subcategory, onClose, onUpdate }) => {
     const fetchSubCategory = async () => {
       setIsFetching(true);
       try {
-        const res = await fetch(`https://jahezdelivery.com/api/Subcategories/GetSubCategoryByid/${subcategory.id}`, {
+        const res = await fetch(`${BASE_URL}/api/Subcategories/GetSubCategoryByid/${subcategory.id}`, {
           headers: { accept: "*/*" },
         });
         if (res.ok) {
@@ -40,7 +41,7 @@ const EditSubCategoryModal = ({ subcategory, onClose, onUpdate }) => {
 
     try {
       const response = await fetch(
-        `https://jahezdelivery.com/api/Subcategories/UpdateSubCategoryByid/${subcategory.id}`,
+        `${BASE_URL}/api/Subcategories/UpdateSubCategoryByid/${subcategory.id}`,
         {
           method: "PUT",
           headers: {

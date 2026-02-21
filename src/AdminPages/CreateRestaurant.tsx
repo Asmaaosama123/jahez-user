@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
+import { BASE_URL } from "../utils/apiConfig";
 
 export default function CreateRestaurant({ subcategoryId, isModal = false }) {
   const [form, setForm] = useState({
@@ -63,7 +64,7 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
 
     try {
       const res = await fetch(
-        "https://jahezdelivery.com/api/Post/create-store",
+        `${BASE_URL}/api/Post/create-store`,
         { method: "POST", body: data }
       );
       const result = await res.json();
@@ -130,7 +131,7 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
             {/* أيام العمل */}
             <div className="border rounded-lg p-4 mt-4 w-[850px]">
               <h2 className="font-bold mb-2">أيام العمل</h2>
-              {["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"].map((day, i) => (
+              {["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"].map((day, i) => (
                 <div key={i} className="grid grid-cols-2 gap-2 mb-2">
                   <span>{day}</span>
                   <div className="flex gap-2">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { CameraIcon, CheckCircleIcon } from "@heroicons/react/24/solid";
+import { BASE_URL } from "../utils/apiConfig";
 
 interface Product {
   id: number;
@@ -26,7 +27,7 @@ interface Props {
   onUpdated: () => void;
 }
 
-const BASE = "https://jahezdelivery.com";
+const BASE = BASE_URL;
 
 const EditProductModal: React.FC<Props> = ({ productId, onClose, onUpdated, currentImage }) => {
   const [loading, setLoading] = useState(true);
@@ -43,51 +44,51 @@ const EditProductModal: React.FC<Props> = ({ productId, onClose, onUpdated, curr
   const [isAvailable, setIsAvailable] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const descArRef = useRef<HTMLTextAreaElement>(null);
   const descFrRef = useRef<HTMLTextAreaElement>(null);
 
-useEffect(() => {
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
 
-      // لو الصورة موجودة كـ prop استخدمها مباشرة
-      if (currentImage) {
-        let imageUrl = currentImage.startsWith('http') ? currentImage : `${BASE}/${currentImage.replace(/^\/+/, '')}`;
-        setImagePreview(imageUrl);
-      }
-
-      const res = await fetch(`${BASE}/api/CustomerGet/product/${productId}`);
-      if (!res.ok) throw new Error("المنتج غير موجود");
-      const prod: Product = await res.json();
-
-      setProduct(prod);
-      setNameAr(prod.nameAr);
-      setNameFr(prod.nameFr || "");
-      setDescriptionAr(prod.descriptionAr || "");
-      setDescriptionFr(prod.descriptionFr || "");
-      setPrice(prod.price);
-      setIsAvailable(prod.isAvailable);
-
-      // لو لم يتم تمرير currentImage، اعمل إعداد الصورة من الـ API
-      if (!currentImage) {
-        let imageUrl = prod.imageUrl || "";
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = `${BASE}/${imageUrl.replace(/^\/+/, '')}`;
+        // لو الصورة موجودة كـ prop استخدمها مباشرة
+        if (currentImage) {
+          let imageUrl = currentImage.startsWith('http') ? currentImage : `${BASE}/${currentImage.replace(/^\/+/, '')}`;
+          setImagePreview(imageUrl);
         }
-        setImagePreview(imageUrl);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  fetchProduct();
-}, [productId, currentImage]);
+        const res = await fetch(`${BASE}/api/CustomerGet/product/${productId}`);
+        if (!res.ok) throw new Error("المنتج غير موجود");
+        const prod: Product = await res.json();
+
+        setProduct(prod);
+        setNameAr(prod.nameAr);
+        setNameFr(prod.nameFr || "");
+        setDescriptionAr(prod.descriptionAr || "");
+        setDescriptionFr(prod.descriptionFr || "");
+        setPrice(prod.price);
+        setIsAvailable(prod.isAvailable);
+
+        // لو لم يتم تمرير currentImage، اعمل إعداد الصورة من الـ API
+        if (!currentImage) {
+          let imageUrl = prod.imageUrl || "";
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = `${BASE}/${imageUrl.replace(/^\/+/, '')}`;
+          }
+          setImagePreview(imageUrl);
+        }
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId, currentImage]);
 
   // جعل الكتابة تبدأ من الأعلى في textarea
   useEffect(() => {
@@ -129,9 +130,9 @@ useEffect(() => {
 
   const handleSubmit = async () => {
     if (!product) return;
-    
+
     setIsSubmitting(true);
-    
+
     const form = new FormData();
     form.append("Id", product.id.toString());
     form.append("NameAr", nameAr);
@@ -148,11 +149,11 @@ useEffect(() => {
         method: "PUT",
         body: form,
       });
-      
+
       if (res.ok) {
         // عرض رسالة النجاح مع أنيميشن
         setShowSuccess(true);
-        
+
         // تأخير بسيط لمشاهدة الأنيميشن ثم التحديث والإغلاق
         setTimeout(() => {
           onUpdated();
@@ -177,13 +178,13 @@ useEffect(() => {
       </div>
     </div>
   );
-  
+
   if (error) return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
       <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md mx-4">
         <div className="text-red-600 text-center mb-4">⚠️</div>
         <p className="text-red-600 text-center">{error}</p>
-        <button 
+        <button
           onClick={onClose}
           className="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg transition-colors"
         >
@@ -192,7 +193,7 @@ useEffect(() => {
       </div>
     </div>
   );
-  
+
   if (!product) return null;
 
   return (
@@ -206,14 +207,14 @@ useEffect(() => {
           </div>
         </div>
       )}
-      
+
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md md:max-w-lg mx-4 flex flex-col max-h-[90vh] overflow-hidden">
         {/* الهيدر ثابت */}
         <div className="p-4 md:p-6 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 text-center">تعديل المنتج</h2>
           <p className="text-gray-500 text-center text-sm mt-1">ID: {product.id}</p>
         </div>
-        
+
         {/* المحتوى القابل للتمرير */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {/* عرض الصورة مع زر الكاميرا */}
@@ -238,7 +239,7 @@ useEffect(() => {
                     <p className="text-gray-500">لا توجد صورة</p>
                   </div>
                 )}
-                
+
                 {/* زر الكاميرا - هذا الزر يعمل الآن */}
                 <button
                   type="button"
@@ -248,7 +249,7 @@ useEffect(() => {
                   <CameraIcon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </button>
               </div>
-              
+
               {/* input مخفي - سيتم تشغيله من زر الكاميرا */}
               <input
                 ref={fileInputRef}
@@ -257,7 +258,7 @@ useEffect(() => {
                 accept="image/*"
                 onChange={handleImageChange}
               />
-              
+
               <p className="text-xs text-gray-500 mt-2 text-center">
                 انقر على أيقونة الكاميرا لتغيير الصورة
               </p>
@@ -323,28 +324,28 @@ useEffect(() => {
               />
             </div>
             <div>
-  <label className="block text-right text-gray-700 mb-1 text-sm md:text-base">
-    حالة المنتج
-  </label>
+              <label className="block text-right text-gray-700 mb-1 text-sm md:text-base">
+                حالة المنتج
+              </label>
 
-  <select
-    className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50
+              <select
+                className="w-full p-2 md:p-3 border border-gray-300 rounded-lg bg-gray-50
                focus:bg-white focus:border-green-500 focus:ring-2
                focus:ring-green-200 transition-all text-right text-sm md:text-base"
-    value={isAvailable ? "true" : "false"}
-    onChange={(e) => setIsAvailable(e.target.value === "true")}
-    style={{ direction: "rtl" }}
-  >
-    <option value="true">🟢 متاح</option>
-    <option value="false">🔴 غير متاح</option>
-  </select>
-</div>
+                value={isAvailable ? "true" : "false"}
+                onChange={(e) => setIsAvailable(e.target.value === "true")}
+                style={{ direction: "rtl" }}
+              >
+                <option value="true">🟢 متاح</option>
+                <option value="false">🔴 غير متاح</option>
+              </select>
+            </div>
 
 
-           
+
           </div>
         </div>
-        
+
         {/* أزرار التحكم ثابتة في الأسفل */}
         <div className="p-4 md:p-6 border-t border-gray-200 bg-white flex-shrink-0">
           <div className="flex gap-2 md:gap-3">
@@ -364,7 +365,7 @@ useEffect(() => {
                 </>
               )}
             </button>
-            
+
             <button
               className="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-50 font-semibold py-2 md:py-3 px-2 md:px-4 rounded-lg transition-all text-sm md:text-base"
               onClick={onClose}
