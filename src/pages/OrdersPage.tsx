@@ -20,7 +20,6 @@ interface Order {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hubConnected, setHubConnected] = useState(false);
 
   const playNotificationSound = () => {
     const audio = new Audio(NOTIFICATION_SOUND_URL);
@@ -74,7 +73,6 @@ export default function OrdersPage() {
     connection.start()
       .then(() => {
         console.log("Connected to SignalR Hub");
-        setHubConnected(true);
         toast.success("متصل بنظام التنبيهات اللحظية", { id: 'signalr-conn' });
       })
       .catch(err => {
@@ -130,9 +128,6 @@ export default function OrdersPage() {
           <div className="flex justify-between items-center mb-5">
             <h1 className="text-xl font-bold">جميع الطلبات</h1>
             <div className="flex gap-2 items-center">
-              <span className={`text-xs px-2 py-1 rounded ${hubConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                {hubConnected ? 'متصل لحظياً' : 'غير متصل'}
-              </span>
               <button
                 onClick={testSystem}
                 className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"

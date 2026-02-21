@@ -102,9 +102,6 @@ export default function Cart() {
       if (!res.ok) throw new Error("فشل إنشاء الطلب");
 
       const data = await res.json();
-      const orderId = data.orderId;
-
-      await saveOrderLink(orderId);
       navigate("/order-success");
     } catch (err) {
       setErrorMessage(language === "ar" ? `حدث خطأ: ${err.message}` : `Error: ${err.message}`);
@@ -113,16 +110,6 @@ export default function Cart() {
     }
   };
 
-  const saveOrderLink = async (orderId) => {
-    const publicLink = `https://jahez-five.vercel.app/public-order/${orderId}`;
-    const res = await fetch(`${BASE_URL}/api/Orders/SetOrderLink/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(publicLink),
-    });
-    if (!res.ok) throw new Error("فشل حفظ رابط الطلب");
-    return await res.json();
-  };
 
   // تعديل Bottom Bar عند ظهور الكيبورد
   // تعديل Bottom Bar عند ظهور الكيبورد

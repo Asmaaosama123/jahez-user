@@ -13,10 +13,19 @@ const WhatsAppOrderButton = ({ cart, phone, address, storeNames, productNames })
     setLoading(true);
     try {
       // 1️⃣ حفظ الطلب في قاعدة البيانات
-      const resOrder = await fetch(`${BASE_URL}/api/Orders`, {
+      const resOrder = await fetch(`${BASE_URL}/api/Orders/CreateOrder`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, address, cart })
+        body: JSON.stringify({
+          customerPhone: phone,
+          customerAddress: address,
+          storeId: Object.keys(cart)[0], // Assuming single store per order for this button
+          items: cart[Object.keys(cart)[0]].items.map(item => ({
+            productId: item.id,
+            qty: item.qty,
+            price: item.price
+          }))
+        })
       });
       const orderData = await resOrder.json();
 
@@ -39,6 +48,8 @@ const WhatsAppOrderButton = ({ cart, phone, address, storeNames, productNames })
       });
 
       const waNumber = "201006621660"; // الرقم الثابت
+      const orderLink = `https://jahez-five.vercel.app/public-order/${orderData.orderId}`;
+      message += `\nرابط الطلب: ${orderLink}`;
       const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
 
       window.open(waLink, "_blank");

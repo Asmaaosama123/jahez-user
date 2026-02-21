@@ -64,28 +64,36 @@ export default function Cart() {
   const handleOrder = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/Orders`, {
+      const response = await fetch(`${BASE_URL}/api/Orders/CreateOrder`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone,
-          address,
-          cart,
+          customerPhone: phone,
+          customerAddress: address,
+          storeId: Object.keys(cart)[0],
+          items: Object.values(cart).flatMap((store: any) =>
+            store.items.map((item: any) => ({
+              productId: item.id,
+              qty: item.qty,
+              price: item.price
+            }))
+          )
         }),
       });
 
       const data = await response.json();
 
-      if (response.ok && data.orderLink) {
+      if (response.ok) {
         // إرسال رسالة واتساب إلى الرقم الثابت
+        const orderLink = `https://jahez-five.vercel.app/public-order/${data.orderId}`;
         const orderDetails = Object.values(cart)
-          .flatMap(store => store.items)
+          .flatMap((store: any) => store.items)
           .map(item => `${item.name} - ${item.qty} × ${item.price} MRU`)
           .join('%0A');
 
-        const message = `طلب جديد%0A%0Aالعميل: ${phone}%0Aالعنوان: ${address}%0A%0Aالتفاصيل:%0A${orderDetails}%0A%0Aالمجموع: ${totalPrice} MRU%0A%0Aرابط الطلب: ${data.orderLink}`;
+        const message = `طلب جديد%0A%0Aالعميل: ${phone}%0Aالعنوان: ${address}%0A%0Aالتفاصيل:%0A${orderDetails}%0A%0Aالمجموع: ${totalPrice} MRU%0A%0Aرابط الطلب: ${orderLink}`;
 
         const whatsappUrl = `https://wa.me/201006621660?text=${message}`;
         window.open(whatsappUrl, '_blank');
