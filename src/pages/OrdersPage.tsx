@@ -1,9 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import * as signalR from "@microsoft/signalr";
 import toast from "react-hot-toast";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL, HUB_URL } from "../utils/apiConfig";
+import { Copy, Map as MapIcon, X, MapPin } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+
+// Leaflet icon fix
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+let DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
 
@@ -17,9 +32,50 @@ interface Order {
   createdAt: string;
 }
 
+function LocationMarker({ position, setPosition, label }: { position: [number, number] | null, setPosition: (pos: [number, number]) => void, label: string }) {
+  useMapEvents({
+    click(e) {
+      setPosition([e.latlng.lat, e.latlng.lng]);
+    },
+  });
+
+  return position === null ? null : (
+    <Marker position={position}>
+      <div className="bg-white p-1 rounded shadow-md border border-gray-300 text-[10px] absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
+        {label}
+      </div>
+    </Marker>
+  );
+}
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // GPS State
+  const [isGpsOpen, setIsGpsOpen] = useState(false);
+  const [startPos, setStartPos] = useState<[number, number] | null>(null);
+  const [endPos, setEndPos] = useState<[number, number] | null>(null);
+  const [startingRate, setStartingRate] = useState<number>(0);
+  const [pricePerKm, setPricePerKm] = useState<number>(0);
+  const [distance, setDistance] = useState<number>(0);
+
+  const calculateDistance = useCallback(() => {
+    if (startPos && endPos) {
+      const from = L.latLng(startPos[0], startPos[1]);
+      const to = L.latLng(endPos[0], endPos[1]);
+      const d = from.distanceTo(to) / 1000; // in km
+      setDistance(Number(d.toFixed(2)));
+    } else {
+      setDistance(0);
+    }
+  }, [startPos, endPos]);
+
+  useEffect(() => {
+    calculateDistance();
+  }, [calculateDistance]);
+
+  const totalPrice = startingRate + (distance * pricePerKm);
 
   const playNotificationSound = () => {
     const audio = new Audio(NOTIFICATION_SOUND_URL);
@@ -124,10 +180,17 @@ export default function OrdersPage() {
       <div className="flex-1 mt-[77px]">
         <Header />
 
-        <div className="p-6">
+        <div className="p-6 relative">
           <div className="flex justify-between items-center mb-5">
             <h1 className="text-xl font-bold">جميع الطلبات</h1>
             <div className="flex gap-2 items-center">
+              <button
+                onClick={() => setIsGpsOpen(true)}
+                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition flex items-center gap-1"
+              >
+                <MapIcon size={16} />
+                فتح الخريطة (GPS)
+              </button>
               <button
                 onClick={testSystem}
                 className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
@@ -136,6 +199,95 @@ export default function OrdersPage() {
               </button>
             </div>
           </div>
+
+          {/* GPS Panel */}
+          {isGpsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden">
+                <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <MapIcon size={20} />
+                    حساب المسافة والسعر (GPS)
+                  </h2>
+                  <button onClick={() => setIsGpsOpen(false)} className="hover:text-gray-300">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                  {/* Map Side */}
+                  <div className="flex-1 h-[40vh] md:h-full relative">
+                    <MapContainer center={[30.0444, 31.2357]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <LocationMarker position={startPos} setPosition={setStartPos} label="نقطة البداية" />
+                      <LocationMarker position={endPos} setPosition={setEndPos} label="نقطة النهاية" />
+                      {startPos && endPos && (
+                        <Polyline positions={[startPos, endPos]} color="blue" />
+                      )}
+                    </MapContainer>
+                    <div className="absolute top-2 right-2 bg-white p-2 rounded shadow text-xs z-[1000] pointer-events-none">
+                      اضغط على الخريطة لتحديد النقاط
+                    </div>
+                  </div>
+
+                  {/* Controls Side */}
+                  <div className="w-full md:w-80 bg-gray-50 p-4 border-r overflow-y-auto">
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">بداية العداد (Starting Rate)</label>
+                        <input
+                          type="number"
+                          value={startingRate}
+                          onChange={(e) => setStartingRate(Number(e.target.value))}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">سعر الكيلو (Price per KM)</label>
+                        <input
+                          type="number"
+                          value={pricePerKm}
+                          onChange={(e) => setPricePerKm(Number(e.target.value))}
+                          className="w-full p-2 border rounded"
+                        />
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>المسافة (Distance):</span>
+                          <span className="font-bold">{distance} كم</span>
+                        </div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>سعر الكيلو:</span>
+                          <span className="font-bold">{pricePerKm}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-bold text-blue-600 mt-2 pt-2 border-t">
+                          <span>السعر الإجمالي:</span>
+                          <span>{totalPrice.toFixed(2)} جنيه</span>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 space-y-2">
+                        <div className="text-xs text-gray-500">
+                          <p>نقطة البداية: {startPos ? `${startPos[0].toFixed(4)}, ${startPos[1].toFixed(4)}` : "غير محددة"}</p>
+                          <p>نقطة النهاية: {endPos ? `${endPos[0].toFixed(4)}, ${endPos[1].toFixed(4)}` : "غير محددة"}</p>
+                        </div>
+                        <button
+                          onClick={() => { setStartPos(null); setEndPos(null); }}
+                          className="w-full bg-gray-200 text-gray-700 py-2 rounded text-sm hover:bg-gray-300"
+                        >
+                          إعادة تعيين النقاط
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center text-gray-500">جارٍ التحميل...</div>
@@ -198,6 +350,8 @@ export default function OrdersPage() {
                               📋
                             </button>
                           )}
+                        </span>
+                        <span>
                           {order.orderLink
                             ? order.orderLink.length > 10
                               ? order.orderLink.slice(0, 40) + "..."
