@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL, HUB_URL } from "../utils/apiConfig";
-import { Copy, Map as MapIcon, X, MapPin } from "lucide-react";
+import { Map as MapIcon, X, MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
@@ -12,7 +12,7 @@ import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-let DefaultIcon = L.icon({
+const DefaultIcon = L.icon({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
   iconSize: [25, 41],
@@ -139,7 +139,7 @@ export default function OrdersPage() {
     return () => {
       connection.stop();
     };
-  }, []);
+  }, [notifyNewOrder]);
 
   const handleAddDelivery = async (orderId: string) => {
     const phone = prompt("ادخل رقم الدليفري");
