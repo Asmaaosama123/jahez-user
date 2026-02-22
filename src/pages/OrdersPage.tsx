@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL, HUB_URL } from "../utils/apiConfig";
-import { Map as MapIcon, X, MapPin } from "lucide-react";
+import { Link as LinkIcon, Map as MapIcon, X, MapPin } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 
@@ -172,202 +172,197 @@ export default function OrdersPage() {
 
 
   return (
-    <div className="flex bg-gray-100 min-h-screen" dir="rtl">
-      {/* Sidebar */}
-      <Sidebar />
+    <div className="flex bg-[#f4f7f6] min-h-screen font-sans" dir="rtl">
+      {/* Sidebar - Hide if GPS is open to save space as per screenshot */}
+      {!isGpsOpen && <Sidebar />}
 
-      {/* Main */}
-      <div className="flex-1 mt-[77px]">
-        <Header />
+      <div className="flex-1 flex flex-col min-w-0">
+        {!isGpsOpen && <Header />}
 
-        <div className="p-6 relative">
-          <div className="flex justify-between items-center mb-5">
-            <h1 className="text-xl font-bold">جميع الطلبات</h1>
-            <div className="flex gap-2 items-center">
-              <button
-                onClick={() => setIsGpsOpen(true)}
-                className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition flex items-center gap-1"
-              >
-                <MapIcon size={16} />
-                فتح الخريطة (GPS)
-              </button>
-              <button
-                onClick={testSystem}
-                className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
-              >
-                تجربة الصوت والتنبيه
-              </button>
-            </div>
-          </div>
+        <div className={`flex-1 flex overflow-hidden ${!isGpsOpen ? "mt-[77px]" : ""}`}>
 
-          {/* GPS Panel */}
+          {/* GPS Section - Left side */}
           {isGpsOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden">
-                <div className="bg-gray-800 text-white p-4 flex justify-between items-center">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    <MapIcon size={20} />
-                    حساب المسافة والسعر (GPS)
-                  </h2>
-                  <button onClick={() => setIsGpsOpen(false)} className="hover:text-gray-300">
-                    <X size={24} />
+            <div className="flex-[2] flex border-l bg-white overflow-hidden">
+              {/* GPS Sidebar */}
+              <div className="w-72 bg-[#f8faf9] border-l p-4 flex flex-col gap-4 overflow-y-auto">
+                <div className="space-y-2">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="نقطة البداية"
+                      className="w-full p-2 border rounded-md pr-8 text-xs bg-white"
+                      value={startPos ? `${startPos[0].toFixed(5)}, ${startPos[1].toFixed(5)}` : ""}
+                      readOnly
+                    />
+                    <MapPin size={14} className="absolute right-2 top-2.5 text-gray-400" />
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="نقطة النهاية"
+                      className="w-full p-2 border rounded-md pr-8 text-xs bg-white"
+                      value={endPos ? `${endPos[0].toFixed(5)}, ${endPos[1].toFixed(5)}` : ""}
+                      readOnly
+                    />
+                    <MapPin size={14} className="absolute right-2 top-2.5 text-gray-400" />
+                  </div>
+                  <button
+                    onClick={() => { setStartPos(null); setEndPos(null); }}
+                    className="text-[11px] text-gray-500 hover:text-red-600 transition-colors"
+                  >
+                    إعادة تعيين النقاط
                   </button>
                 </div>
 
-                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                  {/* Map Side */}
-                  <div className="flex-1 h-[40vh] md:h-full relative">
-                    <MapContainer center={[30.0444, 31.2357]} zoom={13} style={{ height: "100%", width: "100%" }}>
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      <LocationMarker position={startPos} setPosition={setStartPos} label="نقطة البداية" />
-                      <LocationMarker position={endPos} setPosition={setEndPos} label="نقطة النهاية" />
-                      {startPos && endPos && (
-                        <Polyline positions={[startPos, endPos]} color="blue" />
-                      )}
-                    </MapContainer>
-                    <div className="absolute top-2 right-2 bg-white p-2 rounded shadow text-xs z-[1000] pointer-events-none">
-                      اضغط على الخريطة لتحديد النقاط
-                    </div>
+                <div className="mt-4 py-4 border-y border-gray-100 space-y-3">
+                  <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">المسافة</div>
+                    <div className="text-xl font-bold text-gray-800">{distance} km</div>
                   </div>
-
-                  {/* Controls Side */}
-                  <div className="w-full md:w-80 bg-gray-50 p-4 border-r overflow-y-auto">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">بداية العداد (Starting Rate)</label>
-                        <input
-                          type="number"
-                          value={startingRate}
-                          onChange={(e) => setStartingRate(Number(e.target.value))}
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">سعر الكيلو (Price per KM)</label>
-                        <input
-                          type="number"
-                          value={pricePerKm}
-                          onChange={(e) => setPricePerKm(Number(e.target.value))}
-                          className="w-full p-2 border rounded"
-                        />
-                      </div>
-
-                      <div className="pt-4 border-t">
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>المسافة (Distance):</span>
-                          <span className="font-bold">{distance} كم</span>
-                        </div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>سعر الكيلو:</span>
-                          <span className="font-bold">{pricePerKm}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-bold text-blue-600 mt-2 pt-2 border-t">
-                          <span>السعر الإجمالي:</span>
-                          <span>{totalPrice.toFixed(2)} جنيه</span>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 space-y-2">
-                        <div className="text-xs text-gray-500">
-                          <p>نقطة البداية: {startPos ? `${startPos[0].toFixed(4)}, ${startPos[1].toFixed(4)}` : "غير محددة"}</p>
-                          <p>نقطة النهاية: {endPos ? `${endPos[0].toFixed(4)}, ${endPos[1].toFixed(4)}` : "غير محددة"}</p>
-                        </div>
-                        <button
-                          onClick={() => { setStartPos(null); setEndPos(null); }}
-                          className="w-full bg-gray-200 text-gray-700 py-2 rounded text-sm hover:bg-gray-300"
-                        >
-                          إعادة تعيين النقاط
-                        </button>
-                      </div>
-                    </div>
+                  <div className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">الإجمالي</div>
+                    <div className="text-xl font-bold text-green-600">{totalPrice.toFixed(0)} MRU</div>
                   </div>
                 </div>
+
+                <div className="mt-auto space-y-3 pt-4">
+                  <div>
+                    <label className="block text-[11px] text-gray-500 mb-1 mr-1">تسعيرة البداية</label>
+                    <input
+                      type="number"
+                      value={startingRate}
+                      onChange={(e) => setStartingRate(Number(e.target.value))}
+                      className="w-full p-2 border border-blue-100 rounded bg-blue-50/30 text-center font-bold text-gray-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-gray-500 mb-1 mr-1">سعر الكيلو</label>
+                    <input
+                      type="number"
+                      value={pricePerKm}
+                      onChange={(e) => setPricePerKm(Number(e.target.value))}
+                      className="w-full p-2 border border-blue-100 rounded bg-blue-50/30 text-center font-bold text-gray-700"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Map container */}
+              <div className="flex-1 relative text-left">
+                <MapContainer center={[30.0444, 31.2357]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                  />
+                  <LocationMarker position={startPos} setPosition={setStartPos} label="نقطة البداية" />
+                  <LocationMarker position={endPos} setPosition={setEndPos} label="نقطة النهاية" />
+                  {startPos && endPos && (
+                    <Polyline positions={[startPos, endPos]} color="#3b82f6" weight={5} opacity={0.7} />
+                  )}
+                </MapContainer>
+
+                {/* Close Button on Map */}
+                <button
+                  onClick={() => setIsGpsOpen(false)}
+                  className="absolute top-4 left-4 z-[1000] bg-white p-2 rounded-full shadow-lg hover:bg-gray-100 text-gray-600"
+                >
+                  <X size={20} />
+                </button>
               </div>
             </div>
           )}
 
-          {loading ? (
-            <div className="text-center text-gray-500">جارٍ التحميل...</div>
-          ) : (
-            <table className="w-full bg-white shadow rounded overflow-hidden">
-              <thead className="bg-black text-white text-sm">
-                <tr>
-                  <th className="p-3">هاتف العميل</th>
-                  <th className="p-3">عنوان المستلم</th>
-                  <th className="p-3">عنوان الالتقاط</th>
-                  <th className="p-3">مندوب التوصيل</th>
-                  <th className="p-3">رابط الطلب</th>
-                  <th className="p-3">التاريخ</th>
-                </tr>
-              </thead>
+          {/* Orders Table Section - Right side or full width */}
+          <div className={`flex-1 flex flex-col min-w-0 bg-white ${isGpsOpen ? "md:max-w-md lg:max-w-lg" : "p-6"}`}>
+            <div className={`flex justify-between items-center ${isGpsOpen ? "p-4 border-b" : "mb-6"}`}>
+              <h1 className="text-xl font-bold text-gray-800">جميع الطلبات</h1>
+              {!isGpsOpen && (
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setIsGpsOpen(true)}
+                    className="bg-[#2e7d32] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-all flex items-center gap-2 shadow-sm"
+                  >
+                    <MapIcon size={18} />
+                    فتح الخريطة (GPS)
+                  </button>
+                  <button
+                    onClick={testSystem}
+                    className="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-900 transition-all shadow-sm"
+                  >
+                    تجربة التنبيه
+                  </button>
+                </div>
+              )}
+            </div>
 
-              <tbody>
-                {orders.length === 0 ? (
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-sm text-right">
+                <thead className="bg-[#1b1b1b] text-white sticky top-0 z-10">
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-gray-500">
-                      لا توجد طلبات
-                    </td>
+                    <th className="p-3 font-medium">المستخدم</th>
+                    <th className="p-3 font-medium">الوقت</th>
+                    <th className="p-3 font-medium">مندوب التوصيل</th>
+                    <th className="p-3 font-medium">الرابط</th>
                   </tr>
-                ) : (
-                  orders.map(order => (
-                    <tr
-                      key={order.orderId}
-                      className="text-center border-b hover:bg-gray-100"
-                    >
-                      <td className="p-3 font-semibold">{order.customerPhone}</td>
-                      <td className="p-3">{order.customerAddress}</td>
-                      <td className="p-3">{order.storeName || "-"}</td>
-                      <td className="p-3">
-                        {order.deliveryPhone ? (
-                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-sm">
-                            {order.deliveryPhone}
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() =>
-                              handleAddDelivery(order.orderId)
-                            }
-                            className="bg-green-800 text-white px-4 py-1 rounded text-sm hover:bg-green-700"
-                          >
-                            ضيف رقم
-                          </button>
-                        )}
-                      </td>
-                      <td className="p-3 text-xs break-all flex items-center justify-center gap-2">
-                        <span>
-                          {order.orderLink && (
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(order.orderLink as string);
-                                toast.success("تم نسخ الرابط!");
-                              }}
-                              className="text-gray-500 hover:text-gray-800"
-                              title="انسخ الرابط"
-                            >
-                              📋
-                            </button>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {loading ? (
+                    <tr><td colSpan={4} className="p-8 text-center text-gray-400">جارٍ التحميل...</td></tr>
+                  ) : orders.length === 0 ? (
+                    <tr><td colSpan={4} className="p-8 text-center text-gray-400">لا توجد طلبات حالياً</td></tr>
+                  ) : (
+                    orders.map((order, idx) => {
+                      const date = new Date(order.createdAt);
+                      const timeStr = date.toLocaleTimeString("en-GB", { hour: '2-digit', minute: '2-digit', hour12: false });
+                      const dateStr = date.toLocaleDateString("en-GB");
+                      const showDate = idx === 0 || new Date(orders[idx - 1].createdAt).toDateString() !== date.toDateString();
+
+                      return (
+                        <React.Fragment key={order.orderId}>
+                          {showDate && (
+                            <tr className="bg-[#f0f0f0] text-[#555] text-[10px] font-bold uppercase tracking-widest">
+                              <td colSpan={4} className="p-1 px-4 text-center">{dateStr}</td>
+                            </tr>
                           )}
-                        </span>
-                        <span>
-                          {order.orderLink
-                            ? order.orderLink.length > 10
-                              ? order.orderLink.slice(0, 40) + "..."
-                              : order.orderLink
-                            : "-"}
-                        </span>
-                      </td>
-                      <td className="p-3 text-sm">
-                        {new Date(order.createdAt).toLocaleString("ar-EG")}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          )}
+                          <tr className="hover:bg-green-50/30 transition-colors border-b border-gray-50">
+                            <td className="p-3 font-medium text-gray-700">{order.customerPhone}</td>
+                            <td className="p-3 text-gray-500 text-xs">{timeStr}</td>
+                            <td className="p-3">
+                              {order.deliveryPhone ? (
+                                <span className="text-green-600 font-medium">{order.deliveryPhone}</span>
+                              ) : (
+                                <button
+                                  onClick={() => handleAddDelivery(order.orderId)}
+                                  className="bg-green-600 text-white px-3 py-1 rounded text-[10px] hover:bg-green-700 transition-colors"
+                                >
+                                  ضيف رقم
+                                </button>
+                              )}
+                            </td>
+                            <td className="p-3">
+                              {order.orderLink && (
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(order.orderLink as string);
+                                    toast.success("تم نسخ الرابط!");
+                                  }}
+                                  className="text-gray-400 hover:text-green-600 transition-colors p-1"
+                                  title="نسخ الرابط"
+                                >
+                                  <LinkIcon size={16} />
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
