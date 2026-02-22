@@ -16,5 +16,16 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-leaflet': ['leaflet', 'react-leaflet'],
+          'vendor-icons': ['lucide-react', 'react-icons'],
+        }
+      }
+    }
   }
 });
