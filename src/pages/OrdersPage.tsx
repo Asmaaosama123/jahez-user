@@ -32,16 +32,30 @@ interface Order {
   createdAt: string;
 }
 
-function LocationMarker({ position, setPosition, label }: { position: [number, number] | null, setPosition: (pos: [number, number]) => void, label: string }) {
+interface MapClickHandlerProps {
+  startPos: [number, number] | null;
+  setStartPos: (pos: [number, number]) => void;
+  endPos: [number, number] | null;
+  setEndPos: (pos: [number, number]) => void;
+}
+
+function MapClickHandler({ startPos, setStartPos, endPos, setEndPos }: MapClickHandlerProps) {
   useMapEvents({
     click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng]);
+      if (!startPos) {
+        setStartPos([e.latlng.lat, e.latlng.lng]);
+      } else if (!endPos) {
+        setEndPos([e.latlng.lat, e.latlng.lng]);
+      }
     },
   });
+  return null;
+}
 
+function LocationMarker({ position, label }: { position: [number, number] | null, label: string }) {
   return position === null ? null : (
     <Marker position={position}>
-      <div className="bg-white p-1 rounded shadow-md border border-gray-300 text-[10px] absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap">
+      <div className="bg-white p-1 rounded shadow-md border border-gray-300 text-[10px] absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap font-bold">
         {label}
       </div>
     </Marker>
@@ -287,8 +301,14 @@ export default function OrdersPage() {
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       />
-                      <LocationMarker position={startPos} setPosition={setStartPos} label="نقطة البداية" />
-                      <LocationMarker position={endPos} setPosition={setEndPos} label="نقطة النهاية" />
+                      <MapClickHandler
+                        startPos={startPos}
+                        setStartPos={setStartPos}
+                        endPos={endPos}
+                        setEndPos={setEndPos}
+                      />
+                      <LocationMarker position={startPos} label="نقطة البداية" />
+                      <LocationMarker position={endPos} label="نقطة النهاية" />
                       {startPos && endPos && (
                         <Polyline positions={[startPos, endPos]} color="#2563eb" weight={5} opacity={0.6} />
                       )}
