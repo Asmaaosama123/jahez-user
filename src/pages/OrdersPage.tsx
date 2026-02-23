@@ -70,6 +70,10 @@ export default function OrdersPage() {
   const [isGpsOpen, setIsGpsOpen] = useState(false);
   const [startPos, setStartPos] = useState<[number, number] | null>(null);
   const [endPos, setEndPos] = useState<[number, number] | null>(null);
+  const [startInput, setStartInput] = useState("");
+  const [endInput, setEndInput] = useState("");
+  const [startSuggestions, setStartSuggestions] = useState<any[]>([]);
+  const [endSuggestions, setEndSuggestions] = useState<any[]>([]);
   const [startingRate, setStartingRate] = useState<number>(0);
   const [pricePerKm, setPricePerKm] = useState<number>(0);
   const [distance, setDistance] = useState<number>(0);
@@ -89,7 +93,25 @@ export default function OrdersPage() {
     calculateDistance();
   }, [calculateDistance]);
 
-  const totalPrice = startingRate + (distance * pricePerKm);
+  const totalPrice = distance <= 4 && distance > 0 ? 100 : startingRate + (distance * pricePerKm);
+
+  const fetchSuggestions = async (query: string, setSuggestions: (s: any[]) => void) => {
+    if (query.length < 3) return;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+      const data = await res.json();
+      setSuggestions(data);
+    } catch (err) {
+      console.error("Error fetching suggestions:", err);
+    }
+  };
+
+  const handleManualCoord = (val: string, setPos: (p: [number, number]) => void) => {
+    const coords = val.split(",").map(c => parseFloat(c.trim()));
+    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+      setPos([coords[0], coords[1]]);
+    }
+  };
 
   const playNotificationSound = () => {
     const audio = new Audio(NOTIFICATION_SOUND_URL);
@@ -230,7 +252,7 @@ export default function OrdersPage() {
 
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
-                  {/* GPS Sidebar - Left Side inside Modal (to match screenshot relative position) */}
+                  {/* GPS Sidebar - Left Side inside Modal */}
                   <div className="w-full md:w-80 bg-[#f8faf9] p-6 border-l flex flex-col gap-6 overflow-y-auto order-1 md:order-1">
                     <div className="space-y-4">
                       <div className="relative">
@@ -238,23 +260,67 @@ export default function OrdersPage() {
                         <input
                           type="text"
                           className="w-full p-2 border rounded-md text-xs bg-white pr-8"
-                          value={startPos ? `${startPos[0].toFixed(5)}, ${startPos[1].toFixed(5)}` : ""}
-                          readOnly
+                          placeholder="ابحث عن مكان أو أدخل إحداثيات..."
+                          value={startInput || (startPos ? `${startPos[0].toFixed(5)}, ${startPos[1].toFixed(5)}` : "")}
+                          onChange={(e) => {
+                            setStartInput(e.target.value);
+                            fetchSuggestions(e.target.value, setStartSuggestions);
+                            handleManualCoord(e.target.value, setStartPos);
+                          }}
                         />
                         <MapPin size={14} className="absolute right-2 top-8 text-red-500" />
+                        {startSuggestions.length > 0 && (
+                          <div className="absolute z-50 bg-white border rounded shadow-md mt-1 w-full text-xs">
+                            {startSuggestions.map((s, idx) => (
+                              <div
+                                key={idx}
+                                className="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-0"
+                                onClick={() => {
+                                  setStartPos([parseFloat(s.lat), parseFloat(s.lon)]);
+                                  setStartInput(s.display_name);
+                                  setStartSuggestions([]);
+                                }}
+                              >
+                                {s.display_name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="relative">
                         <label className="block text-[11px] text-gray-500 mb-1 mr-1">نقطة النهاية</label>
                         <input
                           type="text"
                           className="w-full p-2 border rounded-md text-xs bg-white pr-8"
-                          value={endPos ? `${endPos[0].toFixed(5)}, ${endPos[1].toFixed(5)}` : ""}
-                          readOnly
+                          placeholder="ابحث عن مكان أو أدخل إحداثيات..."
+                          value={endInput || (endPos ? `${endPos[0].toFixed(5)}, ${endPos[1].toFixed(5)}` : "")}
+                          onChange={(e) => {
+                            setEndInput(e.target.value);
+                            fetchSuggestions(e.target.value, setEndSuggestions);
+                            handleManualCoord(e.target.value, setEndPos);
+                          }}
                         />
                         <MapPin size={14} className="absolute right-2 top-8 text-blue-500" />
+                        {endSuggestions.length > 0 && (
+                          <div className="absolute z-50 bg-white border rounded shadow-md mt-1 w-full text-xs">
+                            {endSuggestions.map((s, idx) => (
+                              <div
+                                key={idx}
+                                className="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-0"
+                                onClick={() => {
+                                  setEndPos([parseFloat(s.lat), parseFloat(s.lon)]);
+                                  setEndInput(s.display_name);
+                                  setEndSuggestions([]);
+                                }}
+                              >
+                                {s.display_name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <button
-                        onClick={() => { setStartPos(null); setEndPos(null); }}
+                        onClick={() => { setStartPos(null); setEndPos(null); setStartInput(""); setEndInput(""); }}
                         className="text-xs text-blue-600 hover:text-red-500 transition-colors"
                       >
                         إعادة تعيين النقاط
@@ -269,6 +335,7 @@ export default function OrdersPage() {
                       <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                         <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">الإجمالي</div>
                         <div className="text-xl font-bold text-green-700">{totalPrice.toFixed(0)} MRU</div>
+                        {distance > 0 && distance <= 4 && <div className="text-[9px] text-blue-600">سعر ثابت (≤ 4km)</div>}
                       </div>
                     </div>
 
@@ -280,6 +347,7 @@ export default function OrdersPage() {
                           value={startingRate}
                           onChange={(e) => setStartingRate(Number(e.target.value))}
                           className="w-full p-2 border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
+                          disabled={distance > 0 && distance <= 4}
                         />
                       </div>
                       <div>
@@ -289,6 +357,7 @@ export default function OrdersPage() {
                           value={pricePerKm}
                           onChange={(e) => setPricePerKm(Number(e.target.value))}
                           className="w-full p-2 border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
+                          disabled={distance > 0 && distance <= 4}
                         />
                       </div>
                     </div>
@@ -396,7 +465,7 @@ export default function OrdersPage() {
                       </span>
                     </td>
                     <td className="p-3 text-xs text-gray-500">
-                      {new Date(order.createdAt).toLocaleString("ar-EG")}
+                      {new Date(order.createdAt).toLocaleString("en-US")}
                     </td>
                   </tr>
                 ))
