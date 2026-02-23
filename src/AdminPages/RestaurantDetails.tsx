@@ -647,53 +647,6 @@ export default function RestaurantDetailsPage() {
                 </div>
               )}
 
-              {/* ---------- زر الإغلاق التام Toggle ---------- */}
-              {restaurantData && (
-                <div className="mt-2 relative">
-                  <button
-                    className={`
-          relative mt-2 py-2 w-full flex items-center justify-center gap-2
-          transition-all duration-300 overflow-hidden group
-          ${restaurantData.isClosed
-                        ? 'bg-red-700 text-white shadow-lg'
-                        : 'bg-gray-200 text-gray-700 hover:bg-red-200 hover:text-red-800'
-                      }
-          ${isClosing ? 'opacity-70 cursor-not-allowed' : ''}
-        `}
-                    onClick={toggleCloseStore}
-                    disabled={isClosing}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
-          translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-
-                    {isClosing && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-white/30">
-                        <div className="w-5 h-5 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />
-                      </div>
-                    )}
-
-                    <div className={`relative flex items-center gap-2 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-                      <div className={`
-            w-8 h-8 flex items-center justify-center rounded-full
-            ${restaurantData.isClosed ? 'bg-white/30' : 'bg-red-100'}
-          `}>
-                        {restaurantData.isClosed ? (
-                          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.367zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        )}
-                      </div>
-                      <span className="font-bold">
-                        {restaurantData.isClosed ? 'مغلق تماماً 🚫' : 'إغلاق المحل تماماً'}
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              )}
 
             </div>
             <p className="text-xl bg-gray-100 pl-4 py-1 mb-2">{restaurantData?.nameAr}</p>
@@ -788,6 +741,54 @@ export default function RestaurantDetailsPage() {
                     {verifyToast}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ---------- زر الإغلاق التام Toggle ---------- */}
+            {restaurantData && (
+              <div className="mt-2 relative">
+                <button
+                  className={`
+          relative mt-2 py-2 w-full flex items-center justify-center gap-2
+          transition-all duration-300 overflow-hidden group
+          ${restaurantData.isClosed
+                      ? 'bg-red-700 text-white shadow-lg'
+                      : 'bg-gray-200 text-gray-700 hover:bg-red-200 hover:text-red-800'
+                    }
+          ${isClosing ? 'opacity-70 cursor-not-allowed' : ''}
+        `}
+                  onClick={toggleCloseStore}
+                  disabled={isClosing}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent 
+          translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
+                  {isClosing && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/30">
+                      <div className="w-5 h-5 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+
+                  <div className={`relative flex items-center gap-2 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
+                    <div className={`
+            w-8 h-8 flex items-center justify-center rounded-full
+            ${restaurantData.isClosed ? 'bg-white/30' : 'bg-red-100'}
+          `}>
+                      {restaurantData.isClosed ? (
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.367zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-bold">
+                      {restaurantData.isClosed ? 'مغلق تماماً 🚫' : 'إغلاق المحل تماماً'}
+                    </span>
+                  </div>
+                </button>
               </div>
             )}
 
