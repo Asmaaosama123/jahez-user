@@ -20,7 +20,8 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-const NOTIFICATION_SOUND_URL = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3";
+const NOTIFICATION_SOUND_URL = "/notification.mp3";
+const notificationAudio = new Audio(NOTIFICATION_SOUND_URL);
 
 interface Order {
   orderId: string;
@@ -114,10 +115,18 @@ export default function OrdersPage() {
   };
 
   const playNotificationSound = () => {
-    const audio = new Audio(NOTIFICATION_SOUND_URL);
-    audio.play().catch(err => {
-      console.warn("Audio playback failed. This might be due to browser autoplay policies.", err);
-    });
+    notificationAudio.currentTime = 0;
+    notificationAudio.play()
+      .then(() => {
+        // Stop after 2 seconds as requested by the user
+        setTimeout(() => {
+          notificationAudio.pause();
+          notificationAudio.currentTime = 0;
+        }, 2000);
+      })
+      .catch(err => {
+        console.warn("Audio playback failed. This might be due to browser autoplay policies.", err);
+      });
   };
 
   const notifyNewOrder = (order: Order) => {
