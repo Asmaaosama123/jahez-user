@@ -114,7 +114,7 @@ export default function OrdersPage() {
     }
   };
 
-  const playNotificationSound = () => {
+  const playNotificationSound = useCallback(() => {
     notificationAudio.currentTime = 0;
     notificationAudio.play()
       .then(() => {
@@ -127,9 +127,9 @@ export default function OrdersPage() {
       .catch(err => {
         console.warn("Audio playback failed. This might be due to browser autoplay policies.", err);
       });
-  };
+  }, []);
 
-  const notifyNewOrder = (order: Order) => {
+  const notifyNewOrder = useCallback((order: Order) => {
     toast.success((t) => (
       <span onClick={() => toast.dismiss(t.id)} className="cursor-pointer">
         <b>📦 طلب جديد من {order.customerPhone}</b>
@@ -138,7 +138,7 @@ export default function OrdersPage() {
       </span>
     ), { duration: 6000, icon: '🔥' });
     playNotificationSound();
-  };
+  }, [playNotificationSound]);
 
   const testSystem = () => {
     playNotificationSound();
@@ -158,7 +158,11 @@ export default function OrdersPage() {
 
     // SignalR Connection
     const connection = new signalR.HubConnectionBuilder()
-      .withUrl(HUB_URL)
+      .withUrl(HUB_URL, {
+        skipNegotiation: false,
+        transport: signalR.HttpTransportType.WebSockets | signalR.HttpTransportType.LongPolling
+      })
+      .configureLogging(signalR.LogLevel.Information)
       .withAutomaticReconnect()
       .build();
 
@@ -171,17 +175,28 @@ export default function OrdersPage() {
       notifyNewOrder(newOrder);
     });
 
-    connection.start()
-      .then(() => {
+    let isStopped = false;
+    const startConnection = async () => {
+      try {
+        await connection.start();
+        if (isStopped) {
+          await connection.stop();
+          return;
+        }
         console.log("Connected to SignalR Hub");
         toast.success("متصل بنظام التنبيهات اللحظية", { id: 'signalr-conn' });
-      })
-      .catch(err => {
-        console.error("SignalR Connection Error: ", err);
-        toast.error("فشل الاتصال بسيرفر التنبيهات", { id: 'signalr-conn' });
-      });
+      } catch (err) {
+        if (!isStopped) {
+          console.error("SignalR Connection Error: ", err);
+          toast.error("فشل الاتصال بسيرفر التنبيهات", { id: 'signalr-conn' });
+        }
+      }
+    };
+
+    startConnection();
 
     return () => {
+      isStopped = true;
       connection.stop();
     };
   }, [notifyNewOrder]);
