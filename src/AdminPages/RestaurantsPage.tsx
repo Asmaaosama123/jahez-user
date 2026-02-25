@@ -52,7 +52,7 @@ export default function RestaurantsPage() {
   }, [selectedSub, selectedCity]);
 
   const fetchStores = (subId, city = selectedCity) => {
-    fetch(`${BASE}/api/CustomerGet/by-city-sub/${city}/${subId}`)
+    fetch(`${BASE}/api/CustomerGet/by-city-sub/${city}/${subId}?includeClosed=true`)
       .then(async (res) => {
         const text = await res.text();
         try {

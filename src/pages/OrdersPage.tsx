@@ -74,7 +74,7 @@ export default function OrdersPage() {
   const [endInput, setEndInput] = useState("");
   const [startSuggestions, setStartSuggestions] = useState<any[]>([]);
   const [endSuggestions, setEndSuggestions] = useState<any[]>([]);
-  const [startingRate, setStartingRate] = useState<number>(0);
+  const [startingRate, setStartingRate] = useState<number>(100);
   const [pricePerKm, setPricePerKm] = useState<number>(0);
   const [distance, setDistance] = useState<number>(0);
 
@@ -93,7 +93,7 @@ export default function OrdersPage() {
     calculateDistance();
   }, [calculateDistance]);
 
-  const totalPrice = distance <= 4 && distance > 0 ? 100 : startingRate + (distance * pricePerKm);
+  const totalPrice = distance > 4 ? startingRate + (distance * pricePerKm) : (distance > 0 ? 100 : 0);
 
   const fetchSuggestions = async (query: string, setSuggestions: (s: any[]) => void) => {
     if (query.length < 3) return;
@@ -335,7 +335,11 @@ export default function OrdersPage() {
                       <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
                         <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">الإجمالي</div>
                         <div className="text-xl font-bold text-green-700">{totalPrice.toFixed(0)} MRU</div>
-                        {distance > 0 && distance <= 4 && <div className="text-[9px] text-blue-600">سعر ثابت (≤ 4km)</div>}
+                        {distance > 0 && distance <= 4 ? (
+                          <div className="text-[9px] text-blue-600">سعر ثابت (≤ 4km)</div>
+                        ) : distance > 4 ? (
+                          <div className="text-[9px] text-orange-600">100 (أساس) + سعر الكيلو</div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -365,7 +369,12 @@ export default function OrdersPage() {
 
                   {/* Map Area - Right Side inside Modal */}
                   <div className="flex-1 relative text-left order-2 md:order-2">
-                    <MapContainer center={[30.0444, 31.2357]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                    <MapContainer
+                      center={[18.0735, -15.9582]}
+                      zoom={12}
+                      maxBounds={[[17.9, -16.2], [18.2, -15.7]]}
+                      style={{ height: "100%", width: "100%" }}
+                    >
                       <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
