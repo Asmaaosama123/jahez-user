@@ -93,7 +93,7 @@ export default function OrdersPage() {
     calculateDistance();
   }, [calculateDistance]);
 
-  const totalPrice = distance > 4 ? startingRate + (distance * pricePerKm) : (distance > 0 ? 100 : 0);
+  const totalPrice = distance > 4 ? startingRate + ((distance - 4) * pricePerKm) : (distance > 0 ? 100 : 0);
 
   const fetchSuggestions = async (query: string, setSuggestions: (s: any[]) => void) => {
     if (query.length < 3) return;
@@ -338,7 +338,7 @@ export default function OrdersPage() {
                         {distance > 0 && distance <= 4 ? (
                           <div className="text-[9px] text-blue-600">سعر ثابت (≤ 4km)</div>
                         ) : distance > 4 ? (
-                          <div className="text-[9px] text-orange-600">100 (أساس) + سعر الكيلو</div>
+                          <div className="text-[9px] text-orange-600">100 (أساس) + سعر الكيلو للمسافة الزائدة عن 4km</div>
                         ) : null}
                       </div>
                     </div>
