@@ -80,16 +80,20 @@ function LocationMarker({ position, label }: { position: [number, number] | null
 
   const customHtmlIcon = L.divIcon({
     html: renderToStaticMarkup(
-      <div className="relative flex flex-col items-center">
-        <div className="bg-white px-2 py-0.5 rounded-full shadow-md border text-[10px] font-bold text-black border-red-500 whitespace-nowrap mb-1">
+      <div className="relative flex flex-col items-center pointer-events-auto">
+        <div className="text-white text-[12px] font-bold mb-0.5 tracking-wide text-center leading-tight whitespace-nowrap" style={{ fontFamily: "'Noto Kufi Arabic', sans-serif", textShadow: '0px 0px 4px rgba(0,0,0,0.9), 0px 0px 4px rgba(0,0,0,0.9), 0px 0px 4px rgba(0,0,0,0.9)' }}>
           {label}
         </div>
-        <img src={markerIcon} alt="marker" style={{ width: '25px', height: '41px' }} />
+        <div className="w-5 h-5 rounded-full bg-[#202124] border-[1.5px] border-blue-500 shadow-md flex items-center justify-center">
+          <div className="w-2.5 h-2.5 rounded-full bg-blue-500 flex items-center justify-center">
+            <div className="w-1 h-1 rounded-full bg-white"></div>
+          </div>
+        </div>
       </div>
     ),
-    className: "custom-div-icon",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
+    className: "custom-div-icon bg-transparent border-none",
+    iconSize: [120, 50],
+    iconAnchor: [60, 40],
   });
 
   return (
@@ -690,8 +694,8 @@ export default function OrdersPage() {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
                       />
                       <MapClickHandler
                         startPos={startPos}
@@ -710,18 +714,20 @@ export default function OrdersPage() {
                       {savedLocations.map(loc => {
                         const markerHtmlIcon = L.divIcon({
                           html: renderToStaticMarkup(
-                            <div className="relative flex flex-col items-center cursor-pointer pointer-events-auto group">
-                              <div className="bg-[#cc1616] px-4 py-1.5 rounded-full shadow-lg text-[13px] font-bold text-white whitespace-nowrap mb-1 flex items-center gap-1 border border-[#a01010]" style={{ fontFamily: "'Noto Kufi Arabic', sans-serif" }}>
+                            <div className="relative flex flex-col items-center cursor-pointer pointer-events-auto group mt-2">
+                              <div className="text-[#e8eaed] text-[12.5px] font-bold mb-0.5 tracking-wide text-center leading-tight whitespace-nowrap transition-transform opacity-90 group-hover:opacity-100" style={{ fontFamily: "'Noto Kufi Arabic', sans-serif", textShadow: '0px 0px 4px rgba(0,0,0,0.9), 0px 0px 4px rgba(0,0,0,0.9), 0px 0px 4px rgba(0,0,0,0.9)' }}>
                                 {loc.nameAr}
                               </div>
-                              <div className="w-4 h-4 rounded-full bg-white border-4 border-[#cc1616] shadow-sm flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 rounded-full bg-[#cc1616]"></div>
+                              <div className="w-5 h-5 rounded-full bg-[#1b1b1e] border-[1.5px] border-[#ea4335] shadow-lg flex items-center justify-center transition-transform group-hover:scale-110 opacity-90 group-hover:opacity-100">
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#ea4335] flex items-center justify-center">
+                                  <div className="w-1 h-1 rounded-full bg-white"></div>
+                                </div>
                               </div>
                             </div>
                           ),
                           className: "custom-div-icon bg-transparent border-none",
-                          iconSize: [120, 50],
-                          iconAnchor: [60, 40], // adjust anchor points accordingly
+                          iconSize: [140, 60],
+                          iconAnchor: [70, 50], // adjust anchor points accordingly
                         });
                         return (
                           <Marker
