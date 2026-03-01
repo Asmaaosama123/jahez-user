@@ -183,6 +183,13 @@ export default function OrdersPage() {
   const [editNameFr, setEditNameFr] = useState("");
   const [deletingLocationId, setDeletingLocationId] = useState<number | null>(null);
 
+  // Settings Modal Add Location State
+  const [isAddingInSettings, setIsAddingInSettings] = useState(false);
+  const [settingsLocationAr, setSettingsLocationAr] = useState("");
+  const [settingsLocationFr, setSettingsLocationFr] = useState("");
+  const [settingsLat, setSettingsLat] = useState("");
+  const [settingsLng, setSettingsLng] = useState("");
+
   const handleManualCoord = (val: string, setPos: (p: [number, number]) => void) => {
     const coords = val.split(",").map(c => parseFloat(c.trim()));
     if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
@@ -247,6 +254,50 @@ export default function OrdersPage() {
         setNewLocationNameAr("");
         setNewLocationNameFr("");
         setNewLocationCoords(null);
+      } else {
+        toast.error("حدث خطأ أثناء الحفظ");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("مشكلة في الاتصال بالخادم");
+    }
+  };
+
+  const handleSaveSettingsLocation = async () => {
+    if (!settingsLocationAr.trim() || !settingsLocationFr.trim() || !settingsLat || !settingsLng) {
+      toast.error("يرجى ملء جميع الحقول", { id: 'save-settings-loc' });
+      return;
+    }
+    const lat = parseFloat(settingsLat);
+    const lng = parseFloat(settingsLng);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      toast.error("الإحداثيات غير صحيحة", { id: 'save-settings-loc' });
+      return;
+    }
+
+    const locationData = {
+      nameAr: settingsLocationAr,
+      nameFr: settingsLocationFr,
+      latitude: lat,
+      longitude: lng
+    };
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/SavedLocations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(locationData),
+      });
+
+      if (res.ok) {
+        toast.success("تم الحفظ بنجاح");
+        fetchSavedLocations();
+        setIsAddingInSettings(false);
+        setSettingsLocationAr("");
+        setSettingsLocationFr("");
+        setSettingsLat("");
+        setSettingsLng("");
       } else {
         toast.error("حدث خطأ أثناء الحفظ");
       }
@@ -445,72 +496,91 @@ export default function OrdersPage() {
                     <Settings size={20} />
                     إعدادات المواقع المحفوظة
                   </h2>
-                  <button onClick={() => setIsSettingsOpen(false)} className="hover:text-gray-300">
-                    <X size={24} />
-                  </button>
+                  <div className="flex gap-4 items-center">
+                    <button onClick={() => setIsAddingInSettings(!isAddingInSettings)} className="text-xs bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded transition shadow-sm font-bold">
+                      {isAddingInSettings ? "إلغاء الإضافة" : "+ إضافة موقع بإحداثيات"}
+                    </button>
+                    <button onClick={() => setIsSettingsOpen(false)} className="hover:text-gray-300">
+                      <X size={24} />
+                    </button>
+                  </div>
                 </div>
-                <div className="p-4 overflow-y-auto flex-1">
-                  <table className="w-full text-sm text-right">
-                    <thead className="bg-gray-100 text-gray-700">
-                      <tr>
-                        <th className="p-3 rounded-tr">الاسم بالعربي</th>
-                        <th className="p-3">الاسم بالفرنسي</th>
-                        <th className="p-3">الإحداثيات</th>
-                        <th className="p-3 rounded-tl text-center">إجراءات</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {savedLocations.length === 0 ? (
+                <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-4">
+                  {isAddingInSettings && (
+                    <div className="p-4 bg-gray-50 border rounded-lg shadow-inner">
+                      <h3 className="text-sm font-bold mb-3 text-gray-800">إضافة موقع يدوياً (بالإحداثيات)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs mb-3">
+                        <input type="text" placeholder="الاسم بالعربي" value={settingsLocationAr} onChange={e => setSettingsLocationAr(e.target.value)} className="p-2 border rounded" />
+                        <input type="text" placeholder="الاسم بالفرنسي" value={settingsLocationFr} onChange={e => setSettingsLocationFr(e.target.value)} className="p-2 border rounded" />
+                        <input type="number" placeholder="Latitude (خط العرض)" value={settingsLat} onChange={e => setSettingsLat(e.target.value)} className="p-2 border rounded text-left dir-ltr font-mono" />
+                        <input type="number" placeholder="Longitude (خط الطول)" value={settingsLng} onChange={e => setSettingsLng(e.target.value)} className="p-2 border rounded text-left dir-ltr font-mono" />
+                      </div>
+                      <button onClick={handleSaveSettingsLocation} className="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700 font-bold transition">حفظ الموقع</button>
+                    </div>
+                  )}
+                  <div className="border rounded-lg overflow-hidden flex-1">
+                    <table className="w-full text-sm text-right">
+                      <thead className="bg-gray-100 text-gray-700">
                         <tr>
-                          <td colSpan={4} className="p-4 text-center text-gray-500">لا توجد مواقع محفوظة</td>
+                          <th className="p-3 rounded-tr">الاسم بالعربي</th>
+                          <th className="p-3">الاسم بالفرنسي</th>
+                          <th className="p-3">الإحداثيات</th>
+                          <th className="p-3 rounded-tl text-center">إجراءات</th>
                         </tr>
-                      ) : (
-                        savedLocations.map(loc => (
-                          <tr key={loc.id} className="hover:bg-gray-50">
-                            <td className="p-3 font-semibold">
-                              {editingLocationId === loc.id ? (
-                                <input type="text" value={editNameAr} onChange={(e) => setEditNameAr(e.target.value)} className="border p-1 rounded w-full text-xs" />
-                              ) : loc.nameAr}
-                            </td>
-                            <td className="p-3">
-                              {editingLocationId === loc.id ? (
-                                <input type="text" value={editNameFr} onChange={(e) => setEditNameFr(e.target.value)} className="border p-1 rounded w-full text-xs" />
-                              ) : loc.nameFr}
-                            </td>
-                            <td className="p-3 text-xs text-blue-600 dir-ltr text-right">{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</td>
-                            <td className="p-3 flex justify-center gap-2 items-center">
-                              {/* Action Buttons */}
-                              {editingLocationId === loc.id ? (
-                                <>
-                                  <button onClick={() => handleUpdateSavedLocation(loc)} className="text-green-600 hover:text-green-800 p-1" title="حفظ">
-                                    <Check size={16} />
-                                  </button>
-                                  <button onClick={() => setEditingLocationId(null)} className="text-gray-500 hover:text-gray-700 p-1" title="إلغاء">
-                                    <XCircle size={16} />
-                                  </button>
-                                </>
-                              ) : deletingLocationId === loc.id ? (
-                                <div className="flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200">
-                                  <span className="text-xs text-red-600 mr-1">تأكيد؟</span>
-                                  <button onClick={() => handleDeleteSavedLocation(loc.id)} className="text-red-600 font-bold hover:text-red-800 text-xs px-1">نعم</button>
-                                  <button onClick={() => setDeletingLocationId(null)} className="text-gray-500 hover:text-gray-800 text-xs px-1">لا</button>
-                                </div>
-                              ) : (
-                                <>
-                                  <button onClick={() => { setEditingLocationId(loc.id); setEditNameAr(loc.nameAr); setEditNameFr(loc.nameFr); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="تعديل">
-                                    <Edit size={16} />
-                                  </button>
-                                  <button onClick={() => setDeletingLocationId(loc.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="حذف">
-                                    <Trash2 size={16} />
-                                  </button>
-                                </>
-                              )}
-                            </td>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {savedLocations.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="p-4 text-center text-gray-500">لا توجد مواقع محفوظة</td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          savedLocations.map(loc => (
+                            <tr key={loc.id} className="hover:bg-gray-50">
+                              <td className="p-3 font-semibold">
+                                {editingLocationId === loc.id ? (
+                                  <input type="text" value={editNameAr} onChange={(e) => setEditNameAr(e.target.value)} className="border p-1 rounded w-full text-xs" />
+                                ) : loc.nameAr}
+                              </td>
+                              <td className="p-3">
+                                {editingLocationId === loc.id ? (
+                                  <input type="text" value={editNameFr} onChange={(e) => setEditNameFr(e.target.value)} className="border p-1 rounded w-full text-xs" />
+                                ) : loc.nameFr}
+                              </td>
+                              <td className="p-3 text-xs text-blue-600 dir-ltr text-right">{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</td>
+                              <td className="p-3 flex justify-center gap-2 items-center">
+                                {/* Action Buttons */}
+                                {editingLocationId === loc.id ? (
+                                  <>
+                                    <button onClick={() => handleUpdateSavedLocation(loc)} className="text-green-600 hover:text-green-800 p-1" title="حفظ">
+                                      <Check size={16} />
+                                    </button>
+                                    <button onClick={() => setEditingLocationId(null)} className="text-gray-500 hover:text-gray-700 p-1" title="إلغاء">
+                                      <XCircle size={16} />
+                                    </button>
+                                  </>
+                                ) : deletingLocationId === loc.id ? (
+                                  <div className="flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200">
+                                    <span className="text-xs text-red-600 mr-1">تأكيد؟</span>
+                                    <button onClick={() => handleDeleteSavedLocation(loc.id)} className="text-red-600 font-bold hover:text-red-800 text-xs px-1">نعم</button>
+                                    <button onClick={() => setDeletingLocationId(null)} className="text-gray-500 hover:text-gray-800 text-xs px-1">لا</button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <button onClick={() => { setEditingLocationId(loc.id); setEditNameAr(loc.nameAr); setEditNameFr(loc.nameFr); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="تعديل">
+                                      <Edit size={16} />
+                                    </button>
+                                    <button onClick={() => setDeletingLocationId(loc.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="حذف">
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
