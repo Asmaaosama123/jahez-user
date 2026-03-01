@@ -4,9 +4,10 @@ import toast from "react-hot-toast";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL, HUB_URL } from "../utils/apiConfig";
-import { Map as MapIcon, X, MapPin } from "lucide-react";
+import { Map as MapIcon, X, MapPin, Settings } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { renderToStaticMarkup } from "react-dom/server";
 
 // Leaflet icon fix
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -66,12 +67,24 @@ function MapClickHandler({ startPos, setStartPos, endPos, setEndPos, pendingSave
 }
 
 function LocationMarker({ position, label }: { position: [number, number] | null, label: string }) {
-  return position === null ? null : (
-    <Marker position={position}>
-      <div className="bg-white p-1 rounded shadow-md border border-gray-300 text-[10px] absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap font-bold">
-        {label}
+  if (!position) return null;
+
+  const customHtmlIcon = L.divIcon({
+    html: renderToStaticMarkup(
+      <div className="relative flex flex-col items-center">
+        <div className="bg-white px-2 py-0.5 rounded-full shadow-md border text-[10px] font-bold text-black border-red-500 whitespace-nowrap mb-1">
+          {label}
+        </div>
+        <img src={markerIcon} alt="marker" style={{ width: '25px', height: '41px' }} />
       </div>
-    </Marker>
+    ),
+    className: "custom-div-icon",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  });
+
+  return (
+    <Marker position={position} icon={customHtmlIcon} />
   );
 }
 
@@ -134,15 +147,24 @@ export default function OrdersPage() {
   const totalPrice = distance > 4 ? startingRate + ((distance - 4) * pricePerKm) : (distance > 0 ? 100 : 0);
 
   const fetchSuggestions = async (query: string, setSuggestions: (s: any[]) => void) => {
-    if (query.length < 3) return;
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
-      const data = await res.json();
-      setSuggestions(data);
-    } catch (err) {
-      console.error("Error fetching suggestions:", err);
+    if (query.length < 2) {
+      setSuggestions([]);
+      return;
     }
+    // Filter only from saved locations
+    const filtered = savedLocations.filter(loc =>
+      loc.nameAr.toLowerCase().includes(query.toLowerCase()) ||
+      loc.nameFr.toLowerCase().includes(query.toLowerCase())
+    ).map(loc => ({
+      display_name: loc.nameAr,
+      lat: loc.latitude,
+      lon: loc.longitude
+    }));
+
+    setSuggestions(filtered);
   };
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleManualCoord = (val: string, setPos: (p: [number, number]) => void) => {
     const coords = val.split(",").map(c => parseFloat(c.trim()));
@@ -345,6 +367,13 @@ export default function OrdersPage() {
             <h1 className="text-xl font-bold">جميع الطلبات</h1>
             <div className="flex gap-2 items-center">
               <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition flex items-center gap-1 shadow-sm"
+              >
+                <Settings size={16} />
+                المواقع المحفوظة
+              </button>
+              <button
                 onClick={() => setIsGpsOpen(true)}
                 className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 transition flex items-center gap-1 shadow-sm"
               >
@@ -359,6 +388,56 @@ export default function OrdersPage() {
               </button>
             </div>
           </div>
+
+          {/* Settings Modal */}
+          {isSettingsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl h-[70vh] flex flex-col overflow-hidden">
+                <div className="bg-gray-800 text-white p-4 flex justify-between items-center border-b border-gray-700">
+                  <h2 className="text-lg font-bold flex items-center gap-2">
+                    <Settings size={20} />
+                    إعدادات المواقع المحفوظة
+                  </h2>
+                  <button onClick={() => setIsSettingsOpen(false)} className="hover:text-gray-300">
+                    <X size={24} />
+                  </button>
+                </div>
+                <div className="p-4 overflow-y-auto flex-1">
+                  <table className="w-full text-sm text-right">
+                    <thead className="bg-gray-100 text-gray-700">
+                      <tr>
+                        <th className="p-3 rounded-tr">الاسم بالعربي</th>
+                        <th className="p-3">الاسم بالفرنسي</th>
+                        <th className="p-3">الإحداثيات</th>
+                        <th className="p-3 rounded-tl text-center">إجراءات</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {savedLocations.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className="p-4 text-center text-gray-500">لا توجد مواقع محفوظة</td>
+                        </tr>
+                      ) : (
+                        savedLocations.map(loc => (
+                          <tr key={loc.id} className="hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{loc.nameAr}</td>
+                            <td className="p-3">{loc.nameFr}</td>
+                            <td className="p-3 text-xs text-blue-600 dir-ltr text-right">{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</td>
+                            <td className="p-3 flex justify-center gap-3">
+                              {/* Edit is planned, but for now we rely on delete/re-add as a simple solution or just implement Delete */}
+                              <button onClick={() => handleDeleteSavedLocation(loc.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="حذف">
+                                <X size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* GPS Modal */}
           {isGpsOpen && (
@@ -493,70 +572,43 @@ export default function OrdersPage() {
                     {/* المحفوظات */}
                     <div className="mt-4 pt-4 border-t border-gray-100 flex-1 overflow-y-auto min-h-[150px]">
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-[12px] font-bold text-gray-800">المواقع المحفوظة</label>
-                        <button
-                          onClick={() => {
-                            setIsAddingSavedLocation(!isAddingSavedLocation);
-                            setNewLocationCoords(null);
-                          }}
-                          className="text-[11px] bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded"
-                        >
-                          {isAddingSavedLocation ? "إلغاء الإضافة" : "+ إضافة موقع"}
-                        </button>
+                        <label className="text-[12px] font-bold text-gray-800">إضافة موقع محفوظ جديد</label>
                       </div>
 
-                      {isAddingSavedLocation && (
-                        <div className="bg-white p-3 rounded border border-gray-200 mb-3 space-y-2 text-xs">
-                          <input
-                            type="text"
-                            placeholder="الاسم بالعربي"
-                            value={newLocationNameAr}
-                            onChange={(e) => setNewLocationNameAr(e.target.value)}
-                            className="w-full p-1.5 border rounded"
-                          />
-                          <input
-                            type="text"
-                            placeholder="الاسم بالفرنسي"
-                            value={newLocationNameFr}
-                            onChange={(e) => setNewLocationNameFr(e.target.value)}
-                            className="w-full p-1.5 border rounded"
-                          />
-                          <div className="flex flex-col gap-1">
-                            <button
-                              className={`p-1.5 text-center rounded border border-blue-500 ${newLocationCoords ? "bg-green-100 text-green-700 border-green-500" : "text-blue-600 hover:bg-blue-50"}`}
-                              onClick={() => {
-                                toast("اضغط على الخريطة لتحديد الموقع", { icon: "🗺️" });
-                                // User maps click handled inside map events
-                              }}
-                            >
-                              {newLocationCoords ? `تم التحديد ✅` : "حدد الموقع من الخريطة"}
-                            </button>
-                          </div>
+                      <div className="bg-white p-3 rounded border border-gray-200 mb-3 space-y-2 text-xs">
+                        <input
+                          type="text"
+                          placeholder="الاسم بالعربي"
+                          value={newLocationNameAr}
+                          onChange={(e) => setNewLocationNameAr(e.target.value)}
+                          className="w-full p-1.5 border rounded"
+                        />
+                        <input
+                          type="text"
+                          placeholder="الاسم بالفرنسي"
+                          value={newLocationNameFr}
+                          onChange={(e) => setNewLocationNameFr(e.target.value)}
+                          className="w-full p-1.5 border rounded"
+                        />
+                        <div className="flex flex-col gap-1">
                           <button
-                            onClick={handleSaveLocation}
-                            className="w-full p-1.5 bg-green-700 text-white rounded font-bold hover:bg-green-800"
+                            className={`p-1.5 text-center rounded border ${isAddingSavedLocation || newLocationCoords ? 'border-green-500' : 'border-blue-500'} ${newLocationCoords ? "bg-green-100 text-green-700" : isAddingSavedLocation ? "bg-yellow-100 text-yellow-700 border-yellow-500" : "text-blue-600 hover:bg-blue-50"}`}
+                            onClick={() => {
+                              setIsAddingSavedLocation(true);
+                              setNewLocationCoords(null);
+                              toast("اضغط على الخريطة لتحديد الموقع الجديد", { icon: "🗺️" });
+                            }}
                           >
-                            حفظ
+                            {newLocationCoords ? `تم التحديد ✅` : (isAddingSavedLocation ? "اضغط على الخريطة الآن..." : "حدد الموقع من الخريطة")}
                           </button>
                         </div>
-                      )}
-
-                      <div className="space-y-1">
-                        {savedLocations.length === 0 ? (
-                          <div className="text-[10px] text-gray-400 text-center py-2">لا توجد مواقع محفوظة</div>
-                        ) : (
-                          savedLocations.map(loc => (
-                            <div key={loc.id} className="flex justify-between items-center p-2 bg-white border rounded hover:bg-blue-50 cursor-pointer text-xs" onClick={() => handleSavedLocationClick(loc)}>
-                              <div className="flex items-center gap-2">
-                                <MapPin size={12} className="text-green-600" />
-                                <span>{loc.nameAr}</span>
-                              </div>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteSavedLocation(loc.id); }} className="text-red-500 hover:text-red-700">
-                                <X size={14} />
-                              </button>
-                            </div>
-                          ))
-                        )}
+                        <button
+                          onClick={handleSaveLocation}
+                          className="w-full p-1.5 bg-green-700 text-white rounded font-bold hover:bg-green-800 disabled:opacity-50"
+                          disabled={!newLocationCoords}
+                        >
+                          حفظ الموقع
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -579,24 +631,39 @@ export default function OrdersPage() {
                         endPos={endPos}
                         setEndPos={setEndPos}
                         pendingSavedLocation={isAddingSavedLocation}
-                        handleMapClickForSavedLocation={(lat, lng) => setNewLocationCoords([lat, lng])}
+                        handleMapClickForSavedLocation={(lat, lng) => {
+                          setNewLocationCoords([lat, lng]);
+                          setIsAddingSavedLocation(false);
+                        }}
                       />
                       <LocationMarker position={startPos} label="نقطة البداية" />
                       <LocationMarker position={endPos} label="نقطة النهاية" />
                       {newLocationCoords && <LocationMarker position={newLocationCoords} label="موقع جديد" />}
-                      {savedLocations.map(loc => (
-                        <Marker
-                          key={loc.id}
-                          position={[loc.latitude, loc.longitude]}
-                          eventHandlers={{
-                            click: () => handleSavedLocationClick(loc)
-                          }}
-                        >
-                          <div className="bg-green-700 text-white p-1 rounded shadow-md border border-green-800 text-[10px] absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap font-bold">
-                            {loc.nameAr}
-                          </div>
-                        </Marker>
-                      ))}
+                      {savedLocations.map(loc => {
+                        const markerHtmlIcon = L.divIcon({
+                          html: renderToStaticMarkup(
+                            <div className="relative flex flex-col items-center cursor-pointer">
+                              <div className="bg-[#cc0000] px-3 py-1 rounded-full shadow-md text-[11px] font-bold text-white whitespace-nowrap mb-1">
+                                {loc.nameAr}
+                              </div>
+                              <img src={markerIcon} alt="marker" style={{ width: '20px', height: '32px' }} />
+                            </div>
+                          ),
+                          className: "custom-div-icon",
+                          iconSize: [20, 32],
+                          iconAnchor: [10, 32], // adjust anchor points accordingly
+                        });
+                        return (
+                          <Marker
+                            key={loc.id}
+                            position={[loc.latitude, loc.longitude]}
+                            icon={markerHtmlIcon}
+                            eventHandlers={{
+                              click: () => handleSavedLocationClick(loc)
+                            }}
+                          />
+                        );
+                      })}
                       {startPos && endPos && (
                         <Polyline positions={[startPos, endPos]} color="#2563eb" weight={5} opacity={0.6} />
                       )}
