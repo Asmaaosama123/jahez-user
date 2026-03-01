@@ -397,6 +397,11 @@ export default function OrdersPage() {
 
   return (
     <div className="flex bg-gray-100 min-h-screen" dir="rtl">
+      <style>{`
+        .dark-map-tiles {
+          filter: invert(100%) hue-rotate(180deg) brightness(100%) contrast(90%);
+        }
+      `}</style>
       {/* Sidebar */}
       <Sidebar />
 
@@ -528,13 +533,13 @@ export default function OrdersPage() {
                 <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
 
                   {/* GPS Sidebar - Left Side inside Modal */}
-                  <div className="w-full md:w-80 bg-[#f8faf9] p-6 border-l flex flex-col gap-6 overflow-y-auto order-1 md:order-1">
-                    <div className="space-y-4">
+                  <div className="w-full md:w-80 bg-[#f8faf9] p-4 border-l flex flex-col gap-3 overflow-y-auto order-1 md:order-1">
+                    <div className="space-y-3">
                       <div className="relative">
                         <label className="block text-[11px] text-gray-500 mb-1 mr-1">نقطة البداية</label>
                         <input
                           type="text"
-                          className="w-full p-2 border rounded-md text-xs bg-white pr-8"
+                          className="w-full p-1.5 border rounded-md text-xs bg-white pr-8"
                           placeholder="ابحث عن مكان أو أدخل إحداثيات..."
                           value={startInput || (startPos ? `${startPos[0].toFixed(5)}, ${startPos[1].toFixed(5)}` : "")}
                           onChange={(e) => {
@@ -566,7 +571,7 @@ export default function OrdersPage() {
                         <label className="block text-[11px] text-gray-500 mb-1 mr-1">نقطة النهاية</label>
                         <input
                           type="text"
-                          className="w-full p-2 border rounded-md text-xs bg-white pr-8"
+                          className="w-full p-1.5 border rounded-md text-xs bg-white pr-8"
                           placeholder="ابحث عن مكان أو أدخل إحداثيات..."
                           value={endInput || (endPos ? `${endPos[0].toFixed(5)}, ${endPos[1].toFixed(5)}` : "")}
                           onChange={(e) => {
@@ -602,48 +607,43 @@ export default function OrdersPage() {
                       </button>
                     </div>
 
-                    <div className="mt-4 py-6 border-y border-gray-100 space-y-4">
-                      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                        <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">المسافة</div>
-                        <div className="text-xl font-bold text-gray-800">{distance} km</div>
+                    <div className="mt-2 py-3 border-y border-gray-100 flex gap-2">
+                      <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm flex-1">
+                        <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5">المسافة</div>
+                        <div className="text-sm font-bold text-gray-800">{distance} km</div>
                       </div>
-                      <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                        <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">الإجمالي</div>
-                        <div className="text-xl font-bold text-green-700">{totalPrice.toFixed(0)} MRU</div>
-                        {distance > 0 && distance <= 4 ? (
-                          <div className="text-[9px] text-blue-600">سعر ثابت (≤ 4km)</div>
-                        ) : distance > 4 ? (
-                          <div className="text-[9px] text-orange-600">100 (أساس) + سعر الكيلو للمسافة الزائدة عن 4km</div>
-                        ) : null}
+                      <div className="bg-white p-2 rounded-lg border border-gray-100 shadow-sm flex-1">
+                        <div className="text-[9px] text-gray-400 uppercase tracking-wider mb-0.5">الإجمالي</div>
+                        <div className="text-sm font-bold text-green-700">{totalPrice.toFixed(0)} MRU</div>
                       </div>
                     </div>
 
-                    <div className="mt-auto space-y-4 pt-4">
-                      <div>
-                        <label className="block text-[11px] text-gray-500 mb-1 mr-1">تسعيرة البداية</label>
+                    <div className="mt-auto flex gap-2 pt-2">
+                      <div className="flex-1">
+                        <label className="block text-[10px] text-gray-500 mb-1 mr-1">بداية</label>
                         <input
                           type="number"
                           value={startingRate}
                           onChange={(e) => setStartingRate(Number(e.target.value))}
-                          className="w-full p-2 border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
+                          className="w-full p-1 text-xs border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
                           disabled={distance > 0 && distance <= 4}
                         />
                       </div>
-                      <div>
-                        <label className="block text-[11px] text-gray-500 mb-1 mr-1">سعر الكيلو</label>
+                      <div className="flex-1">
+                        <label className="block text-[10px] text-gray-500 mb-1 mr-1">ك/متر</label>
                         <input
                           type="number"
                           value={pricePerKm}
                           onChange={(e) => setPricePerKm(Number(e.target.value))}
-                          className="w-full p-2 border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
+                          className="w-full p-1 text-xs border border-blue-50 bg-blue-50/20 rounded text-center font-bold text-gray-800"
                           disabled={distance > 0 && distance <= 4}
                         />
                       </div>
                     </div>
 
                     {/* المحفوظات */}
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex-1 overflow-y-auto min-h-[150px]">
-                      <div className="flex justify-between items-center mb-2">
+                    <div className="mt-2 pt-2 border-t border-gray-100 flex-1 overflow-y-auto min-h-[100px]">
+                      <div className="flex justify-between items-center mb-1.5">
                         <label className="text-[12px] font-bold text-gray-800">إضافة موقع محفوظ جديد</label>
                       </div>
 
@@ -694,8 +694,9 @@ export default function OrdersPage() {
                       style={{ height: "100%", width: "100%" }}
                     >
                       <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-                        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        className="dark-map-tiles"
                       />
                       <MapClickHandler
                         startPos={startPos}
