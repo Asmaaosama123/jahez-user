@@ -23,6 +23,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const NOTIFICATION_SOUND_URL = "/notification.mp3";
 const notificationAudio = new Audio(NOTIFICATION_SOUND_URL);
 
+interface SavedLocation {
+  id: number;
+  nameAr: string;
+  nameFr: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface Order {
   orderId: string;
   customerPhone: string;
@@ -40,9 +48,13 @@ interface MapClickHandlerProps {
   setEndPos: (pos: [number, number]) => void;
 }
 
-function MapClickHandler({ startPos, setStartPos, endPos, setEndPos }: MapClickHandlerProps) {
+function MapClickHandler({ startPos, setStartPos, endPos, setEndPos, pendingSavedLocation, handleMapClickForSavedLocation }: MapClickHandlerProps & { pendingSavedLocation: boolean, handleMapClickForSavedLocation: (lat: number, lng: number) => void }) {
   useMapEvents({
     click(e) {
+      if (pendingSavedLocation) {
+        handleMapClickForSavedLocation(e.latlng.lat, e.latlng.lng);
+        return;
+      }
       if (!startPos) {
         setStartPos([e.latlng.lat, e.latlng.lng]);
       } else if (!endPos) {
@@ -79,6 +91,25 @@ export default function OrdersPage() {
   const [pricePerKm, setPricePerKm] = useState<number>(0);
   const [distance, setDistance] = useState<number>(0);
 
+  // Saved Locations State
+  const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
+  const [isAddingSavedLocation, setIsAddingSavedLocation] = useState(false);
+  const [newLocationNameAr, setNewLocationNameAr] = useState("");
+  const [newLocationNameFr, setNewLocationNameFr] = useState("");
+  const [newLocationCoords, setNewLocationCoords] = useState<[number, number] | null>(null);
+
+  const fetchSavedLocations = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/SavedLocations`);
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setSavedLocations(data);
+      }
+    } catch (err) {
+      console.error("Error fetching saved locations:", err);
+    }
+  }, []);
+
   const calculateDistance = useCallback(() => {
     if (startPos && endPos) {
       const from = L.latLng(startPos[0], startPos[1]);
@@ -93,6 +124,12 @@ export default function OrdersPage() {
   useEffect(() => {
     calculateDistance();
   }, [calculateDistance]);
+
+  useEffect(() => {
+    if (isGpsOpen) {
+      fetchSavedLocations();
+    }
+  }, [isGpsOpen, fetchSavedLocations]);
 
   const totalPrice = distance > 4 ? startingRate + ((distance - 4) * pricePerKm) : (distance > 0 ? 100 : 0);
 
@@ -143,6 +180,69 @@ export default function OrdersPage() {
   const testSystem = () => {
     playNotificationSound();
     toast.success("نظام التنبيهات والصوت يعمل بنجاح!");
+  };
+
+  const handleSaveLocation = async () => {
+    if (!newLocationNameAr.trim() || !newLocationNameFr.trim() || !newLocationCoords) {
+      toast.error("يرجى ملء جميع الحقول وتحديد الموقع على الخريطة أولاً");
+      return;
+    }
+    const locationData = {
+      nameAr: newLocationNameAr,
+      nameFr: newLocationNameFr,
+      latitude: newLocationCoords[0],
+      longitude: newLocationCoords[1]
+    };
+
+    try {
+      const res = await fetch(`${BASE_URL}/api/SavedLocations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(locationData),
+      });
+
+      if (res.ok) {
+        toast.success("تم حفظ الموقع بنجاح");
+        fetchSavedLocations();
+        setIsAddingSavedLocation(false);
+        setNewLocationNameAr("");
+        setNewLocationNameFr("");
+        setNewLocationCoords(null);
+      } else {
+        toast.error("حدث خطأ أثناء الحفظ");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("مشكلة في الاتصال بالخادم");
+    }
+  };
+
+  const handleDeleteSavedLocation = async (id: number) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا الموقع؟")) {
+      try {
+        const res = await fetch(`${BASE_URL}/api/SavedLocations/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          toast.success("تم الحذف بنجاح");
+          fetchSavedLocations();
+        } else {
+          toast.error("حدث خطأ أثناء الحذف");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleSavedLocationClick = (loc: SavedLocation) => {
+    if (!startPos) {
+      setStartPos([loc.latitude, loc.longitude]);
+      setStartInput(loc.nameAr);
+    } else if (!endPos) {
+      setEndPos([loc.latitude, loc.longitude]);
+      setEndInput(loc.nameAr);
+    } else {
+      toast.error("لقد قمت باختيار نقطتي البداية والنهاية بالفعل.");
+    }
   };
 
   useEffect(() => {
@@ -389,6 +489,76 @@ export default function OrdersPage() {
                         />
                       </div>
                     </div>
+
+                    {/* المحفوظات */}
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex-1 overflow-y-auto min-h-[150px]">
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[12px] font-bold text-gray-800">المواقع المحفوظة</label>
+                        <button
+                          onClick={() => {
+                            setIsAddingSavedLocation(!isAddingSavedLocation);
+                            setNewLocationCoords(null);
+                          }}
+                          className="text-[11px] bg-gray-200 hover:bg-gray-300 text-gray-800 px-2 py-1 rounded"
+                        >
+                          {isAddingSavedLocation ? "إلغاء الإضافة" : "+ إضافة موقع"}
+                        </button>
+                      </div>
+
+                      {isAddingSavedLocation && (
+                        <div className="bg-white p-3 rounded border border-gray-200 mb-3 space-y-2 text-xs">
+                          <input
+                            type="text"
+                            placeholder="الاسم بالعربي"
+                            value={newLocationNameAr}
+                            onChange={(e) => setNewLocationNameAr(e.target.value)}
+                            className="w-full p-1.5 border rounded"
+                          />
+                          <input
+                            type="text"
+                            placeholder="الاسم بالفرنسي"
+                            value={newLocationNameFr}
+                            onChange={(e) => setNewLocationNameFr(e.target.value)}
+                            className="w-full p-1.5 border rounded"
+                          />
+                          <div className="flex flex-col gap-1">
+                            <button
+                              className={`p-1.5 text-center rounded border border-blue-500 ${newLocationCoords ? "bg-green-100 text-green-700 border-green-500" : "text-blue-600 hover:bg-blue-50"}`}
+                              onClick={() => {
+                                toast("اضغط على الخريطة لتحديد الموقع", { icon: "🗺️" });
+                                // User maps click handled inside map events
+                              }}
+                            >
+                              {newLocationCoords ? `تم التحديد ✅` : "حدد الموقع من الخريطة"}
+                            </button>
+                          </div>
+                          <button
+                            onClick={handleSaveLocation}
+                            className="w-full p-1.5 bg-green-700 text-white rounded font-bold hover:bg-green-800"
+                          >
+                            حفظ
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="space-y-1">
+                        {savedLocations.length === 0 ? (
+                          <div className="text-[10px] text-gray-400 text-center py-2">لا توجد مواقع محفوظة</div>
+                        ) : (
+                          savedLocations.map(loc => (
+                            <div key={loc.id} className="flex justify-between items-center p-2 bg-white border rounded hover:bg-blue-50 cursor-pointer text-xs" onClick={() => handleSavedLocationClick(loc)}>
+                              <div className="flex items-center gap-2">
+                                <MapPin size={12} className="text-green-600" />
+                                <span>{loc.nameAr}</span>
+                              </div>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteSavedLocation(loc.id); }} className="text-red-500 hover:text-red-700">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Map Area - Right Side inside Modal */}
@@ -408,9 +578,25 @@ export default function OrdersPage() {
                         setStartPos={setStartPos}
                         endPos={endPos}
                         setEndPos={setEndPos}
+                        pendingSavedLocation={isAddingSavedLocation}
+                        handleMapClickForSavedLocation={(lat, lng) => setNewLocationCoords([lat, lng])}
                       />
                       <LocationMarker position={startPos} label="نقطة البداية" />
                       <LocationMarker position={endPos} label="نقطة النهاية" />
+                      {newLocationCoords && <LocationMarker position={newLocationCoords} label="موقع جديد" />}
+                      {savedLocations.map(loc => (
+                        <Marker
+                          key={loc.id}
+                          position={[loc.latitude, loc.longitude]}
+                          eventHandlers={{
+                            click: () => handleSavedLocationClick(loc)
+                          }}
+                        >
+                          <div className="bg-green-700 text-white p-1 rounded shadow-md border border-green-800 text-[10px] absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap font-bold">
+                            {loc.nameAr}
+                          </div>
+                        </Marker>
+                      ))}
                       {startPos && endPos && (
                         <Polyline positions={[startPos, endPos]} color="#2563eb" weight={5} opacity={0.6} />
                       )}
