@@ -4,10 +4,19 @@ import toast from "react-hot-toast";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL, HUB_URL } from "../utils/apiConfig";
-import { Map as MapIcon, X, MapPin, Settings } from "lucide-react";
+import { Map as MapIcon, X, MapPin, Settings, Edit, Trash2, Check, XCircle } from "lucide-react";
 import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import { renderToStaticMarkup } from "react-dom/server";
+
+// Import Google Font for Map Markers
+const NotoKufiFontUrl = "https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap";
+if (typeof document !== 'undefined') {
+  const link = document.createElement('link');
+  link.href = NotoKufiFontUrl;
+  link.rel = 'stylesheet';
+  document.head.appendChild(link);
+}
 
 // Leaflet icon fix
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -165,6 +174,10 @@ export default function OrdersPage() {
   };
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [editingLocationId, setEditingLocationId] = useState<number | null>(null);
+  const [editNameAr, setEditNameAr] = useState("");
+  const [editNameFr, setEditNameFr] = useState("");
+  const [deletingLocationId, setDeletingLocationId] = useState<number | null>(null);
 
   const handleManualCoord = (val: string, setPos: (p: [number, number]) => void) => {
     const coords = val.split(",").map(c => parseFloat(c.trim()));
@@ -240,18 +253,43 @@ export default function OrdersPage() {
   };
 
   const handleDeleteSavedLocation = async (id: number) => {
-    if (window.confirm("هل أنت متأكد من حذف هذا الموقع؟")) {
-      try {
-        const res = await fetch(`${BASE_URL}/api/SavedLocations/${id}`, { method: "DELETE" });
-        if (res.ok) {
-          toast.success("تم الحذف بنجاح");
-          fetchSavedLocations();
-        } else {
-          toast.error("حدث خطأ أثناء الحذف");
-        }
-      } catch (err) {
-        console.error(err);
+    try {
+      const res = await fetch(`${BASE_URL}/api/SavedLocations/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("تم الحذف بنجاح");
+        fetchSavedLocations();
+        setDeletingLocationId(null);
+      } else {
+        toast.error("حدث خطأ أثناء الحذف");
       }
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ في الاتصال");
+    }
+  };
+
+  const handleUpdateSavedLocation = async (loc: SavedLocation) => {
+    if (!editNameAr.trim() || !editNameFr.trim()) {
+      toast.error("يرجى ملء الأسماء بالعربي والفرنسي");
+      return;
+    }
+    const updatedLoc = { ...loc, nameAr: editNameAr, nameFr: editNameFr };
+    try {
+      const res = await fetch(`${BASE_URL}/api/SavedLocations/${loc.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedLoc)
+      });
+      if (res.ok) {
+        toast.success("تم التعديل بنجاح");
+        setEditingLocationId(null);
+        fetchSavedLocations();
+      } else {
+        toast.error("فشل في التعديل");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("خطأ في الاتصال بالخادم");
     }
   };
 
@@ -368,7 +406,7 @@ export default function OrdersPage() {
             <div className="flex gap-2 items-center">
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition flex items-center gap-1 shadow-sm"
+                className="bg-[#1b1b1b] text-white px-3 py-1 rounded text-sm hover:bg-gray-800 transition flex items-center gap-1 shadow-sm border border-gray-700"
               >
                 <Settings size={16} />
                 المواقع المحفوظة
@@ -420,14 +458,44 @@ export default function OrdersPage() {
                       ) : (
                         savedLocations.map(loc => (
                           <tr key={loc.id} className="hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{loc.nameAr}</td>
-                            <td className="p-3">{loc.nameFr}</td>
+                            <td className="p-3 font-semibold">
+                              {editingLocationId === loc.id ? (
+                                <input type="text" value={editNameAr} onChange={(e) => setEditNameAr(e.target.value)} className="border p-1 rounded w-full text-xs" />
+                              ) : loc.nameAr}
+                            </td>
+                            <td className="p-3">
+                              {editingLocationId === loc.id ? (
+                                <input type="text" value={editNameFr} onChange={(e) => setEditNameFr(e.target.value)} className="border p-1 rounded w-full text-xs" />
+                              ) : loc.nameFr}
+                            </td>
                             <td className="p-3 text-xs text-blue-600 dir-ltr text-right">{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)}</td>
-                            <td className="p-3 flex justify-center gap-3">
-                              {/* Edit is planned, but for now we rely on delete/re-add as a simple solution or just implement Delete */}
-                              <button onClick={() => handleDeleteSavedLocation(loc.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="حذف">
-                                <X size={16} />
-                              </button>
+                            <td className="p-3 flex justify-center gap-2 items-center">
+                              {/* Action Buttons */}
+                              {editingLocationId === loc.id ? (
+                                <>
+                                  <button onClick={() => handleUpdateSavedLocation(loc)} className="text-green-600 hover:text-green-800 p-1" title="حفظ">
+                                    <Check size={16} />
+                                  </button>
+                                  <button onClick={() => setEditingLocationId(null)} className="text-gray-500 hover:text-gray-700 p-1" title="إلغاء">
+                                    <XCircle size={16} />
+                                  </button>
+                                </>
+                              ) : deletingLocationId === loc.id ? (
+                                <div className="flex items-center gap-1 bg-red-50 p-1 rounded border border-red-200">
+                                  <span className="text-xs text-red-600 mr-1">تأكيد؟</span>
+                                  <button onClick={() => handleDeleteSavedLocation(loc.id)} className="text-red-600 font-bold hover:text-red-800 text-xs px-1">نعم</button>
+                                  <button onClick={() => setDeletingLocationId(null)} className="text-gray-500 hover:text-gray-800 text-xs px-1">لا</button>
+                                </div>
+                              ) : (
+                                <>
+                                  <button onClick={() => { setEditingLocationId(loc.id); setEditNameAr(loc.nameAr); setEditNameFr(loc.nameFr); }} className="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded" title="تعديل">
+                                    <Edit size={16} />
+                                  </button>
+                                  <button onClick={() => setDeletingLocationId(loc.id)} className="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="حذف">
+                                    <Trash2 size={16} />
+                                  </button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         ))
@@ -642,16 +710,18 @@ export default function OrdersPage() {
                       {savedLocations.map(loc => {
                         const markerHtmlIcon = L.divIcon({
                           html: renderToStaticMarkup(
-                            <div className="relative flex flex-col items-center cursor-pointer">
-                              <div className="bg-[#cc0000] px-3 py-1 rounded-full shadow-md text-[11px] font-bold text-white whitespace-nowrap mb-1">
+                            <div className="relative flex flex-col items-center cursor-pointer pointer-events-auto group">
+                              <div className="bg-[#cc1616] px-4 py-1.5 rounded-full shadow-lg text-[13px] font-bold text-white whitespace-nowrap mb-1 flex items-center gap-1 border border-[#a01010]" style={{ fontFamily: "'Noto Kufi Arabic', sans-serif" }}>
                                 {loc.nameAr}
                               </div>
-                              <img src={markerIcon} alt="marker" style={{ width: '20px', height: '32px' }} />
+                              <div className="w-4 h-4 rounded-full bg-white border-4 border-[#cc1616] shadow-sm flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#cc1616]"></div>
+                              </div>
                             </div>
                           ),
-                          className: "custom-div-icon",
-                          iconSize: [20, 32],
-                          iconAnchor: [10, 32], // adjust anchor points accordingly
+                          className: "custom-div-icon bg-transparent border-none",
+                          iconSize: [120, 50],
+                          iconAnchor: [60, 40], // adjust anchor points accordingly
                         });
                         return (
                           <Marker
