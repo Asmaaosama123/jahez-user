@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AiFillHome } from "react-icons/ai";
+import { FaMotorcycle } from "react-icons/fa";
 import LogoutButton from "./LogoutButton";
 
 import restaurantIcon from "../assets/Layer 1.png";
@@ -45,7 +46,18 @@ export default function Sidebar() {
       </div>
       <CategoryButton id={1} icon={restaurantIcon} label="مطاعم" />
       <CategoryButton id={2} icon={marketIcon} label="سوبر ماركت" />
-      <CategoryButton id={3} icon={medicineIcon} label="مخابز" />
+      <CategoryButton id={3} icon={medicineIcon} label="صيدليات" />
+      
+      <button
+        onClick={() => navigate("/admin/delivery-representatives")}
+        className={`flex items-center gap-2 px-6 py-3 transition-colors hover:bg-green-700
+          ${location.pathname === "/admin/delivery-representatives" ? "bg-white text-black font-bold" : ""}
+        `}
+      >
+        <FaMotorcycle className="w-5 h-5 text-black" />
+        مندوبي التوصيل
+      </button>
+
       <LogoutButton />
     </div>
   );
