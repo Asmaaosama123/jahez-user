@@ -7,6 +7,7 @@ import RestaurantsPage from "./RestaurantsPage";
 import RestaurantDetails from "./RestaurantDetails";
 import ProtectedRoute from "./ProtectedRoute";
 import DeliveryRepresentativesPage from "./DeliveryRepresentativesPage";
+import UsersPage from "./UsersPage";
 
 export default function AdminApp() {
   return (
@@ -55,6 +56,14 @@ export default function AdminApp() {
         element={
           <ProtectedRoute>
             <DeliveryRepresentativesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <UsersPage />
           </ProtectedRoute>
         }
       />

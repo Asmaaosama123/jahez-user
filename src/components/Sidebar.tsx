@@ -58,6 +58,20 @@ export default function Sidebar() {
         مندوبي التوصيل
       </button>
 
+      <button
+        onClick={() => navigate("/admin/users")}
+        className={`flex items-center gap-2 px-6 py-3 transition-colors hover:bg-green-700
+          ${location.pathname === "/admin/users" ? "bg-white text-black font-bold" : ""}
+        `}
+      >
+        <div className="w-5 h-5 flex items-center justify-center">
+            <svg className="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+            </svg>
+        </div>
+        المستخدمين
+      </button>
+
       <LogoutButton />
     </div>
   );
