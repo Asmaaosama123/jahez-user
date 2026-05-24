@@ -34,7 +34,7 @@ export default function LoginPage() {
       // ✅ التحقق من 2FA
       if (data.requires2FA) {
         localStorage.setItem("tempAdminEmail", email); // تخزين email مؤقت
-        navigate("/admin/otp"); // توجيه OTP
+        navigate("/admin/otp", { state: { email } }); // توجيه OTP
       } else {
         localStorage.setItem("adminToken", data.token); // JWT النهائي
         navigate("/admin/orders");

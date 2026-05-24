@@ -50,30 +50,59 @@ export default function OtpPage() {
   };
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-green-50 via-white to-emerald-100 p-4">
       <form
         onSubmit={handleVerify}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
+        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-emerald-50 transition-all duration-300 hover:shadow-2xl"
       >
-        <h1 className="text-2xl font-bold mb-6 text-center">التحقق بخطوتين (2FA)</h1>
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4 text-emerald-600 animate-bounce">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black text-slate-800 text-center">تأكيد الهوية</h1>
+          <p className="text-sm text-slate-500 text-center mt-2 leading-relaxed">
+            تم إرسال كود تحقق مكون من 6 أرقام إلى بريدك الإلكتروني: <br />
+            <strong className="text-emerald-600 font-semibold">{email}</strong>
+          </p>
+        </div>
 
-        <label className="block mb-2">أدخل الكود من Google Authenticator</label>
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="w-full p-2 mb-4 border rounded"
-          required
-        />
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-slate-700 mb-2 text-right">
+            أدخل كود التحقق
+          </label>
+          <input
+            type="text"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+            placeholder="0 0 0 0 0 0"
+            className="w-full p-3 border-2 border-slate-200 rounded-xl text-center text-2xl font-bold tracking-[0.75em] placeholder-slate-300 focus:border-emerald-500 focus:outline-none transition duration-200 text-slate-800"
+            required
+            disabled={isLoading}
+          />
+        </div>
 
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm font-semibold text-center border border-red-100 animate-pulse">
+            {error}
+          </div>
+        )}
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          className="w-full bg-gradient-to-r from-emerald-600 to-green-600 text-white py-3 rounded-xl font-bold hover:from-emerald-700 hover:to-green-700 active:scale-[0.98] transition duration-150 shadow-md hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {isLoading ? "جار التحقق..." : "تحقق"}
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>جاري التحقق...</span>
+            </>
+          ) : (
+            <span>تحقق ودخول</span>
+          )}
         </button>
       </form>
     </div>
