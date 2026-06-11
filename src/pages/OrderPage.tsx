@@ -15,6 +15,11 @@ export default function Cart() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Geolocation states
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
   useEffect(() => {
     const stored = localStorage.getItem("cart");
     if (stored) {
@@ -61,6 +66,83 @@ export default function Cart() {
     .flatMap(store => store.items)
     .reduce((acc, item) => acc + (item?.qty || 0) * (item?.price || 0), 0);
 
+  // Geolocation and Dynamic Pricing Calculations
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      alert("تحديد الموقع الجغرافي غير مدعوم في متصفحك.");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        setLat(userLat);
+        setLng(userLng);
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json&accept-language=ar`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setAddress(data.display_name || "موقعي الحالي");
+          } else {
+            setAddress("موقعي الحالي (تم تحديده بالخريطة)");
+          }
+        } catch {
+          setAddress("موقعي الحالي (تم تحديده بالخريطة)");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      () => {
+        alert("تعذر جلب موقعك. يرجى كتابة العنوان يدوياً.");
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const calculateDeliveryFee = () => {
+    const [_, storeData] = Object.entries(cart)[0] || [null, null];
+    if (!storeData) return 0;
+    const storeLatitude = storeData.storeLatitude;
+    const storeLongitude = storeData.storeLongitude;
+    const defaultFee = storeData.deliveryFee ?? 100;
+
+    if (
+      lat !== null &&
+      lng !== null &&
+      storeLatitude !== undefined &&
+      storeLongitude !== undefined &&
+      storeLatitude !== null &&
+      storeLongitude !== null
+    ) {
+      const dist = getDistance(lat, lng, storeLatitude, storeLongitude);
+      return dist > 4 ? 100 + Math.round((dist - 4) * 10) : 100;
+    }
+    return defaultFee;
+  };
+
+  const deliveryFee = calculateDeliveryFee();
+  const serviceFee = Math.min(totalPrice * 0.03, 20);
+  const grandTotal = totalPrice + deliveryFee + serviceFee;
+
   const handleOrder = async () => {
     setLoading(true);
     try {
@@ -72,6 +154,8 @@ export default function Cart() {
         body: JSON.stringify({
           customerPhone: phone,
           customerAddress: address,
+          customerLat: lat,
+          customerLong: lng,
           storeId: Object.keys(cart)[0],
           items: Object.values(cart).flatMap((store: any) =>
             store.items.map((item: any) => ({
@@ -93,7 +177,7 @@ export default function Cart() {
           .map(item => `${item.name} - ${item.qty} × ${item.price} MRU`)
           .join('%0A');
 
-        const message = `طلب جديد%0A%0Aالعميل: ${phone}%0Aالعنوان: ${address}%0A%0Aالتفاصيل:%0A${orderDetails}%0A%0Aالمجموع: ${totalPrice} MRU%0A%0Aرابط الطلب: ${orderLink}`;
+        const message = `طلب جديد%0A%0Aالعميل: ${phone}%0Aالعنوان: ${address}%0A%0Aالتفاصيل:%0A${orderDetails}%0A%0Aمجموع المنتجات: ${totalPrice} MRU%0Aسعر التوصيل: ${deliveryFee} MRU%0Aرسوم الخدمة: ${serviceFee.toFixed(1)} MRU%0Aالإجمالي الكلي: ${grandTotal.toFixed(1)} MRU%0A%0Aرابط الطلب: ${orderLink}`;
 
         const whatsappUrl = `https://wa.me/201006621660?text=${message}`;
         window.open(whatsappUrl, '_blank');
@@ -165,19 +249,59 @@ export default function Cart() {
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 w-full bg-white p-4 border-t shadow-lg">
-        <input
-          className="w-full border p-3 rounded-lg mb-3"
-          placeholder="عنوان الاستلام"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
+      <div className="fixed bottom-0 left-0 w-full bg-white p-4 border-t shadow-lg max-h-[60vh] overflow-y-auto z-50">
+        <div className="relative mb-3">
+          <input
+            className="w-full border p-3 rounded-lg pl-12 text-right"
+            placeholder="عنوان الاستلام"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleLocateUser}
+            disabled={isLocating}
+            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-green-50 text-green-700 rounded-full hover:bg-green-100 disabled:bg-gray-100 disabled:text-gray-400 transition"
+            title="تحديد موقعي تلقائياً"
+          >
+            {isLocating ? (
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            ) : (
+              <span>📍</span>
+            )}
+          </button>
+        </div>
         <input
           className="w-full border p-3 rounded-lg mb-3"
           placeholder="رقم هاتف المستلم"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
+
+        {/* تفاصيل السعر والفاتورة */}
+        <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-3 text-sm">
+          <div className="flex justify-between mb-1">
+            <span className="text-gray-600">مجموع المنتجات:</span>
+            <span className="font-semibold">{totalPrice} MRU</span>
+          </div>
+          <div className="flex justify-between mb-1">
+            <span className="text-gray-600">سعر التوصيل:</span>
+            <span className="font-semibold">{deliveryFee} MRU</span>
+          </div>
+          <div className="flex justify-between mb-1">
+            <span className="text-gray-600">رسوم الخدمة:</span>
+            <span className="font-semibold">{serviceFee.toFixed(1)} MRU</span>
+          </div>
+          <hr className="my-1 border-gray-300" />
+          <div className="flex justify-between text-base font-bold text-green-800">
+            <span>المجموع الكلي:</span>
+            <span>{grandTotal.toFixed(1)} MRU</span>
+          </div>
+        </div>
+
         <button
           onClick={handleOrder}
           disabled={loading || Object.entries(cart).length === 0 || !address || !phone}

@@ -15,6 +15,9 @@ export interface StoreCart {
   storeName: string;
   storeImage?: string;
   StoreaddressSecondary?: string; // ← مهم جداً
+  storeLatitude?: number;
+  storeLongitude?: number;
+  deliveryFee?: number;
   items: CartItem[];
 }
 
@@ -22,7 +25,16 @@ export interface StoreCart {
 
 interface CartContextType {
   cart: { [storeId: string]: StoreCart };
-  addToCart: (storeId: string, storeName: string, storeImage: string, items: CartItem[]) => void;
+  addToCart: (
+    storeId: string,
+    storeName: string,
+    storeImage: string,
+    StoreaddressSecondary: string,
+    items: CartItem[],
+    storeLatitude?: number,
+    storeLongitude?: number,
+    deliveryFee?: number
+  ) => void;
   updateCart: (storeId: string, items: CartItem[]) => void;
   clearCart: () => void;
 }
@@ -42,11 +54,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     storeName: string,
     storeImage: string,
     StoreaddressSecondary: string,
-    items: CartItem[]
+    items: CartItem[],
+    storeLatitude?: number,
+    storeLongitude?: number,
+    deliveryFee?: number
   ) => {
     if (!Array.isArray(items)) items = [];
     const newCart = {
-      [storeId]: { storeName, storeImage, StoreaddressSecondary, items }
+      [storeId]: { 
+        storeName, 
+        storeImage, 
+        StoreaddressSecondary, 
+        storeLatitude,
+        storeLongitude,
+        deliveryFee,
+        items 
+      }
     };
     localStorage.setItem("cart", JSON.stringify(newCart));
     setCart(newCart);

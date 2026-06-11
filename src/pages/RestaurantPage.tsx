@@ -128,8 +128,11 @@ export default function RestaurantPage() {
       storeInfo.id.toString(),
       storeInfo.name,
       fixImageUrl(storeInfo.profileImageUrl),
-      storeInfo.StoreaddressSecondary,   // تمرير العنوان الثانوي
-      itemsToAdd                        // تمرير المنتجات
+      storeInfo.StoreaddressSecondary || storeInfo.addressSecondary,   // تمرير العنوان الثانوي
+      itemsToAdd,                       // تمرير المنتجات
+      storeInfo.latitude,               // خط العرض
+      storeInfo.longitude,              // خط الطول
+      storeInfo.deliveryFee             // قيمة التوصيل الافتراضية
     );
 
 

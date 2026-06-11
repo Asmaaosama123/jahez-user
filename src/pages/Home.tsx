@@ -222,6 +222,9 @@ export default function Home() {
         StoreaddressSecondary: store.addressSecondary,
         jahezBoxActive: store.jahezBoxActive,
         isVerified: store.isVerified,
+        latitude: store.latitude,
+        longitude: store.longitude,
+        deliveryFee: store.deliveryFee,
       },
     });
   };

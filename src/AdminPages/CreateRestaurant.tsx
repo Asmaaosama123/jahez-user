@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 import { BASE_URL } from "../utils/apiConfig";
+import MapPickerModal from "../components/MapPickerModal";
 
 export default function CreateRestaurant({ subcategoryId, isModal = false }) {
+  const [showMapModal, setShowMapModal] = useState(false);
   const [form, setForm] = useState({
     NameAr: "",
     NameFr: "",
@@ -16,6 +18,8 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
     CoverImage: null,
     ProfileImage: null,
     workingDays: Array.from({ length: 7 }, () => ({ openTime: "", closeTime: "" })),
+    Latitude: "",
+    Longitude: "",
   });
 
   useEffect(() => {
@@ -50,6 +54,8 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
     data.append("SubcategoryId", form.SubcategoryId);
     data.append("Phone1", form.Phone1);
     data.append("Phone2", form.Phone2);
+    if (form.Latitude) data.append("Latitude", form.Latitude);
+    if (form.Longitude) data.append("Longitude", form.Longitude);
 
     if (form.CoverImage) data.append("CoverImage", form.CoverImage);
     if (form.ProfileImage) data.append("ProfileImage", form.ProfileImage);
@@ -75,6 +81,7 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
   };
 
   return (
+    <>
     <div className={`bg-gray-50 ${isModal ? "" : "min-h-screen"}`} dir="rtl">
       {!isModal && <Sidebar />}
 
@@ -174,19 +181,66 @@ export default function CreateRestaurant({ subcategoryId, isModal = false }) {
             <input name="NameFr" onChange={handleChange} placeholder="الاسم بالفرنسي" className="input" />
             <input name="DeliveryFee" onChange={handleChange} placeholder="سعر التوصيل" className="input" />
 
+            <div className="my-2">
+              <button
+                type="button"
+                onClick={() => setShowMapModal(true)}
+                className="w-full px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition rounded text-sm font-bold flex items-center justify-center gap-2"
+              >
+                <span>📍</span>
+                {form.Latitude && form.Longitude 
+                  ? `الموقع: (${parseFloat(form.Latitude).toFixed(4)}, ${parseFloat(form.Longitude).toFixed(4)})` 
+                  : "تحديد الموقع على الخريطة"}
+              </button>
+            </div>
+
+            <input 
+              name="Latitude" 
+              type="number" 
+              step="any"
+              value={form.Latitude} 
+              onChange={handleChange} 
+              placeholder="خط العرض (Latitude)" 
+              className="input font-mono" 
+            />
+
+            <input 
+              name="Longitude" 
+              type="number" 
+              step="any"
+              value={form.Longitude} 
+              onChange={handleChange} 
+              placeholder="خط الطول (Longitude)" 
+              className="input font-mono" 
+            />
+
             <div className="bg-gray-200 p-2 text-sm mb-2">
               القسم الفرعي تم اختياره تلقائيًا
             </div>
 
             <button
               onClick={handleSubmit}
-              className="bg-blue-600 text-white w-full py-2 rounded"
+              className="bg-blue-600 text-white w-full py-2 rounded font-bold"
             >
               إنشاء المتجر
             </button>
           </div>
         </div>
       </div>
+
+      <MapPickerModal
+        isOpen={showMapModal}
+        onClose={() => setShowMapModal(false)}
+        initialCoords={form.Latitude && form.Longitude ? [parseFloat(form.Latitude), parseFloat(form.Longitude)] : null}
+        onConfirm={(coords) => {
+          setForm(prev => ({
+            ...prev,
+            Latitude: coords[0].toString(),
+            Longitude: coords[1].toString()
+          }));
+        }}
+      />
     </div>
+    </>
   );
 }

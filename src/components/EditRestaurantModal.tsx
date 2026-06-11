@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BASE_URL } from "../utils/apiConfig";
+import MapPickerModal from "./MapPickerModal";
 
 const BASE = BASE_URL;
 
@@ -29,6 +30,8 @@ interface FormData {
   CoverImage: File | null;
   ProfileImage: File | null;
   workingDays: Array<{ openTime: string; closeTime: string }>;
+  Latitude: string;
+  Longitude: string;
 }
 
 const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
@@ -40,6 +43,7 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const [form, setForm] = useState<FormData>({
     Id: restaurantId,
@@ -53,6 +57,8 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
     CoverImage: null as File | null,
     ProfileImage: null as File | null,
     workingDays: Array(7).fill({ openTime: "", closeTime: "" }),
+    Latitude: "",
+    Longitude: "",
   });
 
   const [currentImages, setCurrentImages] = useState({
@@ -112,6 +118,8 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
           Phone1: storeData.phone1 || "",
           Phone2: storeData.phone2 || "",
           workingDays: preparedWorkingDays,
+          Latitude: storeData.latitude?.toString() || "",
+          Longitude: storeData.longitude?.toString() || "",
         }));
 
       } catch (error: any) {
@@ -158,6 +166,8 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
 
       if (form.CoverImage instanceof File) data.append("CoverImage", form.CoverImage);
       if (form.ProfileImage instanceof File) data.append("ProfileImage", form.ProfileImage);
+      if (form.Latitude !== undefined && form.Latitude !== null && form.Latitude !== "") data.append("Latitude", form.Latitude);
+      if (form.Longitude !== undefined && form.Longitude !== null && form.Longitude !== "") data.append("Longitude", form.Longitude);
 
       const workingDaysArray: WorkingDay[] = form.workingDays.map((day, index) => ({
         Day: index,
@@ -360,7 +370,60 @@ const EditRestaurantModal: React.FC<EditRestaurantModalProps> = ({
                 min="0"
               />
             </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">تحديد الموقع (GPS)</label>
+              <button
+                type="button"
+                onClick={() => setShowMapModal(true)}
+                className="w-full px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition rounded-lg font-bold flex items-center justify-center gap-2"
+              >
+                <span>📍</span>
+                {form.Latitude && form.Longitude 
+                  ? `الموقع المحدد: (${parseFloat(form.Latitude).toFixed(4)}, ${parseFloat(form.Longitude).toFixed(4)})` 
+                  : "تحديد الموقع على الخريطة"}
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">خط العرض (Latitude)</label>
+              <input
+                type="number"
+                step="any"
+                name="Latitude"
+                value={form.Latitude}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-left font-mono"
+                placeholder="مثال: 18.0735"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">خط الطول (Longitude)</label>
+              <input
+                type="number"
+                step="any"
+                name="Longitude"
+                value={form.Longitude}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent text-left font-mono"
+                placeholder="مثال: -15.9582"
+              />
+            </div>
           </div>
+
+          <MapPickerModal
+            isOpen={showMapModal}
+            onClose={() => setShowMapModal(false)}
+            initialCoords={form.Latitude && form.Longitude ? [parseFloat(form.Latitude), parseFloat(form.Longitude)] : null}
+            onConfirm={(coords) => {
+              setForm(prev => ({
+                ...prev,
+                Latitude: coords[0].toString(),
+                Longitude: coords[1].toString()
+              }));
+            }}
+          />
 
           {/* Working Days */}
           <div className="mb-6">

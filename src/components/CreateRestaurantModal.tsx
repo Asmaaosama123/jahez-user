@@ -1,10 +1,12 @@
 // components/CreateRestaurantModal.jsx
 import React, { useState } from "react";
 import { BASE_URL } from "../utils/apiConfig";
+import MapPickerModal from "./MapPickerModal";
 
 const BASE = BASE_URL;
 
 const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
+  const [showMapModal, setShowMapModal] = useState(false);
   const initialWorkingDays = [
     { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الأحد
     { openTime: "09:00", closeTime: "17:00", is24Hours: false }, // الإثنين
@@ -27,6 +29,8 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     CoverImage: null,
     ProfileImage: null,
     workingDays: initialWorkingDays,
+    Latitude: "",
+    Longitude: "",
   });
 
   const daysAr = [
@@ -79,11 +83,14 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
     // Add text fields
     const fields = [
       "NameAr", "NameFr", "AddressMain", "AddressSecondary",
-      "DeliveryFee", "SubcategoryId", "Phone1", "Phone2"
+      "DeliveryFee", "SubcategoryId", "Phone1", "Phone2",
+      "Latitude", "Longitude"
     ];
 
     fields.forEach(field => {
-      if (form[field]) data.append(field, form[field]);
+      if (form[field] !== undefined && form[field] !== null && form[field] !== "") {
+        data.append(field, form[field]);
+      }
     });
 
     data.append("Address", `${form.AddressSecondary}, ${addressText}`);
@@ -368,9 +375,62 @@ const CreateRestaurantModal = ({ subcategoryId, subcategoryName, onClose }) => {
                     min="0"
                   />
                 </div>
+
+                <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">تحديد الموقع (GPS)</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMapModal(true)}
+                    className="w-full px-4 py-3 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition rounded-lg font-bold flex items-center justify-center gap-2"
+                  >
+                    <span>📍</span>
+                    {form.Latitude && form.Longitude 
+                      ? `الموقع المحدد: (${parseFloat(form.Latitude).toFixed(4)}, ${parseFloat(form.Longitude).toFixed(4)})` 
+                      : "تحديد الموقع على الخريطة"}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">خط العرض (Latitude)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="Latitude"
+                    value={form.Latitude}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent text-left font-mono"
+                    placeholder="مثال: 18.0735"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">خط الطول (Longitude)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    name="Longitude"
+                    value={form.Longitude}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-transparent text-left font-mono"
+                    placeholder="مثال: -15.9582"
+                  />
+                </div>
               </div>
             </div>
           </div>
+
+          <MapPickerModal
+            isOpen={showMapModal}
+            onClose={() => setShowMapModal(false)}
+            initialCoords={form.Latitude && form.Longitude ? [parseFloat(form.Latitude), parseFloat(form.Longitude)] : null}
+            onConfirm={(coords) => {
+              setForm(prev => ({
+                ...prev,
+                Latitude: coords[0].toString(),
+                Longitude: coords[1].toString()
+              }));
+            }}
+          />
 
           {/* Action Buttons */}
           <div className="sticky bottom-0 bg-white border-t p-6 mt-8 flex gap-4 justify-end">

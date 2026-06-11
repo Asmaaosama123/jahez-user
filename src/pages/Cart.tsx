@@ -20,6 +20,11 @@ export default function Cart() {
   const [loading, setLoading] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
+  // Geolocation states
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
   const manualOrder = location.state?.manualOrder || false;
   const storeInfo = location.state?.storeInfo || null;
 
@@ -65,6 +70,122 @@ export default function Cart() {
     Object.entries(cart).filter(([_, storeData]) => (storeData?.items?.length || 0) > 0)
   );
 
+  // Geolocation and Dynamic Pricing Calculations
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleLocateUser = () => {
+    if (!navigator.geolocation) {
+      alert(
+        language === "ar"
+          ? "تحديد الموقع الجغرافي غير مدعوم في متصفحك."
+          : "Geolocation is not supported by your browser."
+      );
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        setLat(userLat);
+        setLng(userLng);
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${userLat}&lon=${userLng}&format=json&accept-language=${language}`
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const displayName =
+              data.display_name ||
+              (language === "ar" ? "موقعي الحالي" : "My Current Location");
+            setAddress(displayName);
+          } else {
+            setAddress(
+              language === "ar"
+                ? "موقعي الحالي (تم تحديده بالخريطة)"
+                : "My Current Location (Map Determined)"
+            );
+          }
+        } catch (error) {
+          setAddress(
+            language === "ar"
+              ? "موقعي الحالي (تم تحديده بالخريطة)"
+              : "My Current Location (Map Determined)"
+          );
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error(error);
+        alert(
+          language === "ar"
+            ? "تعذر جلب موقعك. يرجى كتابة العنوان يدوياً."
+            : "Could not retrieve location. Please enter address manually."
+        );
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const calculateDeliveryFee = () => {
+    if (manualOrder) {
+      const storeLatitude = storeInfo?.latitude;
+      const storeLongitude = storeInfo?.longitude;
+      const defaultFee = storeInfo?.deliveryFee ?? 100;
+
+      if (
+        lat !== null &&
+        lng !== null &&
+        storeLatitude !== undefined &&
+        storeLongitude !== undefined &&
+        storeLatitude !== null &&
+        storeLongitude !== null
+      ) {
+        const dist = getDistance(lat, lng, storeLatitude, storeLongitude);
+        return dist > 4 ? 100 + Math.round((dist - 4) * 10) : 100;
+      }
+      return defaultFee;
+    } else {
+      const [_, storeData] = Object.entries(filteredCart)[0] || [null, null];
+      if (!storeData) return 0;
+      const storeLatitude = storeData.storeLatitude;
+      const storeLongitude = storeData.storeLongitude;
+      const defaultFee = storeData.deliveryFee ?? 100;
+
+      if (
+        lat !== null &&
+        lng !== null &&
+        storeLatitude !== undefined &&
+        storeLongitude !== undefined &&
+        storeLatitude !== null &&
+        storeLongitude !== null
+      ) {
+        const dist = getDistance(lat, lng, storeLatitude, storeLongitude);
+        return dist > 4 ? 100 + Math.round((dist - 4) * 10) : 100;
+      }
+      return defaultFee;
+    }
+  };
+
+  const deliveryFee = calculateDeliveryFee();
+  const serviceFee = Math.min(totalPrice * 0.03, 20);
+  const grandTotal = totalPrice + deliveryFee + serviceFee;
+
   const getProductName = (item) =>
     language === "ar" ? item.nameAr || item.name || "" : item.nameFr || item.name || "";
 
@@ -75,6 +196,8 @@ export default function Cart() {
       let orderPayload = {
         customerPhone: phone,
         customerAddress: address,
+        customerLat: lat,
+        customerLong: lng,
         storeId: 0,
         orderContent: "",
         items: [],
@@ -242,12 +365,32 @@ export default function Cart() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white w-full max-w-md p-5 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">{language === "ar" ? "معلومات التوصيل" : "Delivery Information"}</h2>
-            <input
-              className="w-full border p-3 mb-3 rounded-lg text-base"
-              placeholder={t.addressPlaceholder}
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            
+            <div className="relative mb-3">
+              <input
+                className={`w-full border p-3 rounded-lg text-base ${language === "ar" ? "pl-12 pr-4 text-right" : "pr-12 pl-4 text-left"}`}
+                placeholder={t.addressPlaceholder}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleLocateUser}
+                disabled={isLocating}
+                className={`absolute ${language === "ar" ? "left-2" : "right-2"} top-1/2 -translate-y-1/2 p-2 bg-green-50 text-green-700 rounded-full hover:bg-green-100 disabled:bg-gray-100 disabled:text-gray-400 transition`}
+                title={language === "ar" ? "تحديد موقعي تلقائياً" : "Locate current position"}
+              >
+                {isLocating ? (
+                  <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                ) : (
+                  <span>📍</span>
+                )}
+              </button>
+            </div>
+
             <input
               type="tel"
               inputMode="numeric"
@@ -257,6 +400,28 @@ export default function Cart() {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
             />
+
+            {/* تفاصيل السعر والفاتورة */}
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 my-4 text-sm">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">{language === "ar" ? "مجموع المنتجات:" : "Products Subtotal:"}</span>
+                <span className="font-semibold">{totalPrice} MRU</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">{language === "ar" ? "سعر التوصيل:" : "Delivery Fee:"}</span>
+                <span className="font-semibold">{deliveryFee} MRU</span>
+              </div>
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-600">{language === "ar" ? "رسوم الخدمة:" : "Service Fee:"}</span>
+                <span className="font-semibold">{serviceFee.toFixed(1)} MRU</span>
+              </div>
+              <hr className="my-2 border-gray-300" />
+              <div className="flex justify-between text-base font-bold text-green-800">
+                <span>{language === "ar" ? "المجموع الكلي:" : "Grand Total:"}</span>
+                <span>{grandTotal.toFixed(1)} MRU</span>
+              </div>
+            </div>
+
             <button
               onClick={() => {
                 if (!address || !phone) {
